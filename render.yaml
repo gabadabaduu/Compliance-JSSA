@@ -1,18 +1,14 @@
 services:
   # ============================================
-  # 🗄️ Base de Datos PostgreSQL (Docker Private Service)
+  # 🗄️ PostgreSQL (Docker Private Service)
   # ============================================
   - type: pserv
     name: compliance-db
     runtime: docker
     plan: free
     region: oregon
-
-    disk:
-      name: compliance-db-data
-      mountPath: /var/lib/postgresql/data
-      sizeGB: 1
-
+    dockerfilePath: ./postgres.Dockerfile
+    dockerContext: .
     envVars:
       - key: POSTGRES_DB
         value: compliance_db
@@ -21,19 +17,12 @@ services:
       - key: POSTGRES_PASSWORD
         generateValue: true
 
-    dockerfilePath: ./postgres.Dockerfile
-    dockerContext: .
 
-  # ============================================
-  # 🔴 Redis (Managed)
-  # ============================================
   - type: redis
     name: compliance-redis
     plan: free
     region: oregon
     maxmemoryPolicy: allkeys-lru
-
-    # 🔥 Render lo exige: debe ser array, NO vacío {}
     ipAllowList:
       - source: 0.0.0.0/0
         description: allow all
@@ -47,29 +36,22 @@ services:
     plan: free
     region: oregon
     branch: main
-
     dockerfilePath: ./Dockerfile
     dockerContext: .
-
     healthCheckPath: /api/health
-
     autoDeploy: true
-
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      
+
       - key: ASPNETCORE_URLS
         value: http://+:8080
 
-      # PostgreSQL connection
+      # 🔥 Construir connection string manualmente
       - key: ConnectionStrings__DefaultConnection
-        fromService:
-          name: compliance-db
-          type: pserv
-          property: connectionString
+        value: Host=compliance-db;Port=5432;Database=compliance_db;Username=postgres;Password=${POSTGRES_PASSWORD};
 
-      # Redis connection
+      # Redis (sí soporta connectionString)
       - key: ConnectionStrings__Redis
         fromService:
           name: compliance-redis
@@ -92,8 +74,5 @@ services:
       - key: AllowedOrigins
         value: https://compliance-platform.onrender.com,http://localhost:5173
 
-# ============================================
-# 📊 Managed PostgreSQL (Opcional)
-# Render EXIGE que esto sea array
-# ============================================
+# Render exige array
 databases: []
