@@ -1,4 +1,17 @@
+using Compliance.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
+
+DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
+// Leer connection string desde env
+var connectionString = Environment.GetEnvironmentVariable("SUPABASE_DB_CONNECTION");
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseNpgsql(connectionString);
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

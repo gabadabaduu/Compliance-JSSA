@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../api/authApi';
+//import { authApi } from '../api/authApi';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -12,18 +12,27 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true);
 
-        try {
-            const response = await authApi.login({ email, password });
+        // Hardcodear dos usuarios válidos
+        const allowedUsers = [
+            { email: 'admin@example.com', password: '123456' },
+            { email: 'user@example.com', password: 'abcdef' }
+        ];
 
-            localStorage.setItem('access_token', response.accessToken);
+        const isAllowed = allowedUsers.some(
+            (u) => u.email === email && u.password === password
+        );
 
+        if (isAllowed) {
+            // Guardar token ficticio si quieres
+            localStorage.setItem('access_token', 'fake-token');
+
+            // Redirigir al dashboard
             navigate('/dashboard');
-        } catch (error) {
-            console.error('Login error:', error);
-            alert('Error al iniciar sesión');
-        } finally {
-            setLoading(false);
+        } else {
+            alert('Usuario o contraseña no permitidos');
         }
+
+        setLoading(false);
     };
 
     return (
