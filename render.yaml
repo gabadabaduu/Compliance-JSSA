@@ -43,15 +43,15 @@ services:
       - key: AllowedOrigins
         value: "https://compliance-frontend.onrender.com,http://localhost:5173"
 
-  # Frontend (Vite/React) - force outDir to `dist` and publish that folder
-  - type: static
+  # Frontend (Vite/React) - build and publish static files
+  - type: web
     name: compliance-frontend
+    env: static
     plan: free
     region: oregon
     branch: develop
-    # pass the --outDir argument to vite build so output is always frontend/dist
     buildCommand: cd frontend && npm ci && npm run build -- --outDir dist
-    publishPath: frontend/dist
+    staticPublishPath: frontend/dist
     autoDeploy: true
     envVars:
       - key: VITE_SUPABASE_URL
