@@ -44,14 +44,13 @@ services:
         value: "https://compliance-frontend.onrender.com,http://localhost:5173"
 
   # Frontend (Vite/React) - build and publish static files
-  - type: web
+  - type: static_site
     name: compliance-frontend
-    env: static
     plan: free
-    region: oregon
     branch: develop
-    buildCommand: cd frontend && npm ci && npm run build -- --outDir dist
-    staticPublishPath: frontend/dist
+    # Run from repo root; use --prefix so no cd is required
+    buildCommand: npm ci --prefix frontend && npm run build --prefix frontend -- --outDir dist
+    publishPath: frontend/dist
     autoDeploy: true
     envVars:
       - key: VITE_SUPABASE_URL
