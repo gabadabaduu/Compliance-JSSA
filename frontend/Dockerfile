@@ -1,38 +1,26 @@
-# ============================================
 # Stage 1: Build
-# ============================================
 FROM node:20-alpine AS build
-
 WORKDIR /app
-
-# Copiar package files
 COPY package*.json ./
-
-# Instalar dependencias
 RUN npm ci
-
-# Copiar código fuente
 COPY . .
-
-# Build de producción
 RUN npm run build
 
-# ============================================
-# Stage 2: Nginx
-# ============================================
+# Stage 2: Nginx + entrypoint
 FROM nginx:alpine
+# instalar envsubst (gettext)
+RUN apk add --no-cache gettext
 
-# Copiar build al directorio de Nginx
+# Copiar assets construidos y plantilla de nginx
 COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf.template /etc/nginx/conf.d/default.conf.template
 
-# Copiar configuración de Nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copiar entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Exponer puerto 80
 EXPOSE 80
-
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
