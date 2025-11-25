@@ -1,5 +1,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
+# EXPOSE is optional for Render; leave for documentation only
 EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -26,4 +27,7 @@ RUN dotnet publish "Compliance.Web.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Compliance.Web.dll"]
+
+# At runtime, use the PORT env var (provided by Render). If not set, fallback to 8080.
+# Use sh -c so the shell expands ${PORT} and then exec replaces the shell with dotnet process.
+ENTRYPOINT ["sh", "-c", "export ASPNETCORE_URLS=http://+:${PORT:-8080} && exec dotnet Compliance.Web.dll"]

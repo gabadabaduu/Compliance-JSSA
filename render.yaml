@@ -1,41 +1,11 @@
 services:
-  # ============================================
-  # 🗄️ PostgreSQL (Docker Private Service)
-  # ============================================
-  - type: pserv
-    name: compliance-db
-    runtime: docker
-    plan: free
-    region: oregon
-    dockerfilePath: ./postgres.Dockerfile
-    dockerContext: .
-    envVars:
-      - key: POSTGRES_DB
-        value: compliance_db
-      - key: POSTGRES_USER
-        value: postgres
-      - key: POSTGRES_PASSWORD
-        generateValue: true
-
-
-  - type: redis
-    name: compliance-redis
-    plan: free
-    region: oregon
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: allow all
-
-  # ============================================
-  # 🌐 Backend API (.NET 8)
-  # ============================================
+  # Backend (.NET 8) - build from your Dockerfile
   - type: web
     name: compliance-backend
     runtime: docker
     plan: free
     region: oregon
-    branch: main
+    branch: develop
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
@@ -43,36 +13,50 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-
       - key: ASPNETCORE_URLS
-        value: http://+:8080
+        value: http://+:$PORT
 
-      # 🔥 Construir connection string manualmente
+      # Supabase Postgres connection (testing)
+      - key: SUPABASE_DB_CONNECTION
+        value: "Host=aws-1-us-east-1.pooler.supabase.com;Port=6543;Username=postgres.zyzmaaeoutsfstapbgmc;Password=compliacespace12;Database=postgres;SslMode=Require;TrustServerCertificate=true;KeepAlive=30"
       - key: ConnectionStrings__DefaultConnection
-        value: Host=compliance-db;Port=5432;Database=compliance_db;Username=postgres;Password=${POSTGRES_PASSWORD};
+        value: ${SUPABASE_DB_CONNECTION};
 
-      # Redis (sí soporta connectionString)
-      - key: ConnectionStrings__Redis
-        fromService:
-          name: compliance-redis
-          type: redis
-          property: connectionString
+      # Supabase API keys (testing)
+      - key: SUPABASE_URL
+        value: "https://zyzmaaeoutsfstapbgmc.supabase.co"
+      - key: SUPABASE_ANON_KEY
+        value: "sb_publishable_LMCPeGJlx-MyhjKVHq1New_9"
 
-      # JWT
+      # JWT settings (testing)
       - key: Jwt__Secret
-        generateValue: true
+        value: "xVTha/RnXLSlcvHWhmHzi+HfKSdjOtHOSCsjn9xk0dvtyLHQbYmsyCTX9ICUeHzFJHZtj5xNrKQusTeb2QA6ZA=="
       - key: Jwt__Issuer
-        value: CompliancePlatform
+        value: "CompliancePlatform"
       - key: Jwt__Audience
-        value: CompliancePlatformUsers
+        value: "CompliancePlatformUsers"
       - key: Jwt__ExpiryMinutes
         value: 60
       - key: Jwt__RefreshTokenExpiryDays
         value: 7
 
-      # CORS
       - key: AllowedOrigins
-        value: https://compliance-platform.onrender.com,http://localhost:5173
+        value: "https://compliance-frontend.onrender.com,http://localhost:5173"
 
-# Render exige array
+  # Frontend (Vite/React) - force outDir to `dist` and publish that folder
+  - type: static
+    name: compliance-frontend
+    plan: free
+    region: oregon
+    branch: develop
+    # pass the --outDir argument to vite build so output is always frontend/dist
+    buildCommand: cd frontend && npm ci && npm run build -- --outDir dist
+    publishPath: frontend/dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_SUPABASE_URL
+        value: "https://zyzmaaeoutsfstapbgmc.supabase.co"
+      - key: VITE_SUPABASE_ANON_KEY
+        value: "sb_publishable_LMCPeGJlx-MyhjKVHq1New_9"
+
 databases: []
