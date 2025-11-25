@@ -1,38 +1,17 @@
-# ============================================
-# Stage 1: Build
-# ============================================
 FROM node:20-alpine AS build
-
 WORKDIR /app
-
-# Copiar package files
 COPY package*.json ./
-
-# Instalar dependencias
+COPY tsconfig.json* ./
 RUN npm ci
-
-# Copiar código fuente
 COPY . .
+RUN npm run build -- --outDir dist
 
-# Build de producción
-RUN npm run build
-
-# ============================================
-# Stage 2: Nginx
-# ============================================
 FROM nginx:alpine
-
-# Copiar build al directorio de Nginx
+RUN apk add --no-cache gettext
 COPY --from=build /app/dist /usr/share/nginx/html
-
-# Copiar configuración de Nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Exponer puerto 80
+COPY nginx.conf.template /etc/nginx/conf.d/default.conf.template
+ENV BACKEND_URL=http://backend:8080
+CMD sh -c "envsubst '\$BACKEND_URL' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"
 EXPOSE 80
-
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
-
-CMD ["nginx", "-g", "daemon off;"]

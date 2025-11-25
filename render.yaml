@@ -1,5 +1,4 @@
 services:
-  # Backend (.NET 8) - build from your Dockerfile
   - type: web
     name: compliance-backend
     runtime: docker
@@ -16,43 +15,18 @@ services:
       - key: ASPNETCORE_URLS
         value: http://+:$PORT
 
-      # Supabase Postgres connection (testing)
-      - key: SUPABASE_DB_CONNECTION
-        value: "Host=aws-1-us-east-1.pooler.supabase.com;Port=6543;Username=postgres.zyzmaaeoutsfstapbgmc;Password=compliacespace12;Database=postgres;SslMode=Require;TrustServerCertificate=true;KeepAlive=30"
-      - key: ConnectionStrings__DefaultConnection
-        value: ${SUPABASE_DB_CONNECTION};
-
-      # Supabase API keys (testing)
-      - key: SUPABASE_URL
-        value: "https://zyzmaaeoutsfstapbgmc.supabase.co"
-      - key: SUPABASE_ANON_KEY
-        value: "sb_publishable_LMCPeGJlx-MyhjKVHq1New_9"
-
-      # JWT settings (testing)
-      - key: Jwt__Secret
-        value: "xVTha/RnXLSlcvHWhmHzi+HfKSdjOtHOSCsjn9xk0dvtyLHQbYmsyCTX9ICUeHzFJHZtj5xNrKQusTeb2QA6ZA=="
-      - key: Jwt__Issuer
-        value: "CompliancePlatform"
-      - key: Jwt__Audience
-        value: "CompliancePlatformUsers"
-      - key: Jwt__ExpiryMinutes
-        value: 60
-      - key: Jwt__RefreshTokenExpiryDays
-        value: 7
-
-      - key: AllowedOrigins
-        value: "https://compliance-frontend.onrender.com,http://localhost:5173"
-
-  # Frontend (Vite/React) - build and publish static files
-  - type: static_site
+  - type: web
     name: compliance-frontend
+    runtime: docker
     plan: free
+    region: oregon
     branch: develop
-    # Run from repo root; use --prefix so no cd is required
-    buildCommand: npm ci --prefix frontend && npm run build --prefix frontend -- --outDir dist
-    publishPath: frontend/dist
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: frontend
     autoDeploy: true
     envVars:
+      - key: BACKEND_URL
+        value: ""            # deja vacío si no conoces la URL; luego ponla en dashboard y redeploy
       - key: VITE_SUPABASE_URL
         value: "https://zyzmaaeoutsfstapbgmc.supabase.co"
       - key: VITE_SUPABASE_ANON_KEY
