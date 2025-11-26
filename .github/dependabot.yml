@@ -1,0 +1,15 @@
+# Dependabot - actualizaciones automáticas de dependencias para npm y nuget
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    # optionally add reviewers, ignore rules, etc.
+
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
