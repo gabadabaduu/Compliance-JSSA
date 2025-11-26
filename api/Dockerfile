@@ -5,15 +5,15 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY ["Compliance.Web/Compliance. Web.csproj", "Compliance.Web/"]
-COPY ["Compliance.Core/Compliance.Core.csproj", "Compliance.Core/"]
-COPY ["Compliance.Infrastructure/Compliance.Infrastructure.csproj", "Compliance.Infrastructure/"]
+COPY ["api/Compliance.Web/Compliance.Web.csproj", "Compliance.Web/"]
+COPY ["api/Compliance.Core/Compliance.Core.csproj", "Compliance.Core/"]
+COPY ["api/Compliance.Infrastructure/Compliance.Infrastructure.csproj", "Compliance.Infrastructure/"]
 
 RUN dotnet restore "Compliance.Web/Compliance.Web.csproj"
 
-COPY .  .
+COPY api/ . 
 
-WORKDIR "/Compliance.Web"
+WORKDIR "/src/Compliance.Web"
 RUN dotnet build "Compliance.Web.csproj" -c Release -o /app/build
 
 FROM build AS publish

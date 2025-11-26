@@ -1,8 +1,18 @@
 import axios from 'axios'
 import { supabase } from '../lib/supabase'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const getApiUrl = () => {
+    const url = import.meta.env.VITE_API_URL ?? window.__env?.VITE_API_URL
 
+    if (!url) {
+        console.error('❌ VITE_API_URL no está definido en las variables de entorno')
+        throw new Error('VITE_API_URL no está configurado')
+    }
+
+    return url.endsWith('/api') ? url : `${url}/api`
+}
+
+const API_URL = getApiUrl()
 // Cliente de Axios con interceptor para JWT
 const apiClient = axios.create({
     baseURL: API_URL,

@@ -13,8 +13,8 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    location /api {
-        proxy_pass ${BACKEND_URL};
+    location /api/ {
+        proxy_pass ${BACKEND_URL}/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -25,8 +25,8 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    location /hubs {
-        proxy_pass ${BACKEND_URL};
+    location /hubs/ {
+        proxy_pass ${BACKEND_URL}/hubs/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
