@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: compliance-backend
+    name: compliance-api
     runtime: docker
     plan: free
     region: oregon
     branch: develop
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./api/Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
     autoDeploy: true
