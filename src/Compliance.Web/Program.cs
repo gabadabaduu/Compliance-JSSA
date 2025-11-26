@@ -1,38 +1,88 @@
-using Compliance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Compliance.Infrastructure.Data;
 
-DotNetEnv.Env.Load();
+// Limpiar mapeo de claim types para usar nombres cortos
+Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
+System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
-// Leer connection string desde env
-var connectionString = Environment.GetEnvironmentVariable("SUPABASE_DB_CONNECTION");
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseNpgsql(connectionString);
-});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<Compliance.Core.Interfaces.IAuthService, Compliance.Infrastructure.Services.AuthService>();
-builder.Services.AddScoped<Compliance.Core.Interfaces.IRatService, Compliance.Infrastructure.Services.RatService>();
-builder.Services.AddScoped<Compliance.Core.Interfaces.IHabeasService, Compliance.Infrastructure.Services.HabeasService>();
-builder.Services.AddScoped<Compliance.Core.Interfaces.IEpidService, Compliance.Infrastructure.Services.EpidService>();
-builder.Services.AddScoped<Compliance.Core.Interfaces.INormogramaService, Compliance.Infrastructure.Services.NormogramaService>();
-builder.Services.AddScoped<Compliance.Core.Interfaces.IDashboardService, Compliance.Infrastructure.Services.DashboardService>();
-
+// CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+              .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowCredentials();
     });
 });
+
+// Database
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// JWT Authentication
+var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
+
+if (!string.IsNullOrEmpty(jwtSecret))
+{
+    var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.MapInboundClaims = false; // No mapear claim types a nombres largos
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidIssuer = "https://zyzmaaeoutsfstapbgmc.supabase.co/auth/v1",
+            ValidateAudience = true,
+            ValidAudience = "authenticated",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = "sub",
+            RoleClaimType = "role"
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                var userId = context.Principal?.FindFirst("sub")?.Value;
+                var email = context.Principal?.FindFirst("email")?.Value;
+                Console.WriteLine($"✅ TOKEN VÁLIDO - User ID: {userId}, Email: {email}");
+                return Task.CompletedTask;
+            },
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"❌ Auth failed: {context.Exception.Message}");
+                return Task.CompletedTask;
+            }
+        };
+    });
+}
+else
+{
+    Console.WriteLine("⚠️ JWT Secret no configurado");
+}
 
 var app = builder.Build();
 
@@ -42,12 +92,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAll");
-app.UseHttpsRedirection();
-app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapFallbackToFile("index.html");
+
+Console.WriteLine("🚀 Backend corriendo en http://localhost:5000");
 
 app.Run();
