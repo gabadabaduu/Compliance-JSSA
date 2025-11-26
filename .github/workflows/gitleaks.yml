@@ -1,0 +1,23 @@
+# Gitleaks - busca secretos en commits (historial reciente en run)
+# Muestra resultados en logs. Para detección en pushes/PRs.
+name: Gitleaks Secret Scan
+
+on:
+  push:
+    branches: [ "develop", "main" ]
+  pull_request:
+    branches: [ "develop", "main" ]
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # analiza todo el historial reciente
+
+      - name: Run Gitleaks
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          args: detect --source . --redact
