@@ -9,11 +9,6 @@ services:
     dockerContext: .
     healthCheckPath: /api/health
     autoDeploy: true
-    envVars:
-      - key: ASPNETCORE_ENVIRONMENT
-        value: Production
-      - key: ASPNETCORE_URLS
-        value: http://+:$PORT
 
   - type: web
     name: compliance-frontend
@@ -24,12 +19,5 @@ services:
     dockerfilePath: ./frontend/Dockerfile
     dockerContext: frontend
     autoDeploy: true
-    envVars:
-      - key: BACKEND_URL
-        value: ""            # deja vacío si no conoces la URL; luego ponla en dashboard y redeploy
-      - key: VITE_SUPABASE_URL
-        value: "https://zyzmaaeoutsfstapbgmc.supabase.co"
-      - key: VITE_SUPABASE_ANON_KEY
-        value: "sb_publishable_LMCPeGJlx-MyhjKVHq1New_9"
 
 databases: []
