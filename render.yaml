@@ -1,78 +1,23 @@
 services:
-  # ============================================
-  # 🗄️ PostgreSQL (Docker Private Service)
-  # ============================================
-  - type: pserv
-    name: compliance-db
-    runtime: docker
-    plan: free
-    region: oregon
-    dockerfilePath: ./postgres.Dockerfile
-    dockerContext: .
-    envVars:
-      - key: POSTGRES_DB
-        value: compliance_db
-      - key: POSTGRES_USER
-        value: postgres
-      - key: POSTGRES_PASSWORD
-        generateValue: true
-
-
-  - type: redis
-    name: compliance-redis
-    plan: free
-    region: oregon
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: allow all
-
-  # ============================================
-  # 🌐 Backend API (.NET 8)
-  # ============================================
   - type: web
-    name: compliance-backend
+    name: compliance-api
     runtime: docker
     plan: free
     region: oregon
-    branch: main
-    dockerfilePath: ./Dockerfile
+    branch: develop
+    dockerfilePath: ./api/Dockerfile
     dockerContext: .
     healthCheckPath: /api/health
     autoDeploy: true
-    envVars:
-      - key: ASPNETCORE_ENVIRONMENT
-        value: Production
 
-      - key: ASPNETCORE_URLS
-        value: http://+:8080
+  - type: web
+    name: compliance-frontend
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: develop
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: frontend
+    autoDeploy: true
 
-      # 🔥 Construir connection string manualmente
-      - key: ConnectionStrings__DefaultConnection
-        value: Host=compliance-db;Port=5432;Database=compliance_db;Username=postgres;Password=${POSTGRES_PASSWORD};
-
-      # Redis (sí soporta connectionString)
-      - key: ConnectionStrings__Redis
-        fromService:
-          name: compliance-redis
-          type: redis
-          property: connectionString
-
-      # JWT
-      - key: Jwt__Secret
-        generateValue: true
-      - key: Jwt__Issuer
-        value: CompliancePlatform
-      - key: Jwt__Audience
-        value: CompliancePlatformUsers
-      - key: Jwt__ExpiryMinutes
-        value: 60
-      - key: Jwt__RefreshTokenExpiryDays
-        value: 7
-
-      # CORS
-      - key: AllowedOrigins
-        value: https://compliance-platform.onrender.com,http://localhost:5173
-
-# Render exige array
 databases: []

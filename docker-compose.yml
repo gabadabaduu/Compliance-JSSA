@@ -1,55 +1,52 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: compliance-db
-    environment:
-      POSTGRES_DB: compliance_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - compliance-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: compliance-redis
-    ports:
-      - "6379:6379"
-    networks:
-      - compliance-network
-
-  app:
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: compliance-app
+      dockerfile: ./api/Dockerfile
+    container_name: compliance-backend
+    restart: unless-stopped
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=compliance_db;Username=postgres;Password=postgres123"
-      ConnectionStrings__Redis: "redis:6379"
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=aws-1-us-east-1.pooler.supabase.com;Port=6543;Username=postgres.zyzmaaeoutsfstapbgmc;Password=CompliaceSpace12;Database=postgres;SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;Connection Lifetime=0;Keepalive=10;No Reset On Close=true;Server Compatibility Mode=NoTypeLoading
+      - Jwt__Secret=TbcNmp/2Q3w31OjdZJKxjquNTy+joXitwws6FVu/8r0=
+      - JWT_SECRET=xVTha/RnXLSlcvHWhmHzi+HfKSdjOtHOSCsjn9xk0dvtyLHQbYmsyCTX9ICUeHzFJHZtj5xNrKQusTeb2QA6ZA==
+      - Jwt__Issuer=CompliancePlatform
+      - Jwt__Audience=CompliancePlatformUsers
+      - Jwt__ExpiryMinutes=60
+      - Jwt__RefreshTokenExpiryDays=7
+      - AllowedOrigins=http://localhost:3000,http://localhost:5173
+      - SUPABASE_URL=https://zyzmaaeoutsfstapbgmc.supabase.co
+      - SUPABASE_ANON_KEY=sb_publishable_LMCPeGJlx-MyhjKVHq1New_9nhbxjAB
+      - Supabase__Url=https://zyzmaaeoutsfstapbgmc. supabase.co
+      - Supabase__JwtIssuer=https://zyzmaaeoutsfstapbgmc.supabase.co/auth/v1
+      - Supabase__JwtSecret=xVTha/RnXLSlcvHWhmHzi+HfKSdjOtHOSCsjn9xk0dvtyLHQbYmsyCTX9ICUeHzFJHZtj5xNrKQusTeb2QA6ZA==
+      
     ports:
       - "5000:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
     networks:
       - compliance-network
-
-volumes:
-  postgres_data:
+      
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: compliance-frontend
+    restart: unless-stopped
+    environment:
+      - BACKEND_URL=
+      - VITE_API_URL=http://localhost:5000/api
+      - VITE_SUPABASE_URL=https://zyzmaaeoutsfstapbgmc.supabase.co
+      - VITE_SUPABASE_ANON_KEY=sb_publishable_LMCPeGJlx-MyhjKVHq1New_9nhbxjAB
+      
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - compliance-network
 
 networks:
   compliance-network:

@@ -1,0 +1,92 @@
+# Escaneo de Dockerfile (Hadolint) y de imágenes (Trivy) para FRONTEND y BACKEND.
+# - Hadolint valida buenas prácticas en Dockerfile (se ejecuta sobre ambos Dockerfiles).
+# - Trivy escanea las imágenes construidas por CVEs (se ejecuta sobre backend y frontend).
+# Resultados: logs del job + artifacts trivy-report-*.txt descargables desde la corrida de Actions.
+name: Container & Dockerfile Scan
+
+on:
+  push:
+    branches: [ "develop", "main" ]
+  pull_request:
+    branches: [ "develop", "main" ]
+
+jobs:
+  hadolint:
+    name: Hadolint Dockerfile Lint (frontend + backend)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Lint del Dockerfile del backend (ruta: ./Dockerfile)
+      - name: Hadolint on backend Dockerfile
+        uses: hadolint/hadolint-action@v2
+        with:
+          dockerfile: Dockerfile
+
+      # Lint del Dockerfile del frontend (ruta: frontend/Dockerfile)
+      - name: Hadolint on frontend Dockerfile
+        uses: hadolint/hadolint-action@v2
+        with:
+          dockerfile: frontend/Dockerfile
+
+  build_and_trivy:
+    name: Build images & Trivy scan (frontend + backend)
+    runs-on: ubuntu-latest
+    needs: hadolint
+    env:
+      # Habilitar buildkit ayuda en builds; opcional
+      DOCKER_BUILDKIT: 1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker (required only if pulling private base images)
+        uses: docker/login-action@v2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME || '' }}
+          password: ${{ secrets.DOCKERHUB_TOKEN || '' }}
+
+      # Build backend image (context: repo root, Dockerfile: ./Dockerfile)
+      - name: Build backend image
+        run: |
+          docker build -t local/backend:ci -f Dockerfile .
+
+      # Build frontend image (context: frontend, Dockerfile: frontend/Dockerfile)
+      - name: Build frontend image
+        run: |
+          docker build -t local/frontend:ci -f frontend/Dockerfile frontend
+
+      # Scan backend image with Trivy
+      - name: Scan backend image with Trivy
+        uses: aquasecurity/trivy-action@v1
+        with:
+          image-ref: local/backend:ci
+          format: table
+          severity: HIGH,CRITICAL
+          output: trivy-backend-report.txt
+
+      - name: Upload backend Trivy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-report
+          path: trivy-backend-report.txt
+
+      # Scan frontend image with Trivy
+      - name: Scan frontend image with Trivy
+        uses: aquasecurity/trivy-action@v1
+        with:
+          image-ref: local/frontend:ci
+          format: table
+          severity: HIGH,CRITICAL
+          output: trivy-frontend-report.txt
+
+      - name: Upload frontend Trivy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-frontend-report
+          path: trivy-frontend-report.txt
