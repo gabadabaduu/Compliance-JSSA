@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Compliance.Infrastructure.Entities
 {
-    [Table("Epid")]
-    public class Epid
+    [Table("Habeas_Data")]
+    public class HabeasDataEntity
     {
         [Key]
         [Column("id")]

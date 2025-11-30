@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Compliance.Core.Modules.EPID.Dtos;
 using Compliance.Core.Modules.EPID.Interfaces;
 using Compliance.Infrastructure.Data;
 using Compliance.Infrastructure.Entities;
-using Compliance.Core.Modules.EPID.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace Compliance.Infrastructure.Modules.EPID.Repositories
@@ -17,19 +17,19 @@ namespace Compliance.Infrastructure.Modules.EPID.Repositories
 
         public async Task<IEnumerable<EpidNameDto>> GetNamesAsync(CancellationToken ct = default)
         {
-            return await _db.Set<Epid>()
+            return await _db.Set<EpidEntity>()
                 .AsNoTracking()
                 .OrderBy(e => e.Name)
-                .Select(e => new EpidNameDto { Id = e.Id, Nombre = e.Name })
+                .Select(e => new EpidNameDto { Id = e.Id, Nombre = e.Name ?? string.Empty })
                 .ToListAsync(ct);
         }
 
         public async Task<EpidNameDto?> GetByIdAsync(long id, CancellationToken ct = default)
         {
-            return await _db.Set<Epid>()
+            return await _db.Set<EpidEntity>()
                 .AsNoTracking()
                 .Where(e => e.Id == id)
-                .Select(e => new EpidNameDto { Id = e.Id, Nombre = e.Name })
+                .Select(e => new EpidNameDto { Id = e.Id, Nombre = e.Name ?? string.Empty })
                 .FirstOrDefaultAsync(ct);
         }
     }

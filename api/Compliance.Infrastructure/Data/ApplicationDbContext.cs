@@ -13,7 +13,8 @@ public class AppDbContext : DbContext
 
     public DbSet<AppUser> Users { get; set; }
 
-    public DbSet<Epid> Epids { get; set; }
+    public DbSet<EpidEntity> Epids { get; set; }
+    public DbSet<HabeasDataEntity> HabeasDatas { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,7 +38,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
         });
 
-        modelBuilder.Entity<Epid>(eb =>
+        modelBuilder.Entity<EpidEntity>(eb =>
         {
             eb.ToTable("Epid");
             eb.HasKey(e => e.Id);
@@ -45,6 +46,13 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
 
+        modelBuilder.Entity<HabeasDataEntity>(eb =>
+        {
+            eb.ToTable("Habeas_Data"); // ajustar al nombre real de la tabla, por ejemplo "habeas_data"
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name");
+        });
         // ... otras configuraciones
     }
 }
