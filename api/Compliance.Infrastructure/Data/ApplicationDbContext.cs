@@ -15,7 +15,7 @@ public class AppDbContext : DbContext
 
     public DbSet<EpidEntity> Epids { get; set; }
     public DbSet<HabeasDataEntity> HabeasDatas { get; set; } = null!;
-
+    public DbSet<RatEntity> Rats { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -52,6 +52,14 @@ public class AppDbContext : DbContext
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name");
+        });
+
+        modelBuilder.Entity<RatEntity>(eb =>
+        {
+            eb.ToTable("Rat");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
         // ... otras configuraciones
     }

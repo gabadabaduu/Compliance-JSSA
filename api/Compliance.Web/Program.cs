@@ -9,6 +9,9 @@ using Compliance.Infrastructure.Modules.EPID.Services;
 using Compliance.Core.Modules.HabeasData.Interfaces;
 using Compliance.Infrastructure.Modules.HabeasData.Repositories;
 using Compliance.Infrastructure.Modules.HabeasData.Services;
+using Compliance.Core.Modules.RAT.Interfaces;
+using Compliance.Infrastructure.Modules.RAT.Repositories;
+using Compliance.Infrastructure.Modules.RAT.Services;
 
 // Limpiar mapeo de claim types para usar nombres cortos
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -37,9 +40,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IEpidRepository, EpidRepository>();
 builder.Services.AddScoped<IEpidService, EpidService>();
-// Program.cs - añadir en la sección de configuración de servicios
 builder.Services.AddScoped<IHabeasDataRepository, HabeasDataRepository>();
 builder.Services.AddScoped<IHabeasDataService, HabeasDataService>();
+builder.Services.AddScoped<IRatRepository, RatRepository>();
+builder.Services.AddScoped<IRatService, RatService>();
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
