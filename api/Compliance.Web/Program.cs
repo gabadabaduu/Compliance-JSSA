@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Compliance.Infrastructure.Data;
+using Compliance.Core.Modules.EPID.Interfaces;
+using Compliance.Infrastructure.Modules.EPID.Repositories;
+using Compliance.Infrastructure.Modules.EPID.Services;
 
 // Limpiar mapeo de claim types para usar nombres cortos
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -29,7 +32,8 @@ builder.Services.AddCors(options =>
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddScoped<IEpidRepository, EpidRepository>();
+builder.Services.AddScoped<IEpidService, EpidService>();
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 

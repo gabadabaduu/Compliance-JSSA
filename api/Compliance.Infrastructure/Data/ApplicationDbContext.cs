@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Compliance.Core.Modules.User.Entities;
+using Compliance.Infrastructure.Entities;
 
 namespace Compliance.Infrastructure.Data;
 
@@ -10,22 +11,20 @@ public class AppDbContext : DbContext
     {
     }
 
-    
     public DbSet<AppUser> Users { get; set; }
+
+    public DbSet<Epid> Epids { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configurar Tasks
-       
-        // Configurar Users con nombres de columna en minúsculas
+        // Configurar Users
         modelBuilder.Entity<AppUser>(entity =>
         {
             entity.ToTable("users");
             entity.HasKey(e => e.Id);
 
-            // Mapear todas las propiedades a snake_case
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Email).HasColumnName("email").IsRequired();
             entity.Property(e => e.FullName).HasColumnName("full_name");
@@ -37,5 +36,15 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => e.Email).IsUnique();
         });
+
+        modelBuilder.Entity<Epid>(eb =>
+        {
+            eb.ToTable("Epid");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+        // ... otras configuraciones
     }
 }
