@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<EpidEntity> Epids { get; set; }
     public DbSet<HabeasDataEntity> HabeasDatas { get; set; } = null!;
     public DbSet<RatEntity> Rats { get; set; } = null!;
+    public DbSet<NormogramaEntity> Normogramas { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -48,7 +49,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<HabeasDataEntity>(eb =>
         {
-            eb.ToTable("Habeas_Data"); // ajustar al nombre real de la tabla, por ejemplo "habeas_data"
+            eb.ToTable("Habeas_Data");
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name");
@@ -57,6 +58,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<RatEntity>(eb =>
         {
             eb.ToTable("Rat");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<NormogramaEntity>(eb =>
+        {
+            eb.ToTable("Normograma");
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();

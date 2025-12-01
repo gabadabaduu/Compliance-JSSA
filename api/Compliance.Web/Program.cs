@@ -12,6 +12,9 @@ using Compliance.Infrastructure.Modules.HabeasData.Services;
 using Compliance.Core.Modules.RAT.Interfaces;
 using Compliance.Infrastructure.Modules.RAT.Repositories;
 using Compliance.Infrastructure.Modules.RAT.Services;
+using Compliance.Core.Modules.Normograma.Interfaces;
+using Compliance.Infrastructure.Modules.Normograma.Repositories;
+using Compliance.Infrastructure.Modules.Normograma.Services;
 
 // Limpiar mapeo de claim types para usar nombres cortos
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -44,6 +47,9 @@ builder.Services.AddScoped<IHabeasDataRepository, HabeasDataRepository>();
 builder.Services.AddScoped<IHabeasDataService, HabeasDataService>();
 builder.Services.AddScoped<IRatRepository, RatRepository>();
 builder.Services.AddScoped<IRatService, RatService>();
+builder.Services.AddScoped<INormogramaRepository, NormogramaRepository>();
+builder.Services.AddScoped<INormogramaService, NormogramaService>();
+
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 

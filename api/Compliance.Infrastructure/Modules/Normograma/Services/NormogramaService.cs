@@ -1,8 +1,20 @@
-using Compliance.Core.Interfaces;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Compliance.Core.Modules.Normograma.Dtos;
+using Compliance.Core.Modules.Normograma.Interfaces;
 
-namespace Compliance.Infrastructure.Services;
-
-public class NormogramaService : INormogramaService
+namespace Compliance.Infrastructure.Modules.Normograma.Services
 {
-    public Task<string> GetServiceNameAsync() => Task.FromResult("Normograma");
+    public class NormogramaService : INormogramaService
+    {
+        private readonly INormogramaRepository _repo;
+        public NormogramaService(INormogramaRepository repo) => _repo = repo;
+
+        public Task<IEnumerable<NormogramaNameDto>> GetAllNamesAsync(CancellationToken ct = default) =>
+            _repo.GetNamesAsync(ct);
+
+        public Task<NormogramaNameDto?> GetByIdAsync(long id, CancellationToken ct = default) =>
+            _repo.GetByIdAsync(id, ct);
+    }
 }
