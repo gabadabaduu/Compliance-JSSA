@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<HabeasDataEntity> HabeasDatas { get; set; } = null!;
     public DbSet<RatEntity> Rats { get; set; } = null!;
     public DbSet<NormogramaEntity> Normogramas { get; set; } = null!;
+    public DbSet<MatrizRiesgoEntity> MatrizRiesgos { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -65,6 +67,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<NormogramaEntity>(eb =>
         {
             eb.ToTable("Normograma");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<MatrizRiesgoEntity>(eb =>
+        {
+            eb.ToTable("Matriz_Riesgo");
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();

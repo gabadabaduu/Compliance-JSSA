@@ -15,6 +15,9 @@ using Compliance.Infrastructure.Modules.RAT.Services;
 using Compliance.Core.Modules.Normograma.Interfaces;
 using Compliance.Infrastructure.Modules.Normograma.Repositories;
 using Compliance.Infrastructure.Modules.Normograma.Services;
+using Compliance.Core.Modules.MatrizRiesgo.Interfaces;
+using Compliance.Infrastructure.Modules.MatrizRiesgo.Repositories;
+using Compliance.Infrastructure.Modules.MatrizRiesgo.Services;
 
 // Limpiar mapeo de claim types para usar nombres cortos
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -49,6 +52,8 @@ builder.Services.AddScoped<IRatRepository, RatRepository>();
 builder.Services.AddScoped<IRatService, RatService>();
 builder.Services.AddScoped<INormogramaRepository, NormogramaRepository>();
 builder.Services.AddScoped<INormogramaService, NormogramaService>();
+builder.Services.AddScoped<IMatrizRiesgoRepository, MatrizRiesgoRepository>();
+builder.Services.AddScoped<IMatrizRiesgoService, MatrizRiesgoService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
