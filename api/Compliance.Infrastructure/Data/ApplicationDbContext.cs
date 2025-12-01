@@ -18,7 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<RatEntity> Rats { get; set; } = null!;
     public DbSet<NormogramaEntity> Normogramas { get; set; } = null!;
     public DbSet<MatrizRiesgoEntity> MatrizRiesgos { get; set; } = null!;
-
+    public DbSet<AjusteEntity> Ajustes { get; set; } = null!;
+    public DbSet<UsuarioEntity> Usuarios { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -78,6 +79,21 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
-        // ... otras configuraciones
-    }
+        modelBuilder.Entity<AjusteEntity>(eb =>
+        {
+            eb.ToTable("Ajustes");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<UsuarioEntity>(eb =>
+        {
+            eb.ToTable("User");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+            // ... otras configuraciones
+        }
 }

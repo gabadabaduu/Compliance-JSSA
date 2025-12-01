@@ -18,6 +18,12 @@ using Compliance.Infrastructure.Modules.Normograma.Services;
 using Compliance.Core.Modules.MatrizRiesgo.Interfaces;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Repositories;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Services;
+using Compliance.Core.Modules.Ajustes.Interfaces;
+using Compliance.Infrastructure.Modules.Ajustes.Repositories;
+using Compliance.Infrastructure.Modules.Ajustes.Services;
+using Compliance.Core.Modules.Usuario.Interfaces;
+using Compliance.Infrastructure.Modules.Usuario.Repositories;
+using Compliance.Infrastructure.Modules.Usuario.Services;
 
 // Limpiar mapeo de claim types para usar nombres cortos
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -54,6 +60,10 @@ builder.Services.AddScoped<INormogramaRepository, NormogramaRepository>();
 builder.Services.AddScoped<INormogramaService, NormogramaService>();
 builder.Services.AddScoped<IMatrizRiesgoRepository, MatrizRiesgoRepository>();
 builder.Services.AddScoped<IMatrizRiesgoService, MatrizRiesgoService>();
+builder.Services.AddScoped<IAjusteRepository, AjusteRepository>();
+builder.Services.AddScoped<IAjusteService, AjusteService>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
