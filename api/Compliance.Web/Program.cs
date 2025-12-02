@@ -66,20 +66,23 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 // JWT Authentication
-var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
+var jwtSecret = builder.Configuration["Jwt:Secret"];
 
-if (!string.IsNullOrEmpty(jwtSecret))
+if (string.IsNullOrEmpty(jwtSecret))
 {
-    var key = Encoding.UTF8.GetBytes(jwtSecret);
+    throw new InvalidOperationException("❌ ERROR CRÍTICO: Jwt:Secret no está configurado.  La aplicación no puede iniciar sin autenticación.");
+}
 
-    builder.Services.AddAuthentication(options =>
+var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = false;
         options.SaveToken = true;
         options.MapInboundClaims = false; // No mapear claim types a nombres largos
 
