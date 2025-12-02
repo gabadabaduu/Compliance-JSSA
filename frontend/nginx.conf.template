@@ -4,8 +4,8 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # Resolver DNS para Render (necesario para proxy a HTTPS externo)
-    resolver 8. 8.8.8 8.8.4.4 valid=300s;
+    # Usar resolver DNS del sistema (Docker/Render)
+    resolver 127.0.0.11 valid=30s ipv6=off;
     resolver_timeout 5s;
 
     gzip on;
