@@ -5,10 +5,14 @@ const getApiUrl = () => {
     const url = import.meta.env.VITE_API_URL ?? window.__env?.VITE_API_URL
 
     if (!url) {
-        console.error('❌ VITE_API_URL no está definido en las variables de entorno')
-        throw new Error('VITE_API_URL no está configurado')
+        return '/api'
     }
 
+    if (typeof window !== 'undefined' && url.includes(window.location.hostname)) {
+        return '/api'
+    }
+
+    // Para desarrollo local, usar la URL completa
     return url.endsWith('/api') ? url : `${url}/api`
 }
 
