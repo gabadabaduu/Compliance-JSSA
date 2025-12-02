@@ -1,6 +1,13 @@
-namespace Compliance.Core.Interfaces;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Compliance.Core.Modules.EPID.Dtos;
 
-public interface IEpidService
+namespace Compliance.Core.Modules.EPID.Interfaces
 {
-    Task<string> GetServiceNameAsync();
+    public interface IEpidService
+    {
+        Task<IEnumerable<EpidNameDto>> GetAllNamesAsync(CancellationToken ct = default);
+        Task<EpidNameDto?> GetByIdAsync(long id, CancellationToken ct = default);
+    }
 }

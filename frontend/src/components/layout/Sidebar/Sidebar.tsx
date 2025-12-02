@@ -12,7 +12,8 @@ const menuItems: SidebarItem[] = [
     { name: 'Habeas Data', path: '/app/habeasdata' },
     { name: 'Normograma', path: '/app/normograma' },
     { name: 'RAT', path: '/app/rat' },
-    { name: 'Configuración', path: '/app/settings ' }
+    { name: 'Matriz Riesgo', path: '/app/matrizriesgo' },
+    { name: 'Configuración', path: '/app/ajustes ' },
 ];
 
 export default function Sidebar() {
@@ -40,8 +41,8 @@ export default function Sidebar() {
             </nav>
             <div className="sidebar-footer">
                 <Link
-                    to="/app/user"
-                    className={location.pathname === '/app/user' ? 'active' : ''}
+                    to="/app/usuario"
+                    className={location.pathname === '/app/usuario' ? 'active' : ''}
                 >
                     <div className="user-profile">
                         <div className="user-avatar">👤</div>

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Compliance.Core.Modules.User.Entities;
+using Compliance.Infrastructure.Entities;
 
 namespace Compliance.Infrastructure.Data;
 
@@ -10,22 +11,25 @@ public class AppDbContext : DbContext
     {
     }
 
-    
     public DbSet<AppUser> Users { get; set; }
 
+    public DbSet<EpidEntity> Epids { get; set; }
+    public DbSet<HabeasDataEntity> HabeasDatas { get; set; } = null!;
+    public DbSet<RatEntity> Rats { get; set; } = null!;
+    public DbSet<NormogramaEntity> Normogramas { get; set; } = null!;
+    public DbSet<MatrizRiesgoEntity> MatrizRiesgos { get; set; } = null!;
+    public DbSet<AjusteEntity> Ajustes { get; set; } = null!;
+    public DbSet<UsuarioEntity> Usuarios { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configurar Tasks
-       
-        // Configurar Users con nombres de columna en minúsculas
+        // Configurar Users
         modelBuilder.Entity<AppUser>(entity =>
         {
             entity.ToTable("users");
             entity.HasKey(e => e.Id);
 
-            // Mapear todas las propiedades a snake_case
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Email).HasColumnName("email").IsRequired();
             entity.Property(e => e.FullName).HasColumnName("full_name");
@@ -37,5 +41,59 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => e.Email).IsUnique();
         });
-    }
+
+        modelBuilder.Entity<EpidEntity>(eb =>
+        {
+            eb.ToTable("Epid");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+        modelBuilder.Entity<HabeasDataEntity>(eb =>
+        {
+            eb.ToTable("Habeas_Data");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name");
+        });
+
+        modelBuilder.Entity<RatEntity>(eb =>
+        {
+            eb.ToTable("Rat");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<NormogramaEntity>(eb =>
+        {
+            eb.ToTable("Normograma");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<MatrizRiesgoEntity>(eb =>
+        {
+            eb.ToTable("Matriz_Riesgo");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<AjusteEntity>(eb =>
+        {
+            eb.ToTable("Ajustes");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<UsuarioEntity>(eb =>
+        {
+            eb.ToTable("User");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+            // ... otras configuraciones
+        }
 }

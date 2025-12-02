@@ -1,4 +1,5 @@
 import './NormogramaPage.css';
+import NormogramaNamesList from '../components/NormogramaNamesList';
 
 export default function NormogramaPage() {
     return (
@@ -6,6 +7,11 @@ export default function NormogramaPage() {
             <h2>Normograma</h2>
             <div className="content-box">
                 <p>Contenido del módulo Normograma</p>
+
+                <div className="normograma-list-section">
+                    <h3>Nombres Normograma</h3>
+                    <NormogramaNamesList />
+                </div>
             </div>
         </div>
     );
