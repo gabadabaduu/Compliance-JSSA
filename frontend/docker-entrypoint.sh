@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/sh
 set -e
 
 printenv | grep -E "VITE_|BACKEND_" || echo "No vars found"
