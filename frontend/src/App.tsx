@@ -17,8 +17,9 @@ import HabeasDataPage from './modules/habeasdata/pages/HabeasDataPage';
 import EPIDPage from './modules/epid/pages/EPIDPage';
 import NormogramaPage from './modules/normograma/pages/NormogramaPage';
 import UserManagementPage from './modules/admin/pages/UserManagementPage';
-import SettingsPage from './modules/settings/pages/SettingsPage';
-import UserPage from './modules/user/pages/UserPage';
+import AjustesPage from './modules/ajustes/pages/AjustesPage';
+import UsuarioPage from './modules/usuario/pages/UsuarioPage';
+import MatrizRiesgoPage from './modules/matrizriesgo/pages/MatrizRiesgoPage';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -86,8 +87,9 @@ function App() {
                         <Route path="habeasdata" element={<HabeasDataPage />} />
                         <Route path="normograma" element={<NormogramaPage />} />
                         <Route path="rat" element={<RATPage />} />
-                        <Route path="settings" element={<SettingsPage />} />
-                        <Route path="user" element={<UserPage />} />
+                        <Route path="ajustes" element={<AjustesPage />} />
+                        <Route path="usuario" element={<UsuarioPage />} />
+                        <Route path="matrizriesgo" element={<MatrizRiesgoPage />} />
                         <Route
                             path="admin/users"
                             element={
