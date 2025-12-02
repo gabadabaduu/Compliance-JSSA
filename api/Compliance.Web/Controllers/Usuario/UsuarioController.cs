@@ -10,7 +10,7 @@ namespace Compliance.Web.Controllers.Usuario
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous]
+    [Authorize]
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioService _service;

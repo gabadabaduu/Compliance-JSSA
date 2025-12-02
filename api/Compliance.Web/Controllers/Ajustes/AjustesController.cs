@@ -10,7 +10,7 @@ namespace Compliance.Web.Controllers.Ajustes
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous]
+    [Authorize]
     public class AjustesController : ControllerBase
     {
         private readonly IAjusteService _service;

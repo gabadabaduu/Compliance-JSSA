@@ -10,7 +10,7 @@ namespace Compliance.Web.Controllers.HabeasData
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous]
+    [Authorize]
     public class HabeasDataController : ControllerBase
     {
         private readonly IHabeasDataService _service;

@@ -10,7 +10,7 @@ namespace Compliance.Web.Controllers.RAT
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous]
+    [Authorize]
     public class RATController : ControllerBase
     {
         private readonly IRatService _service;

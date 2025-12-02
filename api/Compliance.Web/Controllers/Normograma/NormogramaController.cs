@@ -10,7 +10,7 @@ namespace Compliance.Web.Controllers.Normograma
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous]
+    [Authorize]
     public class NormogramaController : ControllerBase
     {
         private readonly INormogramaService _service;

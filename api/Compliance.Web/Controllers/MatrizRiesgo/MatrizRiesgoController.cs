@@ -10,7 +10,7 @@ namespace Compliance.Web.Controllers.MatrizRiesgo
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous]
+    [Authorize]
     public class MatrizRiesgoController : ControllerBase
     {
         private readonly IMatrizRiesgoService _service;
