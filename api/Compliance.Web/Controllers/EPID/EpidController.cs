@@ -10,7 +10,7 @@ namespace Compliance.Web.Controllers.EPID
 {
     [ApiController]
     [Route("api/[controller]")]
-    [AllowAnonymous]
+    [Authorize]
     public class EPIDController : ControllerBase
     {
         private readonly IEpidService _service;
