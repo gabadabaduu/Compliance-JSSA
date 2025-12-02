@@ -116,11 +116,6 @@ builder.Services.AddAuthentication(options =>
             }
         };
     });
-}
-else
-{
-    Console.WriteLine("⚠️ JWT Secret no configurado");
-}
 
 var app = builder.Build();
 
