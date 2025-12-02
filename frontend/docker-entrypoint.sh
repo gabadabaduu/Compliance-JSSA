@@ -18,7 +18,7 @@ echo "🔍 BACKEND_HOST: ${BACKEND_HOST}"
 
 envsubst '\$BACKEND_URL \$BACKEND_HOST' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
-envsubst '\$VITE_SUPABASE_URL \$VITE_SUPABASE_ANON_KEY \$VITE_API_URL \$BACKEND_URL' < /usr/share/nginx/html/env.template. js > /usr/share/nginx/html/env.js
+envsubst '\$VITE_SUPABASE_URL \$VITE_SUPABASE_ANON_KEY \$VITE_API_URL \$BACKEND_URL' < /usr/share/nginx/html/env.template.js > /usr/share/nginx/html/env.js
 
 cat /usr/share/nginx/html/env.js
 
