@@ -8,6 +8,8 @@ export default function SignupPage() {
     const {
         fullName,
         setFullName,
+        nombreEmpresa,
+        setNombreEmpresa,
         email,
         setEmail,
         password,
@@ -44,13 +46,26 @@ export default function SignupPage() {
                     </div>
 
                     <div className="form-group">
+                        <label htmlFor="nombreEmpresa">Nombre de la empresa</label>
+                        <input
+                            id="nombreEmpresa"
+                            type="text"
+                            value={nombreEmpresa}
+                            onChange={(e) => setNombreEmpresa(e.target.value)}
+                            placeholder="Mi Empresa S.A. S"
+                            required
+                            disabled={loading}
+                        />
+                    </div>
+
+                    <div className="form-group">
                         <label htmlFor="email">Correo electrónico</label>
                         <input
                             id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="tu@email.com"
+                            placeholder="tu@email. com"
                             required
                             disabled={loading}
                         />

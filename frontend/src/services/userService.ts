@@ -71,14 +71,24 @@ apiClient.interceptors.response.use(
         return Promise.reject(error)
     }
 )
-
 export interface UserDto {
     id: string
     email: string
     fullName?: string
-    role: 'superadmin' | 'admin' | 'user'
+    role: 'superadmin' | 'admin' | 'user'  // ← Agregado
+    nombreEmpresa?: string
+    accessDashboard: boolean
+    accessEpid: boolean
+    accessRat: boolean
+    accessNormograma: boolean
+    accessHabeasdata: boolean
+    accessMatrizriesgo: boolean
+    accessAjustes: boolean
+    accessUsuario: boolean
     createdAt: string
+    updatedAt?: string
 }
+
 
 export const userService = {
     // Obtener usuario actual

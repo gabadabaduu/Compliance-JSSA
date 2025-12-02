@@ -10,7 +10,7 @@ interface AuthState {
 
     // Actions
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-    signup: (email: string, password: string, fullName?: string) => Promise<{ success: boolean; error?: string }>
+    signup: (email: string, password: string, fullName?: string, nombreEmpresa?: string) => Promise<{ success: boolean; error?: string }>
     logout: () => Promise<void>
     checkAuth: () => Promise<void>
     changePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>()(
                 }
             },
 
-            signup: async (email: string, password: string, fullName?: string) => {
+            signup: async (email: string, password: string, fullName?: string, nombreEmpresa?: string) => {
                 try {
                     const { data, error } = await supabase.auth.signUp({
                         email,
@@ -49,7 +49,8 @@ export const useAuthStore = create<AuthState>()(
                         options: {
                             data: {
                                 full_name: fullName || '',
-                                role: 'user'
+                                nombre_empresa: nombreEmpresa || '',
+                                role: 'admin'
                             }
                         }
                     })
