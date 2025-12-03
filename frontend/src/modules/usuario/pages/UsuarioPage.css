@@ -15,3 +15,17 @@
     background-color: #000f;
     border-radius: 5px;
 }
+.usuario-page {
+    padding: 1. 5rem;
+}
+
+.usuario-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1. 5rem;
+}
+
+.usuario-loading {
+    color: #7f8c8d;
+}

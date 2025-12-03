@@ -1,55 +1,46 @@
-﻿import { Link, useLocation } from 'react-router-dom';
-import './Sidebar.css';
-
-interface SidebarItem {
-    name: string;
-    path: string;
-}
-
-const menuItems: SidebarItem[] = [
-    { name: 'Dashboard', path: '/app/dashboard' },
-    { name: 'EPID', path: '/app/epid' },
-    { name: 'Habeas Data', path: '/app/habeasdata' },
-    { name: 'Normograma', path: '/app/normograma' },
-    { name: 'RAT', path: '/app/rat' },
-    { name: 'Matriz Riesgo', path: '/app/matrizriesgo' },
-    { name: 'Configuración', path: '/app/ajustes ' },
-];
+﻿// Ejemplo de cómo debería quedar el Sidebar
+import { NavLink } from 'react-router-dom'
+import { useUserStore } from '../../../stores/userStore'
+import './Sidebar.css'
 
 export default function Sidebar() {
-    const location = useLocation();
+    const { hasAccess } = useUserStore()
+
+    const menuItems = [
+        { path: '/app/dashboard', label: 'Dashboard', access: 'accessDashboard', icon: '📊' },
+        { path: '/app/epid', label: 'EPID', access: 'accessEpid', icon: '📋' },
+        { path: '/app/rat', label: 'RAT', access: 'accessRat', icon: '🔗' },
+        { path: '/app/habeasdata', label: 'Habeas Data', access: 'accessHabeasdata', icon: '📄' },
+        { path: '/app/normograma', label: 'Normograma', access: 'accessNormograma', icon: '📚' },
+        { path: '/app/matrizriesgo', label: 'Matriz Riesgo', access: 'accessMatrizriesgo', icon: '⚠️' },
+        { path: '/app/ajustes', label: 'Ajustes', access: 'accessAjustes', icon: '⚙️' },
+        { path: '/app/usuario', label: 'Mi Cuenta', access: 'accessUsuario', icon: '👤' },
+    ]
 
     return (
-        <aside className="sidebar">
+        <nav className="sidebar">
             <div className="sidebar-header">
                 <h2>Compliance JSSA</h2>
             </div>
 
-            <nav className="sidebar-nav">
-                <ul>
-                    {menuItems.map((item) => (
+            <ul className="sidebar-menu">
+                {menuItems.map((item) => (
+                    // Solo mostrar si tiene acceso
+                    hasAccess(item.access as any) && (
                         <li key={item.path}>
-                            <Link
+                            <NavLink
                                 to={item.path}
-                                className={location.pathname === item.path ? 'active' : ''}
+                                className={({ isActive }) =>
+                                    isActive ? 'sidebar-link active' : 'sidebar-link'
+                                }
                             >
-                                {item.name}
-                            </Link>
+                                <span className="sidebar-icon">{item.icon}</span>
+                                <span className="sidebar-label">{item.label}</span>
+                            </NavLink>
                         </li>
-                    ))}
-                </ul>
-            </nav>
-            <div className="sidebar-footer">
-                <Link
-                    to="/app/usuario"
-                    className={location.pathname === '/app/usuario' ? 'active' : ''}
-                >
-                    <div className="user-profile">
-                        <div className="user-avatar">👤</div>
-                        <span>Mi Perfil</span>
-                    </div>
-                </Link>
-            </div>
-        </aside>
-    );
+                    )
+                ))}
+            </ul>
+        </nav>
+    )
 }

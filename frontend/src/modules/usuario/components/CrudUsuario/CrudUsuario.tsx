@@ -1,15 +1,16 @@
-import { Link } from 'react-router-dom';
-import { useSignup } from '../../hooks/useSignup';
-import ErrorMessage from '../../components/ErrorMessage/ErrorMessage';
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
-import './SignupPage.css';
+import { useCruduser } from '../../hooks/useCruduser';
+import { useUserStore } from '../../../../stores/userStore';
+import ErrorMessage from '../../../auth/components/ErrorMessage';
+import './CrudUsuario.css';
 
-export default function SignupPage() {
+export default function CrudUsuario() {
+    // Obtener nombreEmpresa del userStore (credenciales del usuario logueado)
+    const { userData } = useUserStore();
+
     const {
         fullName,
         setFullName,
-        nombreEmpresa,
-        setNombreEmpresa,
         email,
         setEmail,
         password,
@@ -19,7 +20,7 @@ export default function SignupPage() {
         error,
         loading,
         handleSubmit,
-    } = useSignup();
+    } = useCruduser();
 
     return (
         <div className="signup-page">
@@ -50,12 +51,13 @@ export default function SignupPage() {
                         <input
                             id="nombreEmpresa"
                             type="text"
-                            value={nombreEmpresa}
-                            onChange={(e) => setNombreEmpresa(e.target.value)}
+                            value={userData?.nombreEmpresa || ''}
                             placeholder="Mi Empresa S.A. S"
-                            required
-                            disabled={loading}
+                            disabled={true}
+                            readOnly
+                            className="input-readonly"
                         />
+                        <small>Este campo no se puede modificar</small>
                     </div>
 
                     <div className="form-group">
@@ -99,18 +101,11 @@ export default function SignupPage() {
                             disabled={loading}
                         />
                     </div>
-
                     <button type="submit" disabled={loading} className="btn-submit">
                         {loading ? <LoadingSpinner size="small" /> : 'Crear Cuenta'}
                     </button>
                 </form>
-
-                <div className="signup-footer">
-                    <p>
-                        ¿Ya tienes cuenta?{' '}
-                        <Link to="/login">Inicia sesión aquí</Link>
-                    </p>
-                </div>
+                
             </div>
         </div>
     );

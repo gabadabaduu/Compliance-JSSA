@@ -1,8 +1,9 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../../stores/authStore'
+import { useUserStore } from '../../../stores/userStore'
 
-export function useSignup() {
+export function useCruduser() {
     const [fullName, setFullName] = useState('')
     const [nombreEmpresa, setNombreEmpresa] = useState('')
     const [email, setEmail] = useState('')
@@ -12,20 +13,18 @@ export function useSignup() {
     const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
-    const { signup } = useAuthStore()
+    const { signupu } = useAuthStore()
+    const { userData } = useUserStore()
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
         setError('')
 
+        const nombreEmpresa = userData?.nombreEmpresa || ''
+
         // Validaciones
         if (!fullName.trim()) {
             setError('El nombre completo es requerido')
-            return
-        }
-
-        if (!nombreEmpresa.trim()) {
-            setError('El nombre de la empresa es requerido')
             return
         }
 
@@ -42,11 +41,9 @@ export function useSignup() {
         setLoading(true)
 
         try {
-            const result = await signup(email, password, fullName, nombreEmpresa)
+            const result = await signupu(email, password, fullName, nombreEmpresa)
 
-            if (result.success) {
-                navigate('/app/dashboard')
-            } else {
+            if (!result.success) {
                 setError(result.error || 'Error al crear la cuenta')
             }
         } catch (err: any) {

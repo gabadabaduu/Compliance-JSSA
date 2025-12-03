@@ -30,17 +30,28 @@ public class AppDbContext : DbContext
             entity.ToTable("users");
             entity.HasKey(e => e.Id);
 
+            // Campos básicos
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Email).HasColumnName("email").IsRequired();
             entity.Property(e => e.FullName).HasColumnName("full_name");
             entity.Property(e => e.Role).HasColumnName("role").IsRequired().HasMaxLength(50);
-            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
-            entity.Property(e => e.AvatarUrl).HasColumnName("avatar_url");
+            entity.Property(e => e.NombreEmpresa).HasColumnName("nombre_empresa");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
+            // Campos de acceso a módulos
+            entity.Property(e => e.AccessDashboard).HasColumnName("access_dashboard").HasDefaultValue(false);
+            entity.Property(e => e.AccessEpid).HasColumnName("access_epid").HasDefaultValue(false);
+            entity.Property(e => e.AccessRat).HasColumnName("access_rat").HasDefaultValue(false);
+            entity.Property(e => e.AccessNormograma).HasColumnName("access_normograma").HasDefaultValue(false);
+            entity.Property(e => e.AccessHabeasdata).HasColumnName("access_habeasdata").HasDefaultValue(false);
+            entity.Property(e => e.AccessMatrizriesgo).HasColumnName("access_matrizriesgo").HasDefaultValue(false);
+            entity.Property(e => e.AccessAjustes).HasColumnName("access_ajustes").HasDefaultValue(false);
+            entity.Property(e => e.AccessUsuario).HasColumnName("access_usuario").HasDefaultValue(false);
+
             entity.HasIndex(e => e.Email).IsUnique();
         });
+
 
         modelBuilder.Entity<EpidEntity>(eb =>
         {

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Compliance.Infrastructure.Data;
 using Compliance.Web.DTOs.User;
+using Compliance.Web.Hubs;
 
 namespace Compliance.Web.Controllers;
 
@@ -13,11 +15,16 @@ public class UsersController : ControllerBase
 {
     private readonly ILogger<UsersController> _logger;
     private readonly AppDbContext _context;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public UsersController(AppDbContext context, ILogger<UsersController> logger)
+    public UsersController(
+        AppDbContext context,
+        ILogger<UsersController> logger,
+        IHubContext<NotificationHub> hubContext)
     {
         _context = context;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -45,7 +52,16 @@ public class UsersController : ControllerBase
                     Email = u.Email ?? string.Empty,
                     FullName = u.FullName,
                     Role = u.Role,
-                    CreatedAt = u.CreatedAt
+                    NombreEmpresa = u.NombreEmpresa,
+                    CreatedAt = u.CreatedAt,
+                    AccessDashboard = u.AccessDashboard,
+                    AccessEpid = u.AccessEpid,
+                    AccessRat = u.AccessRat,
+                    AccessNormograma = u.AccessNormograma,
+                    AccessHabeasdata = u.AccessHabeasdata,
+                    AccessMatrizriesgo = u.AccessMatrizriesgo,
+                    AccessAjustes = u.AccessAjustes,
+                    AccessUsuario = u.AccessUsuario
                 })
                 .FirstOrDefaultAsync();
 
@@ -65,7 +81,7 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// GET: api/users - Obtener todos los usuarios (solo admin/superadmin)
+    /// GET: api/users - Obtener todos los usuarios (solo admin/superadmin de la MISMA empresa)
     /// </summary>
     [HttpGet]
     public async Task<ActionResult<List<UserDto>>> GetAllUsers()
@@ -79,24 +95,32 @@ public class UsersController : ControllerBase
                 return Unauthorized(new { message = "Usuario no autenticado" });
             }
 
-            // Solo leer Role para verificar permisos
-            var currentUserRole = await _context.Users
+            // Obtener rol Y empresa del usuario actual
+            var currentUser = await _context.Users
                 .Where(u => u.Id == Guid.Parse(userId))
-                .Select(u => u.Role)
+                .Select(u => new { u.Role, u.NombreEmpresa })
                 .FirstOrDefaultAsync();
 
-            if (currentUserRole == null)
+            if (currentUser == null)
             {
                 return Unauthorized(new { message = "Usuario no encontrado" });
             }
 
-            // Verificar que sea admin o superadmin
-            if (currentUserRole != "admin" && currentUserRole != "superadmin")
+            if (currentUser.Role != "admin" && currentUser.Role != "superadmin")
             {
                 return Forbid();
             }
 
-            var users = await _context.Users
+            // Filtrar usuarios según rol
+            var usersQuery = _context.Users.AsQueryable();
+
+            // Superadmin ve todos, admin solo ve los de su empresa
+            if (currentUser.Role == "admin" && !string.IsNullOrEmpty(currentUser.NombreEmpresa))
+            {
+                usersQuery = usersQuery.Where(u => u.NombreEmpresa == currentUser.NombreEmpresa);
+            }
+
+            var users = await usersQuery
                 .OrderByDescending(u => u.CreatedAt)
                 .Select(u => new UserDto
                 {
@@ -104,7 +128,16 @@ public class UsersController : ControllerBase
                     Email = u.Email ?? string.Empty,
                     FullName = u.FullName,
                     Role = u.Role,
-                    CreatedAt = u.CreatedAt
+                    NombreEmpresa = u.NombreEmpresa,
+                    CreatedAt = u.CreatedAt,
+                    AccessDashboard = u.AccessDashboard,
+                    AccessEpid = u.AccessEpid,
+                    AccessRat = u.AccessRat,
+                    AccessNormograma = u.AccessNormograma,
+                    AccessHabeasdata = u.AccessHabeasdata,
+                    AccessMatrizriesgo = u.AccessMatrizriesgo,
+                    AccessAjustes = u.AccessAjustes,
+                    AccessUsuario = u.AccessUsuario
                 })
                 .ToListAsync();
 
@@ -118,7 +151,278 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// DELETE: api/users/{id} - Eliminar un usuario (solo superadmin)
+    /// GET: api/users/{id} - Obtener un usuario por ID (solo admin/superadmin)
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<UserDto>> GetUserById(Guid id)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "Usuario no autenticado" });
+            }
+
+            var currentUser = await _context.Users
+                .Where(u => u.Id == Guid.Parse(userId))
+                .Select(u => new { u.Role, u.NombreEmpresa })
+                .FirstOrDefaultAsync();
+
+            if (currentUser == null)
+            {
+                return Unauthorized(new { message = "Usuario no encontrado" });
+            }
+
+            // Permitir a cualquier usuario ver su propia información
+            if (Guid.Parse(userId) != id && currentUser.Role != "admin" && currentUser.Role != "superadmin")
+            {
+                return Forbid();
+            }
+
+            var user = await _context.Users
+                .Where(u => u.Id == id)
+                .Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    Email = u.Email ?? string.Empty,
+                    FullName = u.FullName,
+                    Role = u.Role,
+                    NombreEmpresa = u.NombreEmpresa,
+                    CreatedAt = u.CreatedAt,
+                    AccessDashboard = u.AccessDashboard,
+                    AccessEpid = u.AccessEpid,
+                    AccessRat = u.AccessRat,
+                    AccessNormograma = u.AccessNormograma,
+                    AccessHabeasdata = u.AccessHabeasdata,
+                    AccessMatrizriesgo = u.AccessMatrizriesgo,
+                    AccessAjustes = u.AccessAjustes,
+                    AccessUsuario = u.AccessUsuario
+                })
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+            {
+                return NotFound(new { message = "Usuario no encontrado" });
+            }
+
+            // Admin solo puede ver usuarios de su empresa
+            if (currentUser.Role == "admin" && user.NombreEmpresa != currentUser.NombreEmpresa)
+            {
+                return Forbid();
+            }
+
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener usuario por ID");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// PUT: api/users/{id} - Actualizar información de usuario (solo admin/superadmin)
+    /// </summary>
+    [HttpPut("{id}")]
+    public async Task<ActionResult<UserDto>> UpdateUser(Guid id, [FromBody] UpdateUserDto updateDto)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "Usuario no autenticado" });
+            }
+
+            var currentUser = await _context.Users
+                .Where(u => u.Id == Guid.Parse(userId))
+                .Select(u => new { u.Role, u.NombreEmpresa })
+                .FirstOrDefaultAsync();
+
+            if (currentUser == null)
+            {
+                return Unauthorized(new { message = "Usuario no encontrado" });
+            }
+
+            var isSelf = Guid.Parse(userId) == id;
+            var isAdmin = currentUser.Role == "admin" || currentUser.Role == "superadmin";
+
+            if (!isSelf && !isAdmin)
+            {
+                return Forbid();
+            }
+
+            var userToUpdate = await _context.Users.FindAsync(id);
+
+            if (userToUpdate == null)
+            {
+                return NotFound(new { message = "Usuario no encontrado" });
+            }
+
+            // Admin solo puede modificar usuarios de su empresa
+            if (currentUser.Role == "admin" && userToUpdate.NombreEmpresa != currentUser.NombreEmpresa)
+            {
+                return Forbid();
+            }
+
+            if (!string.IsNullOrEmpty(updateDto.FullName))
+            {
+                userToUpdate.FullName = updateDto.FullName;
+            }
+
+            if (!string.IsNullOrEmpty(updateDto.NombreEmpresa))
+            {
+                userToUpdate.NombreEmpresa = updateDto.NombreEmpresa;
+            }
+
+            if (isAdmin && !string.IsNullOrEmpty(updateDto.Role))
+            {
+                if (userToUpdate.Role == "superadmin" && currentUser.Role != "superadmin")
+                {
+                    return BadRequest(new { message = "No tienes permisos para cambiar el rol de un superadmin" });
+                }
+                userToUpdate.Role = updateDto.Role;
+            }
+
+            userToUpdate.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Usuario actualizado: {UserId}", id);
+
+            return Ok(new UserDto
+            {
+                Id = userToUpdate.Id,
+                Email = userToUpdate.Email ?? string.Empty,
+                FullName = userToUpdate.FullName,
+                Role = userToUpdate.Role,
+                NombreEmpresa = userToUpdate.NombreEmpresa,
+                CreatedAt = userToUpdate.CreatedAt,
+                AccessDashboard = userToUpdate.AccessDashboard,
+                AccessEpid = userToUpdate.AccessEpid,
+                AccessRat = userToUpdate.AccessRat,
+                AccessNormograma = userToUpdate.AccessNormograma,
+                AccessHabeasdata = userToUpdate.AccessHabeasdata,
+                AccessMatrizriesgo = userToUpdate.AccessMatrizriesgo,
+                AccessAjustes = userToUpdate.AccessAjustes,
+                AccessUsuario = userToUpdate.AccessUsuario
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar usuario");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// PUT: api/users/{id}/permissions - Actualizar permisos de usuario (solo admin/superadmin de la MISMA empresa)
+    /// </summary>
+    [HttpPut("{id}/permissions")]
+    public async Task<ActionResult<UserDto>> UpdateUserPermissions(Guid id, [FromBody] UpdateUserPermissionsDto permissionsDto)
+    {
+        try
+        {
+            var userId = User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "Usuario no autenticado" });
+            }
+
+            // Obtener rol Y empresa del usuario actual
+            var currentUser = await _context.Users
+                .Where(u => u.Id == Guid.Parse(userId))
+                .Select(u => new { u.Role, u.NombreEmpresa })
+                .FirstOrDefaultAsync();
+
+            if (currentUser == null)
+            {
+                return Unauthorized(new { message = "Usuario no encontrado" });
+            }
+
+            if (currentUser.Role != "admin" && currentUser.Role != "superadmin")
+            {
+                return Forbid();
+            }
+
+            var userToUpdate = await _context.Users.FindAsync(id);
+
+            if (userToUpdate == null)
+            {
+                return NotFound(new { message = "Usuario no encontrado" });
+            }
+
+            // Admin solo puede modificar usuarios de SU empresa
+            if (currentUser.Role == "admin")
+            {
+                if (userToUpdate.NombreEmpresa != currentUser.NombreEmpresa)
+                {
+                    return Forbid();
+                }
+            }
+
+            // No permitir modificar permisos de superadmin si no eres superadmin
+            if (userToUpdate.Role == "superadmin" && currentUser.Role != "superadmin")
+            {
+                return BadRequest(new { message = "No tienes permisos para modificar los permisos de un superadmin" });
+            }
+
+            // Actualizar permisos
+            userToUpdate.AccessDashboard = permissionsDto.AccessDashboard;
+            userToUpdate.AccessEpid = permissionsDto.AccessEpid;
+            userToUpdate.AccessRat = permissionsDto.AccessRat;
+            userToUpdate.AccessNormograma = permissionsDto.AccessNormograma;
+            userToUpdate.AccessHabeasdata = permissionsDto.AccessHabeasdata;
+            userToUpdate.AccessMatrizriesgo = permissionsDto.AccessMatrizriesgo;
+            userToUpdate.AccessAjustes = permissionsDto.AccessAjustes;
+            userToUpdate.AccessUsuario = permissionsDto.AccessUsuario;
+            userToUpdate.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Permisos actualizados para usuario: {UserId}", id);
+
+            // ✅ NUEVO: Notificar al usuario afectado via SignalR
+            await _hubContext.Clients.Group($"user_{id}").SendAsync("PermissionsChanged", new
+            {
+                userId = id,
+                message = "Tus permisos han sido actualizados",
+                timestamp = DateTime.UtcNow
+            });
+
+            _logger.LogInformation("Notificación SignalR enviada al usuario: {UserId}", id);
+
+            return Ok(new UserDto
+            {
+                Id = userToUpdate.Id,
+                Email = userToUpdate.Email ?? string.Empty,
+                FullName = userToUpdate.FullName,
+                Role = userToUpdate.Role,
+                NombreEmpresa = userToUpdate.NombreEmpresa,
+                CreatedAt = userToUpdate.CreatedAt,
+                AccessDashboard = userToUpdate.AccessDashboard,
+                AccessEpid = userToUpdate.AccessEpid,
+                AccessRat = userToUpdate.AccessRat,
+                AccessNormograma = userToUpdate.AccessNormograma,
+                AccessHabeasdata = userToUpdate.AccessHabeasdata,
+                AccessMatrizriesgo = userToUpdate.AccessMatrizriesgo,
+                AccessAjustes = userToUpdate.AccessAjustes,
+                AccessUsuario = userToUpdate.AccessUsuario
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar permisos de usuario");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    /// <summary>
+    /// DELETE: api/users/{id} - Eliminar un usuario (solo admin/superadmin de la MISMA empresa)
     /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(Guid id)
@@ -132,13 +436,18 @@ public class UsersController : ControllerBase
                 return Unauthorized(new { message = "Usuario no autenticado" });
             }
 
-            // Solo leer campos necesarios
             var currentUser = await _context.Users
                 .Where(u => u.Id == Guid.Parse(userId))
-                .Select(u => new { u.Role, u.Email })
+                .Select(u => new { u.Role, u.Email, u.NombreEmpresa })
                 .FirstOrDefaultAsync();
 
-            if (currentUser == null || currentUser.Role != "superadmin")
+            if (currentUser == null)
+            {
+                return Unauthorized(new { message = "Usuario no encontrado" });
+            }
+
+            // Solo admin o superadmin pueden eliminar
+            if (currentUser.Role != "admin" && currentUser.Role != "superadmin")
             {
                 return Forbid();
             }
@@ -150,10 +459,25 @@ public class UsersController : ControllerBase
                 return NotFound(new { message = "Usuario no encontrado" });
             }
 
+            // Admin solo puede eliminar usuarios de SU empresa
+            if (currentUser.Role == "admin")
+            {
+                if (userToDelete.NombreEmpresa != currentUser.NombreEmpresa)
+                {
+                    return Forbid();
+                }
+            }
+
             // No permitir eliminar superadmins
             if (userToDelete.Role == "superadmin")
             {
                 return BadRequest(new { message = "No se puede eliminar un superadmin" });
+            }
+
+            // No permitir que admin elimine a otro admin
+            if (currentUser.Role == "admin" && userToDelete.Role == "admin")
+            {
+                return BadRequest(new { message = "No puedes eliminar a otro administrador" });
             }
 
             _context.Users.Remove(userToDelete);

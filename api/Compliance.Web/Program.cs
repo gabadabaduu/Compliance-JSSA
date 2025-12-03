@@ -24,6 +24,7 @@ using Compliance.Infrastructure.Modules.Ajustes.Services;
 using Compliance.Core.Modules.Usuario.Interfaces;
 using Compliance.Infrastructure.Modules.Usuario.Repositories;
 using Compliance.Infrastructure.Modules.Usuario.Services;
+using Compliance.Web.Hubs;
 
 // Limpiar mapeo de claim types para usar nombres cortos
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -34,7 +35,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddSignalR();
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -102,6 +103,21 @@ builder.Services.AddAuthentication(options =>
 
         options.Events = new JwtBearerEvents
         {
+            OnMessageReceived = context =>
+            {
+                // SignalR envía el token en el query string como "access_token"
+                var accessToken = context.Request.Query["access_token"];
+
+                // Si la request es para el hub de SignalR, usar el token del query
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            },
+
             OnTokenValidated = context =>
             {
                 var userId = context.Principal?.FindFirst("sub")?.Value;
@@ -128,6 +144,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapControllers();
 
 Console.WriteLine("🚀 Backend corriendo en http://localhost:5000");
