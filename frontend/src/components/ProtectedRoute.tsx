@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
+﻿import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { useUserStore } from '../stores/userStore'
+import { useSignalR } from '../hooks/useSignalR'
+import { useFocusRefresh } from '../hooks/useFocusRefresh'
 
 interface ProtectedRouteProps {
     children: React.ReactNode
@@ -11,28 +13,29 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     const { user, loading: authLoading, checkAuth } = useAuthStore()
     const { userData, permissionsLoading, permissionsLoaded, loadUserData, clearUserData } = useUserStore()
 
+    // ✅ Conectar SignalR para recibir notificaciones en tiempo real
+    useSignalR()
+
+    // ✅ Refrescar permisos cuando el usuario vuelve a la pestaña
+    useFocusRefresh()
+
     useEffect(() => {
         checkAuth()
     }, [checkAuth])
 
-    // Cargar permisos cuando hay usuario autenticado
-    // Y verificar que el userData corresponda al usuario actual
     useEffect(() => {
         if (user) {
-            // Si el userData es de otro usuario, limpiar y recargar
             if (userData && userData.id !== user.id) {
                 clearUserData()
-                return // El siguiente render cargar� los datos nuevos
+                return
             }
 
-            // Si no hay datos cargados, cargar
             if (!permissionsLoaded && !permissionsLoading) {
                 loadUserData()
             }
         }
     }, [user, userData, permissionsLoaded, permissionsLoading, loadUserData, clearUserData])
 
-    // Loading de autenticaci�n
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -41,12 +44,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         )
     }
 
-    // No autenticado
     if (!user) {
         return <Navigate to="/login" replace />
     }
 
-    // Loading de permisos
     if (permissionsLoading || !permissionsLoaded) {
         return (
             <div className="min-h-screen flex items-center justify-center">

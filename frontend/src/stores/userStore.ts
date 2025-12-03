@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+﻿import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { apiClient } from '../lib/api-client'
 import { UserDto, UserPermissions } from '../types/user.types'
@@ -7,6 +7,7 @@ interface UserState {
     userData: UserDto | null
     permissionsLoading: boolean
     permissionsLoaded: boolean
+    lastLoadedAt: number | null  // ✅ NUEVO
 
     loadUserData: (forceReload?: boolean) => Promise<void>
     clearUserData: () => void
@@ -19,9 +20,9 @@ export const useUserStore = create<UserState>()(
             userData: null,
             permissionsLoading: false,
             permissionsLoaded: false,
+            lastLoadedAt: null,  // ✅ NUEVO
 
             loadUserData: async (forceReload = false) => {
-                // Si forceReload es true, ignorar el estado actual y recargar
                 if (!forceReload && (get().permissionsLoading || get().permissionsLoaded)) {
                     return
                 }
@@ -33,14 +34,16 @@ export const useUserStore = create<UserState>()(
                     set({
                         userData: data,
                         permissionsLoading: false,
-                        permissionsLoaded: true
+                        permissionsLoaded: true,
+                        lastLoadedAt: Date.now()  // ✅ NUEVO
                     })
                 } catch (error) {
                     console.error('Error loading user data:', error)
                     set({
                         userData: null,
                         permissionsLoading: false,
-                        permissionsLoaded: false
+                        permissionsLoaded: false,
+                        lastLoadedAt: null
                     })
                 }
             },
@@ -49,7 +52,8 @@ export const useUserStore = create<UserState>()(
                 set({
                     userData: null,
                     permissionsLoading: false,
-                    permissionsLoaded: false
+                    permissionsLoaded: false,
+                    lastLoadedAt: null  // ✅ NUEVO
                 })
             },
 
