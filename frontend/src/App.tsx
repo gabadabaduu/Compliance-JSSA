@@ -5,7 +5,6 @@ import { useAuthStore } from './stores/authStore';
 
 import LoginPage from './modules/auth/pages/Login';
 import SignupPage from './modules/auth/pages/Signup';
-import ChangePasswordPage from './modules/auth/pages/ChangePassword';
 import ForgotPasswordPage from './modules/auth/pages/ForgotPassword';
 import ResetPasswordPage from './modules/auth/pages/ResetPassword';
 
@@ -16,14 +15,12 @@ import RATPage from './modules/rat/pages/RATPage';
 import HabeasDataPage from './modules/habeasdata/pages/HabeasDataPage';
 import EPIDPage from './modules/epid/pages/EPIDPage';
 import NormogramaPage from './modules/normograma/pages/NormogramaPage';
-import UserManagementPage from './modules/admin/pages/UserManagementPage';
 import AjustesPage from './modules/ajustes/pages/AjustesPage';
 import UsuarioPage from './modules/usuario/pages/UsuarioPage';
 import MatrizRiesgoPage from './modules/matrizriesgo/pages/MatrizRiesgoPage';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
-import SuperAdminRoute from './components/SuperAdminRoute';
 
 const queryClient = new QueryClient();
 
@@ -64,14 +61,7 @@ function App() {
                         }
                     />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route
-                        path="/change-password"
-                        element={
-                            <ProtectedRoute>
-                                <ChangePasswordPage />
-                            </ProtectedRoute>
-                        }
-                    />
+
 
                     {/* Rutas protegidas CON Layout */}
                     <Route
@@ -90,14 +80,7 @@ function App() {
                         <Route path="ajustes" element={<AjustesPage />} />
                         <Route path="usuario" element={<UsuarioPage />} />
                         <Route path="matrizriesgo" element={<MatrizRiesgoPage />} />
-                        <Route
-                            path="admin/users"
-                            element={
-                                <SuperAdminRoute>
-                                    <UserManagementPage />
-                                </SuperAdminRoute>
-                            }
-                        />
+
                     </Route>
 
                     {/* Redirecciones */}

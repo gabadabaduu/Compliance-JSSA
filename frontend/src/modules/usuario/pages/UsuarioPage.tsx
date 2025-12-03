@@ -1,18 +1,41 @@
-import './UsuarioPage.css';
-import UsuarioNamesList from '../components/UsuarioNamesList';
+﻿import { usePermissions } from '../../../hooks/usePermissions'
+import ChangePasswordSection from '../components/ChangePasswordSection'
+import CrudUsuario from '../components/CrudUsuario'
+import LogoutSection from '../components/LogoutSection'
+import './UsuarioPage.css'
 
 export default function UsuarioPage() {
-    return (
-        <div className="page-container">
-            <h2>Usuario</h2>
-            <div className="content-box">
-                <p>Contenido del m�dulo Usuario</p>
+    const { role, loading, userData } = usePermissions()
 
-                <div className="usuario-list-section">
-                    <h3>Nombres Usuario</h3>
-                    <UsuarioNamesList />
-                </div>
+    // DEBUG - Quitar después
+    console.log('🔍 UsuarioPage - role:', role)
+    console.log('🔍 UsuarioPage - loading:', loading)
+    console.log('🔍 UsuarioPage - userData:', userData)
+
+    if (loading) {
+        return (
+            <div className="usuario-page">
+                <p className="usuario-loading">Cargando...</p>
             </div>
+        )
+    }
+
+    // DEBUG - Ver qué condiciones se evalúan
+    console.log('🔍 role === user:', role === 'user')
+    console.log('🔍 role === admin || superadmin:', role === 'admin' || role === 'superadmin')
+
+    return (
+        <div className="usuario-page">
+            <h1 className="usuario-title">Mi Cuenta</h1>
+
+            {/* Solo para usuarios normales */}
+            {role === 'user' && <ChangePasswordSection />}
+
+            {/* Solo para admin/superadmin */}
+            {(role === 'admin' || role === 'superadmin') && <CrudUsuario />}
+
+            {/* Siempre visible */}
+            <LogoutSection />
         </div>
-    );
+    )
 }

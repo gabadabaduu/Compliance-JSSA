@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { supabase } from '../lib/supabase'
+import { useUserStore } from './userStore'
 import type { User } from '@supabase/supabase-js'
 
 interface AuthState {
@@ -26,6 +27,9 @@ export const useAuthStore = create<AuthState>()(
 
             login: async (email: string, password: string) => {
                 try {
+                    // Limpiar datos del usuario anterior antes de login
+                    useUserStore.getState().clearUserData()
+
                     const { data, error } = await supabase.auth.signInWithPassword({
                         email,
                         password,
@@ -43,6 +47,9 @@ export const useAuthStore = create<AuthState>()(
 
             signup: async (email: string, password: string, fullName?: string, nombreEmpresa?: string) => {
                 try {
+                    // Limpiar datos del usuario anterior antes de signup
+                    useUserStore.getState().clearUserData()
+
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
@@ -69,6 +76,9 @@ export const useAuthStore = create<AuthState>()(
                 try {
                     await supabase.auth.signOut()
                     set({ user: null, session: null })
+
+                    // Limpiar datos del usuario al hacer logout
+                    useUserStore.getState().clearUserData()
                 } catch (error) {
                     console.error('Logout error:', error)
                 }
