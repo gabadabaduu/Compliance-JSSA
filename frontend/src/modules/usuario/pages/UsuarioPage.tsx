@@ -1,7 +1,8 @@
 ﻿import { usePermissions } from '../../../hooks/usePermissions'
 import ChangePasswordSection from '../components/ChangePasswordSection'
-import CrudUsuario from '../components/CrudUsuario'
+import AdminUsuario from '../components/AdminUsuario'
 import LogoutSection from '../components/LogoutSection'
+import Cruduser from '../components/CrudUsuario/CrudUsuario'
 import './UsuarioPage.css'
 
 export default function UsuarioPage() {
@@ -32,7 +33,12 @@ export default function UsuarioPage() {
             {role === 'user' && <ChangePasswordSection />}
 
             {/* Solo para admin/superadmin */}
-            {(role === 'admin' || role === 'superadmin') && <CrudUsuario />}
+            {(role === 'admin' || role === 'superadmin') && (
+                <>
+                    <AdminUsuario />
+                    <Cruduser />
+                </>
+            )}
 
             {/* Siempre visible */}
             <LogoutSection />
