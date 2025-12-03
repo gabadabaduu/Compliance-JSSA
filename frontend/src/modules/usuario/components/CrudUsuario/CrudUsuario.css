@@ -3,7 +3,7 @@
     border-radius: 8px;
     padding: 30px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1. 5rem;
 }
 
 .crud-usuario-header {
@@ -45,6 +45,7 @@
     margin-bottom: 15px;
 }
 
+/* Tabla */
 .table-container {
     overflow-x: auto;
 }
@@ -72,6 +73,7 @@
         background-color: #f8f9fa;
     }
 
+/* Badges de rol */
 .role-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -81,26 +83,55 @@
     text-transform: capitalize;
 }
 
-.role-superadmin {
+. role-superadmin {
     background-color: #9b59b6;
     color: white;
 }
 
-.role-admin {
+. role-admin {
     background-color: #3498db;
     color: white;
 }
 
-. role-user {
+.role-user {
     background-color: #95a5a6;
     color: white;
 }
 
-.btn-delete {
-    padding: 8px 16px;
-    background-color: #e74c3c;
+/* Badges de módulos */
+.modules-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.module-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: #e8f5e9;
+    color: #27ae60;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+. no-modules {
+    color: #95a5a6;
+    font-size: 12px;
+    font-style: italic;
+}
+
+/* Botones de acción */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit {
+    padding: 6px 12px;
+    background-color: #3498db;
     color: white;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     border: none;
     border-radius: 5px;
@@ -108,6 +139,144 @@
     transition: background-color 0.3s;
 }
 
-    .btn-delete:hover {
+    .btn-edit:hover {
+        background-color: #2980b9;
+    }
+
+.btn-delete {
+    padding: 6px 12px;
+    background-color: #e74c3c;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    . btn-delete:hover {
         background-color: #c0392b;
+    }
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0. 5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+. modal-header {
+    margin-bottom: 20px;
+}
+
+    .modal-header h3 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+        font-size: 1.25rem;
+    }
+
+.modal-subtitle {
+    margin: 0;
+    color: #7f8c8d;
+    font-size: 14px;
+}
+
+/* Grid de permisos */
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+    .permission-item:hover {
+        background-color: #ecf0f1;
+    }
+
+    .permission-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+. permission-label {
+    font-size: 14px;
+    color: #2c3e50;
+}
+
+/* Acciones del modal */
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-cancel {
+    padding: 10px 20px;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0. 3s;
+}
+
+    .btn-cancel:hover:not(:disabled) {
+        background-color: #bdc3c7;
+    }
+
+    .btn-cancel:disabled {
+        opacity: 0. 5;
+        cursor: not-allowed;
+    }
+
+. btn-save {
+    padding: 10px 20px;
+    background-color: #27ae60;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+    . btn-save:hover:not(:disabled) {
+        background-color: #219a52;
+    }
+
+    .btn-save:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
     }
