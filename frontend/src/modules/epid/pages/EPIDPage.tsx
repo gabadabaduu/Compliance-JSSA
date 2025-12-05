@@ -6,7 +6,7 @@ export default function EPIDPage() {
         <div className="page-container">
             <h2>EPID</h2>
             <div className="content-box">
-                <p>Contenido del módulo EPID</p>
+                <p>Contenido del mÃ³dulo EPID</p>
 
                 <div className="epid-list-section">
                     <h3>Nombres EPID</h3>

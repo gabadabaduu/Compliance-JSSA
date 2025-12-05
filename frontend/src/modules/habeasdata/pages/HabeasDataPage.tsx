@@ -6,7 +6,7 @@ export default function HabeasDataPage() {
         <div className="page-container">
             <h2>Habeas Data</h2>
             <div className="content-box">
-                <p>Contenido del módulo Habeas Data</p>
+                <p>Contenido del mÃ³dulo Habeas Data</p>
 
                 <div className="habeasdata-list-section">
                     <h3>Nombres Habeas Data</h3>

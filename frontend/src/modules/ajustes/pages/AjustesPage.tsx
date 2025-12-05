@@ -6,7 +6,7 @@ export default function AjustesPage() {
         <div className="page-container">
             <h2>Ajustes</h2>
             <div className="content-box">
-                <p>Contenido del módulo Ajustes</p>
+                <p>Contenido del mÃ³dulo Ajustes</p>
 
                 <div className="ajustes-list-section">
                     <h3>Nombres Ajustes</h3>

@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import { useSignup } from '../../hooks/useSignup';
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage';
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
@@ -12,6 +14,8 @@ export default function SignupPage() {
         setNombreEmpresa,
         email,
         setEmail,
+        phone,
+        setPhone,
         password,
         setPassword,
         confirmPassword,
@@ -26,7 +30,7 @@ export default function SignupPage() {
             <div className="signup-card">
                 <div className="signup-header">
                     <h1>Crear Cuenta</h1>
-                    <p>Regístrate en Compliance JSSA</p>
+                    <p>RegÃ­strate en Compliance JSSA</p>
                 </div>
 
                 {error && <ErrorMessage message={error} />}
@@ -39,7 +43,7 @@ export default function SignupPage() {
                             type="text"
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            placeholder="Juan Pérez"
+                            placeholder="Juan PÃ©rez"
                             required
                             disabled={loading}
                         />
@@ -59,41 +63,77 @@ export default function SignupPage() {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="email">Correo electrónico</label>
+                        <label htmlFor="email">Correo electrÃ³nico</label>
                         <input
                             id="email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="tu@email. com"
+                            placeholder="tu@email.com"
                             required
                             disabled={loading}
                         />
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="password">Contraseña</label>
+                        <label htmlFor="phone">NÃºmero de telÃ©fono</label>
+                        <PhoneInput
+                            country={'co'} // Colombia por defecto
+                            value={phone}
+                            onChange={setPhone}
+                            disabled={loading}
+                            inputProps={{
+                                name: 'phone',
+                                required: true,
+                                autoFocus: false
+                            }}
+                            containerClass="phone-input-container"
+                            inputClass="phone-input"
+                            buttonClass="phone-input-button"
+                            dropdownClass="phone-input-dropdown"
+                            placeholder="Ingresa tu nÃºmero de telÃ©fono"
+                            enableSearch={true}
+                            searchPlaceholder="Buscar paÃ­s..."
+                            localization={{
+                                'Search': 'Buscar',
+                                'searchPlaceholder': 'Buscar paÃ­s...',
+                                'noEntriesText': 'No se encontraron resultados',
+                                'Afghanistan': 'AfganistÃ¡n',
+                                'Colombia': 'Colombia',
+                                'United States': 'Estados Unidos',
+                                'Mexico': 'MÃ©xico',
+                                'Spain': 'EspaÃ±a',
+                                'Argentina': 'Argentina',
+                                'Chile': 'Chile',
+                                'Peru': 'PerÃº',
+                                'Venezuela': 'Venezuela'
+                            }}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="password">ContraseÃ±a</label>
                         <input
                             id="password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                             required
                             minLength={6}
                             disabled={loading}
                         />
-                        <small>Mínimo 6 caracteres</small>
+                        <small>MÃ­nimo 6 caracteres</small>
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="confirmPassword">Confirmar contraseña</label>
+                        <label htmlFor="confirmPassword">Confirmar contraseÃ±a</label>
                         <input
                             id="confirmPassword"
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="••••••••"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                             required
                             minLength={6}
                             disabled={loading}
@@ -107,8 +147,8 @@ export default function SignupPage() {
 
                 <div className="signup-footer">
                     <p>
-                        ¿Ya tienes cuenta?{' '}
-                        <Link to="/login">Inicia sesión aquí</Link>
+                        Â¿Ya tienes cuenta?{' '}
+                        <Link to="/login">Inicia sesiÃ³n aquÃ­</Link>
                     </p>
                 </div>
             </div>
