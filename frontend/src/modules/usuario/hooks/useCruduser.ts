@@ -14,7 +14,7 @@ export function useCruduser() {
     const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
-    const { signupu } = useAuthStore()
+    const { signupu, user } = useAuthStore()
     const { userData } = useUserStore()
 
     const handleSubmit = async (e: FormEvent) => {
@@ -23,7 +23,8 @@ export function useCruduser() {
 
         const nombreEmpresa = userData?.nombreEmpresa || ''
 
-        // Validaciones
+        const createdBy = user?.id || ''
+
         if (!fullName.trim()) {
             setError('El nombre completo es requerido')
             return
@@ -34,20 +35,19 @@ export function useCruduser() {
         }
 
         if (password !== confirmPassword) {
-            setError('Las contrase�as no coinciden')
+            setError('Las contraseñas no coinciden')
             return
         }
 
         if (password.length < 6) {
-            setError('La contrase�a debe tener al menos 6 caracteres')
+            setError('La contraseña debe tener al menos 6 caracteres')
             return
         }
-
 
         setLoading(true)
 
         try {
-            const result = await signupu(email, password, fullName, nombreEmpresa, phone)
+            const result = await signupu(email, password, fullName, nombreEmpresa, phone, createdBy)
 
             if (!result.success) {
                 setError(result.error || 'Error al crear la cuenta')

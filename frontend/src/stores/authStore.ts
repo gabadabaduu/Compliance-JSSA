@@ -12,7 +12,7 @@ interface AuthState {
     // Actions
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
     signup: (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string) => Promise<{ success: boolean; error?: string }>
-    signupu: (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string) => Promise<{ success: boolean; error?: string }>
+    signupu: (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string, createdBy?: string) => Promise<{ success: boolean; error?: string }>
     logout: () => Promise<void>
     checkAuth: () => Promise<void>
     changePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
@@ -72,7 +72,7 @@ export const useAuthStore = create<AuthState>()(
                     return { success: false, error: error.message }
                 }
             },
-            signupu: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string) => {
+            signupu: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string, createdBy?: string) => {
                 try {
                     useUserStore.getState().clearUserData()
 
@@ -84,7 +84,8 @@ export const useAuthStore = create<AuthState>()(
                                 full_name: fullName || '',
                                 nombre_empresa: nombreEmpresa || '',
                                 phone: phone || '',
-                                role: 'user'
+                                role: 'user',
+                                created_by: createdBy || ''
                             }
                         }
                     })
