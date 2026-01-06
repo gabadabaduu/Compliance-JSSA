@@ -11,8 +11,8 @@ interface AuthState {
 
     // Actions
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-    signup: (email: string, password: string, fullName?: string, nombreEmpresa?: string) => Promise<{ success: boolean; error?: string }>
-    signupu: (email: string, password: string, fullName?: string, nombreEmpresa?: string) => Promise<{ success: boolean; error?: string }>
+    signup: (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string) => Promise<{ success: boolean; error?: string }>
+    signupu: (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string, createdBy?: string) => Promise<{ success: boolean; error?: string }>
     logout: () => Promise<void>
     checkAuth: () => Promise<void>
     changePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
@@ -46,9 +46,8 @@ export const useAuthStore = create<AuthState>()(
                 }
             },
 
-            signup: async (email: string, password: string, fullName?: string, nombreEmpresa?: string) => {
+            signup: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string) => {
                 try {
-                    // Limpiar datos del usuario anterior antes de signup
                     useUserStore.getState().clearUserData()
 
                     const { data, error } = await supabase.auth.signUp({
@@ -58,6 +57,7 @@ export const useAuthStore = create<AuthState>()(
                             data: {
                                 full_name: fullName || '',
                                 nombre_empresa: nombreEmpresa || '',
+                                phone: phone || '',
                                 role: 'admin'
                             }
                         }
@@ -71,9 +71,9 @@ export const useAuthStore = create<AuthState>()(
                     console.error('Signup error:', error)
                     return { success: false, error: error.message }
                 }
-            }, signupu: async (email: string, password: string, fullName?: string, nombreEmpresa?: string) => {
+            },
+            signupu: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string, createdBy?: string) => {
                 try {
-                    // Limpiar datos del usuario anterior antes de signup
                     useUserStore.getState().clearUserData()
 
                     const { data, error } = await supabase.auth.signUp({
@@ -83,7 +83,9 @@ export const useAuthStore = create<AuthState>()(
                             data: {
                                 full_name: fullName || '',
                                 nombre_empresa: nombreEmpresa || '',
-                                role: 'user'
+                                phone: phone || '',
+                                role: 'user',
+                                created_by: createdBy || ''
                             }
                         }
                     })

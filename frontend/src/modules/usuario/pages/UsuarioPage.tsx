@@ -1,4 +1,4 @@
-﻿import { usePermissions } from '../../../hooks/usePermissions'
+import { usePermissions } from '../../../hooks/usePermissions'
 import ChangePasswordSection from '../components/ChangePasswordSection'
 import AdminUsuario from '../components/AdminUsuario'
 import LogoutSection from '../components/LogoutSection'

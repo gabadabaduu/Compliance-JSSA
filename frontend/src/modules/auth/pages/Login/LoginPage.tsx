@@ -15,10 +15,11 @@ export default function LoginPage() {
     } = useLogin();
 
     return (
+        
         <div className="login-page">
             <div className="login-card">
                 <div className="login-header">
-                    <h1>Iniciar Sesión</h1>
+                    <h1>Iniciar SesiÃ³n</h1>
                     <p>Accede a tu cuenta de Compliance JSSA</p>
                 </div>
 
@@ -26,7 +27,7 @@ export default function LoginPage() {
 
                 <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                        <label htmlFor="email">Correo electrónico</label>
+                        <label htmlFor="email">Correo electrÃ³nico</label>
                         <input
                             id="email"
                             type="email"
@@ -39,13 +40,13 @@ export default function LoginPage() {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="password">Contraseña</label>
+                        <label htmlFor="password">ContraseÃ±a</label>
                         <input
                             id="password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
+                            placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
                             required
                             minLength={6}
                             disabled={loading}
@@ -53,17 +54,17 @@ export default function LoginPage() {
                     </div>
 
                     <button type="submit" disabled={loading} className="btn-submit">
-                        {loading ? <LoadingSpinner size="small" /> : 'Iniciar Sesión'}
+                        {loading ? <LoadingSpinner size="small" /> : 'Iniciar SesiÃ³n'}
                     </button>
                 </form>
 
                 <div className="login-footer">
                     <p>
-                        ¿No tienes cuenta?{' '}
-                        <Link to="/signup">Regístrate aquí</Link>
+                        Â¿No tienes cuenta?{' '}
+                        <Link to="/signup">RegÃ­strate aquÃ­</Link>
                     </p>
                     <Link to="/forgot-password" className="forgot-link">
-                        ¿Olvidaste tu contraseña?
+                        Â¿Olvidaste tu contraseÃ±a?
                     </Link>
                 </div>
             </div>

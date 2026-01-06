@@ -3,6 +3,7 @@
     border-radius: 8px;
     padding: 25px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-width: 135vh;
 }
 
     .page-container h2 {

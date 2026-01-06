@@ -1,5 +1,6 @@
 .signup-page {
     min-height: 100vh;
+    min-width: 184.5vh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8,7 +9,7 @@
 
 .signup-card {
     max-width: 450px;
-    width: 100%;
+    width: 25%;
     background: white;
     border-radius: 8px;
     padding: 40px;
@@ -121,3 +122,56 @@
         .signup-footer a:hover {
             text-decoration: underline;
         }
+/* Agregar estos estilos a tu archivo SignupPage.css */
+
+.phone-input-container {
+    width: 100% !important;
+}
+
+.phone-input {
+    width: 100% !important;
+    height: 44px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 6px !important;
+    padding: 12px 14px 12px 52px !important;
+    font-size: 14px !important;
+    transition: border-color 0.2s ease !important;
+}
+
+    .phone-input:focus {
+        border-color: #0066cc !important;
+        outline: none !important;
+        box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1) !important;
+    }
+
+. phone-input-button {
+    border: 1px solid #ddd !important;
+    border-right: none !important;
+    border-radius: 6px 0 0 6px !important;
+    background-color: #f8f9fa !important;
+}
+
+.phone-input-dropdown {
+    border-radius: 6px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    z-index: 1000 !important;
+}
+
+/* Estilos para el modo oscuro si los tienes */
+@media (prefers-color-scheme: dark) {
+    .phone-input {
+        background-color: #2a2a2a !important;
+        border-color: #555 !important;
+        color: white !important;
+    }
+
+    .phone-input-button {
+        background-color: #333 !important;
+        border-color: #555 !important;
+    }
+
+    . phone-input-dropdown {
+        background-color: #2a2a2a !important;
+        border-color: #555 !important;
+    }
+}

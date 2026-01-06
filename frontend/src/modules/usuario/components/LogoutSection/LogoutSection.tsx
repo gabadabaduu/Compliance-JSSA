@@ -14,12 +14,12 @@ export default function LogoutSection() {
     return (
         <div className="logout-section">
             <div className="logout-header">
-                <h2>Sesión</h2>
+                <h2>SesiÃ³n</h2>
                 <p>Conectado como: <strong>{user?.email}</strong></p>
             </div>
 
             <button className="btn-logout" onClick={handleLogout}>
-                Cerrar Sesión
+                Cerrar SesiÃ³n
             </button>
         </div>
     )

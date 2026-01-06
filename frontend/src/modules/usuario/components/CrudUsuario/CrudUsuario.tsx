@@ -3,6 +3,8 @@ import { useCruduser } from '../../hooks/useCruduser';
 import { useUserStore } from '../../../../stores/userStore';
 import ErrorMessage from '../../../auth/components/ErrorMessage';
 import './CrudUsuario.css';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 export default function CrudUsuario() {
     // Obtener nombreEmpresa del userStore (credenciales del usuario logueado)
@@ -13,6 +15,8 @@ export default function CrudUsuario() {
         setFullName,
         email,
         setEmail,
+        phone,
+        setPhone,
         password,
         setPassword,
         confirmPassword,
@@ -27,7 +31,7 @@ export default function CrudUsuario() {
             <div className="signup-card">
                 <div className="signup-header">
                     <h1>Crear Cuenta</h1>
-                    <p>Regístrate en Compliance JSSA</p>
+                    <p>RegÃ­strate en Compliance JSSA</p>
                 </div>
 
                 {error && <ErrorMessage message={error} />}
@@ -40,7 +44,7 @@ export default function CrudUsuario() {
                             type="text"
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            placeholder="Juan Pérez"
+                            placeholder="Juan PÃ©rez"
                             required
                             disabled={loading}
                         />
@@ -61,7 +65,7 @@ export default function CrudUsuario() {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="email">Correo electrónico</label>
+                        <label htmlFor="email">Correo electrÃ³nico</label>
                         <input
                             id="email"
                             type="email"
@@ -74,28 +78,64 @@ export default function CrudUsuario() {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="password">Contraseña</label>
+                        <label htmlFor="phone">NÃºmero de telÃ©fono</label>
+                        <PhoneInput
+                            country={'co'} // Colombia por defecto
+                            value={phone}
+                            onChange={setPhone}
+                            disabled={loading}
+                            inputProps={{
+                                name: 'phone',
+                                required: true,
+                                autoFocus: false
+                            }}
+                            containerClass="phone-input-container"
+                            inputClass="phone-input"
+                            buttonClass="phone-input-button"
+                            dropdownClass="phone-input-dropdown"
+                            placeholder="Ingresa tu nÃºmero de telÃ©fono"
+                            enableSearch={true}
+                            searchPlaceholder="Buscar paÃ­s..."
+                            localization={{
+                                'Search': 'Buscar',
+                                'searchPlaceholder': 'Buscar paÃ­s...',
+                                'noEntriesText': 'No se encontraron resultados',
+                                'Afghanistan': 'AfganistÃ¡n',
+                                'Colombia': 'Colombia',
+                                'United States': 'Estados Unidos',
+                                'Mexico': 'MÃ©xico',
+                                'Spain': 'EspaÃ±a',
+                                'Argentina': 'Argentina',
+                                'Chile': 'Chile',
+                                'Peru': 'PerÃº',
+                                'Venezuela': 'Venezuela'
+                            }}
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="password">ContraseÃ±a</label>
                         <input
                             id="password"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
+                            placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
                             required
                             minLength={6}
                             disabled={loading}
                         />
-                        <small>Mínimo 6 caracteres</small>
+                        <small>MÃ­nimo 6 caracteres</small>
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="confirmPassword">Confirmar contraseña</label>
+                        <label htmlFor="confirmPassword">Confirmar contraseÃ±a</label>
                         <input
                             id="confirmPassword"
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="••••••••"
+                            placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
                             required
                             minLength={6}
                             disabled={loading}

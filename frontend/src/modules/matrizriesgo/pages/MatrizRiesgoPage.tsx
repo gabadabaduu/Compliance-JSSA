@@ -6,7 +6,7 @@ export default function MatrizRiesgoPage() {
         <div className="page-container">
             <h2>Matriz de Riesgo</h2>
             <div className="content-box">
-                <p>Contenido del módulo Matriz de Riesgo</p>
+                <p>Contenido del mÃ³dulo Matriz de Riesgo</p>
 
                 <div className="matrizriesgo-list-section">
                     <h3>Nombres Matriz Riesgo</h3>

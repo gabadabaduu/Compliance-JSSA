@@ -6,6 +6,7 @@ export function useSignup() {
     const [fullName, setFullName] = useState('')
     const [nombreEmpresa, setNombreEmpresa] = useState('')
     const [email, setEmail] = useState('')
+    const [phone, setPhone] = useState('') // Nuevo campo
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [error, setError] = useState('')
@@ -29,20 +30,30 @@ export function useSignup() {
             return
         }
 
+        if (!phone.trim()) {
+            setError('El número de teléfono es requerido')
+            return
+        }
+
+        if (phone.length < 10) {
+            setError('El número de teléfono debe tener al menos 10 dígitos')
+            return
+        }
+
         if (password !== confirmPassword) {
-            setError('Las contrase�as no coinciden')
+            setError('Las contraseñas no coinciden')
             return
         }
 
         if (password.length < 6) {
-            setError('La contrase�a debe tener al menos 6 caracteres')
+            setError('La contraseña debe tener al menos 6 caracteres')
             return
         }
 
         setLoading(true)
 
         try {
-            const result = await signup(email, password, fullName, nombreEmpresa)
+            const result = await signup(email, password, fullName, nombreEmpresa, phone)
 
             if (result.success) {
                 navigate('/app/dashboard')
@@ -63,6 +74,8 @@ export function useSignup() {
         setNombreEmpresa,
         email,
         setEmail,
+        phone,
+        setPhone,
         password,
         setPassword,
         confirmPassword,

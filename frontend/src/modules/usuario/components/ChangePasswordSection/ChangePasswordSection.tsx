@@ -20,41 +20,41 @@ export default function ChangePasswordSection() {
     return (
         <div className="change-password-section">
             <div className="change-password-header">
-                <h2>Cambiar Contraseña</h2>
-                <p>Actualiza tu contraseña de acceso</p>
+                <h2>Cambiar ContraseÃ±a</h2>
+                <p>Actualiza tu contraseÃ±a de acceso</p>
             </div>
 
             {error && <ErrorMessage message={error} />}
             {success && (
                 <SuccessMessage
-                    message="Tu contraseña ha sido actualizada correctamente"
+                    message="Tu contraseÃ±a ha sido actualizada correctamente"
                 />
             )}
 
             <form onSubmit={handleSubmit} className="change-password-form">
                 <div className="form-group">
-                    <label htmlFor="newPassword">Nueva Contraseña</label>
+                    <label htmlFor="newPassword">Nueva ContraseÃ±a</label>
                     <input
                         id="newPassword"
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="••••••••"
+                        placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
                         required
                         minLength={6}
                         disabled={success || loading}
                     />
-                    <small>Mínimo 6 caracteres</small>
+                    <small>MÃ­nimo 6 caracteres</small>
                 </div>
 
                 <div className="form-group">
-                    <label htmlFor="confirmPassword">Confirmar Nueva Contraseña</label>
+                    <label htmlFor="confirmPassword">Confirmar Nueva ContraseÃ±a</label>
                     <input
                         id="confirmPassword"
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
+                        placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
                         required
                         minLength={6}
                         disabled={success || loading}
@@ -76,7 +76,7 @@ export default function ChangePasswordSection() {
                         disabled={loading || success}
                         className="btn-submit"
                     >
-                        {loading ? <LoadingSpinner size="small" /> : 'Cambiar Contraseña'}
+                        {loading ? <LoadingSpinner size="small" /> : 'Cambiar ContraseÃ±a'}
                     </button>
                 </div>
             </form>
