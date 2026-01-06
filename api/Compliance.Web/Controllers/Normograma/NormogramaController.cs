@@ -1,15 +1,36 @@
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Compliance.Core.Modules.Normograma.Dtos;
+using Compliance.Core.Modules.Normograma.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Compliance.Core.Interfaces;
 
-namespace Compliance.Web.Controllers;
-
-[ApiController]
-[Route("api/normograma")]
-public class NormogramaController : ControllerBase
+namespace Compliance.Web.Controllers.Normograma
 {
-    private readonly INormogramaService _svc;
-    public NormogramaController(INormogramaService svc) => _svc = svc;
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class NormogramaController : ControllerBase
+    {
+        private readonly INormogramaService _service;
+        public NormogramaController(INormogramaService service) => _service = service;
 
-    [HttpGet]
-    public async Task<IActionResult> Get() => Ok(new { service = await _svc.GetServiceNameAsync() });
+        // GET: api/Normograma/names
+        [HttpGet("names")]
+        public async Task<ActionResult<IEnumerable<NormogramaNameDto>>> GetNames(CancellationToken ct)
+        {
+            var items = await _service.GetAllNamesAsync(ct);
+            return Ok(items);
+        }
+
+        // GET: api/Normograma/{id}
+        [HttpGet("{id:long}")]
+        public async Task<ActionResult<NormogramaNameDto>> GetById(long id, CancellationToken ct)
+        {
+            var item = await _service.GetByIdAsync(id, ct);
+            if (item == null) return NotFound();
+            return Ok(item);
+        }
+    }
 }

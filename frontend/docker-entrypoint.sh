@@ -7,11 +7,16 @@ if [ -z "${BACKEND_URL}" ]; then
   export BACKEND_URL="http://127.0.0.1:8080"
 fi
 
+export BACKEND_HOST=$(echo ${BACKEND_URL} | sed -e 's|^[^/]*//||' -e 's|/.*$||')
+
 if [ -z "${VITE_API_URL}" ]; then
   export VITE_API_URL="${BACKEND_URL}"
 fi
 
-envsubst '\$BACKEND_URL' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
+echo "🔍 BACKEND_URL: ${BACKEND_URL}"
+echo "🔍 BACKEND_HOST: ${BACKEND_HOST}"
+
+envsubst '\$BACKEND_URL \$BACKEND_HOST' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
 envsubst '\$VITE_SUPABASE_URL \$VITE_SUPABASE_ANON_KEY \$VITE_API_URL \$BACKEND_URL' < /usr/share/nginx/html/env.template.js > /usr/share/nginx/html/env.js
 
