@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { supabase } from '../lib/supabase'
+import { useUserStore } from './userStore'
 import type { User } from '@supabase/supabase-js'
 
 interface AuthState {
@@ -10,7 +11,8 @@ interface AuthState {
 
     // Actions
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-    signup: (email: string, password: string, fullName?: string) => Promise<{ success: boolean; error?: string }>
+    signup: (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string) => Promise<{ success: boolean; error?: string }>
+    signupu: (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string, createdBy?: string) => Promise<{ success: boolean; error?: string }>
     logout: () => Promise<void>
     checkAuth: () => Promise<void>
     changePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
@@ -26,6 +28,9 @@ export const useAuthStore = create<AuthState>()(
 
             login: async (email: string, password: string) => {
                 try {
+                    // Limpiar datos del usuario anterior antes de login
+                    useUserStore.getState().clearUserData()
+
                     const { data, error } = await supabase.auth.signInWithPassword({
                         email,
                         password,
@@ -41,15 +46,46 @@ export const useAuthStore = create<AuthState>()(
                 }
             },
 
-            signup: async (email: string, password: string, fullName?: string) => {
+            signup: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string) => {
                 try {
+                    useUserStore.getState().clearUserData()
+
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
                         options: {
                             data: {
                                 full_name: fullName || '',
-                                role: 'user'
+                                nombre_empresa: nombreEmpresa || '',
+                                phone: phone || '',
+                                role: 'admin'
+                            }
+                        }
+                    })
+
+                    if (error) throw error
+
+                    set({ user: data.user, session: data.session, loading: false })
+                    return { success: true }
+                } catch (error: any) {
+                    console.error('Signup error:', error)
+                    return { success: false, error: error.message }
+                }
+            },
+            signupu: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string, createdBy?: string) => {
+                try {
+                    useUserStore.getState().clearUserData()
+
+                    const { data, error } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: {
+                            data: {
+                                full_name: fullName || '',
+                                nombre_empresa: nombreEmpresa || '',
+                                phone: phone || '',
+                                role: 'user',
+                                created_by: createdBy || ''
                             }
                         }
                     })
@@ -68,6 +104,9 @@ export const useAuthStore = create<AuthState>()(
                 try {
                     await supabase.auth.signOut()
                     set({ user: null, session: null })
+
+                    // Limpiar datos del usuario al hacer logout
+                    useUserStore.getState().clearUserData()
                 } catch (error) {
                     console.error('Logout error:', error)
                 }

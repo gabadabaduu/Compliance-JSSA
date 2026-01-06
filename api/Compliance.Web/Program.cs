@@ -3,6 +3,28 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Compliance.Infrastructure.Data;
+using Compliance.Core.Modules.EPID.Interfaces;
+using Compliance.Infrastructure.Modules.EPID.Repositories;
+using Compliance.Infrastructure.Modules.EPID.Services;
+using Compliance.Core.Modules.HabeasData.Interfaces;
+using Compliance.Infrastructure.Modules.HabeasData.Repositories;
+using Compliance.Infrastructure.Modules.HabeasData.Services;
+using Compliance.Core.Modules.RAT.Interfaces;
+using Compliance.Infrastructure.Modules.RAT.Repositories;
+using Compliance.Infrastructure.Modules.RAT.Services;
+using Compliance.Core.Modules.Normograma.Interfaces;
+using Compliance.Infrastructure.Modules.Normograma.Repositories;
+using Compliance.Infrastructure.Modules.Normograma.Services;
+using Compliance.Core.Modules.MatrizRiesgo.Interfaces;
+using Compliance.Infrastructure.Modules.MatrizRiesgo.Repositories;
+using Compliance.Infrastructure.Modules.MatrizRiesgo.Services;
+using Compliance.Core.Modules.Ajustes.Interfaces;
+using Compliance.Infrastructure.Modules.Ajustes.Repositories;
+using Compliance.Infrastructure.Modules.Ajustes.Services;
+using Compliance.Core.Modules.Usuario.Interfaces;
+using Compliance.Infrastructure.Modules.Usuario.Repositories;
+using Compliance.Infrastructure.Modules.Usuario.Services;
+using Compliance.Web.Hubs;
 
 // Limpiar mapeo de claim types para usar nombres cortos
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -13,7 +35,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddSignalR();
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -29,22 +51,39 @@ builder.Services.AddCors(options =>
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IEpidRepository, EpidRepository>();
+builder.Services.AddScoped<IEpidService, EpidService>();
+builder.Services.AddScoped<IHabeasDataRepository, HabeasDataRepository>();
+builder.Services.AddScoped<IHabeasDataService, HabeasDataService>();
+builder.Services.AddScoped<IRatRepository, RatRepository>();
+builder.Services.AddScoped<IRatService, RatService>();
+builder.Services.AddScoped<INormogramaRepository, NormogramaRepository>();
+builder.Services.AddScoped<INormogramaService, NormogramaService>();
+builder.Services.AddScoped<IMatrizRiesgoRepository, MatrizRiesgoRepository>();
+builder.Services.AddScoped<IMatrizRiesgoService, MatrizRiesgoService>();
+builder.Services.AddScoped<IAjusteRepository, AjusteRepository>();
+builder.Services.AddScoped<IAjusteService, AjusteService>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
-if (!string.IsNullOrEmpty(jwtSecret))
+if (string.IsNullOrEmpty(jwtSecret))
 {
-    var key = Encoding.UTF8.GetBytes(jwtSecret);
+    throw new InvalidOperationException("❌ ERROR CRÍTICO: Jwt:Secret no está configurado.  La aplicación no puede iniciar sin autenticación.");
+}
 
-    builder.Services.AddAuthentication(options =>
+var key = Encoding.UTF8.GetBytes(jwtSecret);
+
+builder.Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = false;
         options.SaveToken = true;
         options.MapInboundClaims = false; // No mapear claim types a nombres largos
 
@@ -64,6 +103,21 @@ if (!string.IsNullOrEmpty(jwtSecret))
 
         options.Events = new JwtBearerEvents
         {
+            OnMessageReceived = context =>
+            {
+                // SignalR envía el token en el query string como "access_token"
+                var accessToken = context.Request.Query["access_token"];
+
+                // Si la request es para el hub de SignalR, usar el token del query
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            },
+
             OnTokenValidated = context =>
             {
                 var userId = context.Principal?.FindFirst("sub")?.Value;
@@ -78,11 +132,6 @@ if (!string.IsNullOrEmpty(jwtSecret))
             }
         };
     });
-}
-else
-{
-    Console.WriteLine("⚠️ JWT Secret no configurado");
-}
 
 var app = builder.Build();
 
@@ -95,6 +144,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapControllers();
 
 Console.WriteLine("🚀 Backend corriendo en http://localhost:5000");

@@ -1,29 +1,63 @@
-import { useEffect } from 'react'
+﻿import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
+import { useUserStore } from '../stores/userStore'
+import { useSignalR } from '../hooks/useSignalR'
+import { useFocusRefresh } from '../hooks/useFocusRefresh'
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
+    children: React.ReactNode
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading, checkAuth } = useAuthStore()
+    const { user, loading: authLoading, checkAuth } = useAuthStore()
+    const { userData, permissionsLoading, permissionsLoaded, loadUserData, clearUserData } = useUserStore()
 
-  useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+    // ✅ Conectar SignalR para recibir notificaciones en tiempo real
+    useSignalR()
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
+    // ✅ Refrescar permisos cuando el usuario vuelve a la pestaña
+    useFocusRefresh()
 
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
+    useEffect(() => {
+        checkAuth()
+    }, [checkAuth])
 
-  return <>{children}</>
+    useEffect(() => {
+        if (user) {
+            if (userData && userData.id !== user.id) {
+                clearUserData()
+                return
+            }
+
+            if (!permissionsLoaded && !permissionsLoading) {
+                loadUserData()
+            }
+        }
+    }, [user, userData, permissionsLoaded, permissionsLoading, loadUserData, clearUserData])
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        )
+    }
+
+    if (!user) {
+        return <Navigate to="/login" replace />
+    }
+
+    if (permissionsLoading || !permissionsLoaded) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Cargando permisos...</p>
+                </div>
+            </div>
+        )
+    }
+
+    return <>{children}</>
 }

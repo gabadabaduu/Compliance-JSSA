@@ -1,18 +1,36 @@
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Compliance.Core.Modules.RAT.Dtos;
+using Compliance.Core.Modules.RAT.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Compliance.Core.Interfaces;
 
-namespace Compliance.Web.Controllers;
-
-[ApiController]
-[Route("api/rat")]
-public class RatController : ControllerBase
+namespace Compliance.Web.Controllers.RAT
 {
-    private readonly IRatService _svc;
-    public RatController(IRatService svc) => _svc = svc;
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class RATController : ControllerBase
+    {
+        private readonly IRatService _service;
+        public RATController(IRatService service) => _service = service;
 
-    [HttpGet("entities")]
-    public async Task<IActionResult> GetEntities() => Ok(new { service = await _svc.GetServiceNameAsync() });
+        // GET: api/RAT/names
+        [HttpGet("names")]
+        public async Task<ActionResult<IEnumerable<RatNameDto>>> GetNames(CancellationToken ct)
+        {
+            var items = await _service.GetAllNamesAsync(ct);
+            return Ok(items);
+        }
 
-    [HttpGet("entities/{id:int}")]
-    public async Task<IActionResult> GetEntity(int id) => Ok(new { service = await _svc.GetServiceNameAsync(), id });
+        // GET: api/RAT/{id}
+        [HttpGet("{id:long}")]
+        public async Task<ActionResult<RatNameDto>> GetById(long id, CancellationToken ct)
+        {
+            var item = await _service.GetByIdAsync(id, ct);
+            if (item == null) return NotFound();
+            return Ok(item);
+        }
+    }
 }
