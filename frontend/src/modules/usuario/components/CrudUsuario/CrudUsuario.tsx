@@ -120,7 +120,7 @@ export default function CrudUsuario() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="��������"
+                            placeholder="••••••••"
                             required
                             minLength={6}
                             disabled={loading}
@@ -135,7 +135,7 @@ export default function CrudUsuario() {
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="��������"
+                            placeholder="••••••••"
                             required
                             minLength={6}
                             disabled={loading}

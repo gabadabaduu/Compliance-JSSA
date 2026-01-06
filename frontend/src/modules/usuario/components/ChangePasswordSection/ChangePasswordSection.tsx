@@ -39,7 +39,7 @@ export default function ChangePasswordSection() {
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="��������"
+                        placeholder="••••••••"
                         required
                         minLength={6}
                         disabled={success || loading}
@@ -54,7 +54,7 @@ export default function ChangePasswordSection() {
                         type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="��������"
+                        placeholder="••••••••"
                         required
                         minLength={6}
                         disabled={success || loading}

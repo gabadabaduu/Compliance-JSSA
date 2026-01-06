@@ -24,17 +24,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     }, [checkAuth])
 
     useEffect(() => {
-        if (user) {
-            if (userData && userData.id !== user.id) {
-                clearUserData()
-                return
-            }
+        if (!user) return
 
-            if (!permissionsLoaded && !permissionsLoading) {
-                loadUserData()
-            }
+        if (!permissionsLoaded && !permissionsLoading) {
+            loadUserData()
         }
-    }, [user, userData, permissionsLoaded, permissionsLoading, loadUserData, clearUserData])
+    }, [user, permissionsLoaded, permissionsLoading, loadUserData])
+
 
     if (authLoading) {
         return (
