@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { usuarioService } from '../../services/usuarioService'
 import { UserDto } from '../../../../types/user.types'
+import { useAuthStore } from '../../../../stores/authStore'
 import './AdminUsuario.css'
 
 export default function AdminUsuario() {
@@ -14,6 +15,7 @@ export default function AdminUsuario() {
     useEffect(() => {
         fetchUsers()
     }, [])
+    const { user: currentUser } = useAuthStore()  
 
     const fetchUsers = async () => {
         try {
@@ -77,7 +79,8 @@ export default function AdminUsuario() {
                 accessHabeasdata: editingUser.accessHabeasdata,
                 accessMatrizriesgo: editingUser.accessMatrizriesgo,
                 accessAjustes: editingUser.accessAjustes,
-                accessUsuario: editingUser.accessUsuario
+                accessUsuario: editingUser.accessUsuario,
+                updatedBy: currentUser?.id || ''
             })
 
             setSuccess(`Permisos actualizados para ${editingUser.email}`)
