@@ -38,7 +38,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.NombreEmpresa).HasColumnName("nombre_empresa");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
             // Campos de acceso a módulos
             entity.Property(e => e.AccessDashboard).HasColumnName("access_dashboard").HasDefaultValue(false);
             entity.Property(e => e.AccessEpid).HasColumnName("access_epid").HasDefaultValue(false);

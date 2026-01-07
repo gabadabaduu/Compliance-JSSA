@@ -18,6 +18,7 @@ export interface UserDto {
     accessUsuario: boolean
     createdAt: string
     updatedAt?: string
+    updatedBy?: string 
 }
 
 export interface UserPermissions {

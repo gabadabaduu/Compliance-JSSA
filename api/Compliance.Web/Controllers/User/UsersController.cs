@@ -308,7 +308,8 @@ public class UsersController : ControllerBase
                 AccessHabeasdata = userToUpdate.AccessHabeasdata,
                 AccessMatrizriesgo = userToUpdate.AccessMatrizriesgo,
                 AccessAjustes = userToUpdate.AccessAjustes,
-                AccessUsuario = userToUpdate.AccessUsuario
+                AccessUsuario = userToUpdate.AccessUsuario,
+                updated_by = userToUpdate.UpdatedBy ?? string.Empty
             });
         }
         catch (Exception ex)
@@ -328,7 +329,7 @@ public class UsersController : ControllerBase
         {
             var userId = User.FindFirst("sub")?.Value;
 
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userId))   
             {
                 return Unauthorized(new { message = "Usuario no autenticado" });
             }
@@ -381,6 +382,7 @@ public class UsersController : ControllerBase
             userToUpdate.AccessAjustes = permissionsDto.AccessAjustes;
             userToUpdate.AccessUsuario = permissionsDto.AccessUsuario;
             userToUpdate.UpdatedAt = DateTime.UtcNow;
+            userToUpdate.UpdatedBy = permissionsDto.UpdatedBy;   // Change from updated_by to UpdatedBy on left side
 
             await _context.SaveChangesAsync();
 
@@ -391,7 +393,8 @@ public class UsersController : ControllerBase
             {
                 userId = id,
                 message = "Tus permisos han sido actualizados",
-                timestamp = DateTime.UtcNow
+                timestamp = DateTime.UtcNow,
+                updatedBy = permissionsDto.UpdatedBy
             });
 
             _logger.LogInformation("Notificación SignalR enviada al usuario: {UserId}", id);
@@ -411,7 +414,8 @@ public class UsersController : ControllerBase
                 AccessHabeasdata = userToUpdate.AccessHabeasdata,
                 AccessMatrizriesgo = userToUpdate.AccessMatrizriesgo,
                 AccessAjustes = userToUpdate.AccessAjustes,
-                AccessUsuario = userToUpdate.AccessUsuario
+                AccessUsuario = userToUpdate.AccessUsuario,
+                updated_by = permissionsDto.UpdatedBy
             });
         }
         catch (Exception ex)
