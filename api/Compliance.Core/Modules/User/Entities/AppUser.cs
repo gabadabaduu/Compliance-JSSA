@@ -27,7 +27,7 @@ public class AppUser
     [Column("updated_at")]
     public DateTime? UpdatedAt { get; set; }
 
-    // Permisos de acceso a módulos
+    // Permisos de acceso a mï¿½dulos
     [Column("access_dashboard")]
     public bool AccessDashboard { get; set; }
 
@@ -51,4 +51,7 @@ public class AppUser
 
     [Column("access_usuario")]
     public bool AccessUsuario { get; set; }
+
+    [Column("updated_by")]
+    public string? UpdatedBy { get; set; }
 }

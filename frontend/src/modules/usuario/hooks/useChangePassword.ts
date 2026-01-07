@@ -38,7 +38,7 @@ export function useChangePassword() {
             setNewPassword('')
             setConfirmPassword('')
         } else {
-            setError(result.error || 'Error al cambiar la contraseña')
+            setError(result.error || 'Error al cambiar la contraseï¿½a')
         }
 
         setLoading(false)

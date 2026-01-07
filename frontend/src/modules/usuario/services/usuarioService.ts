@@ -1,7 +1,7 @@
 import { apiClient } from '../../../lib/api-client'
 import { UserDto } from '../../../types/user.types'
 
-// Servicio específico del módulo Usuario
+// Servicio especï¿½fico del mï¿½dulo Usuario
 // Solo contiene operaciones CRUD para gestionar usuarios
 
 export const usuarioService = {
