@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>()(
             },
             signupu: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string, createdBy?: string) => {
                 try {
-                    useUserStore.getState().clearUserData()
+                    
 
                     const { data, error } = await supabase.auth.signUp({
                         email,
@@ -93,6 +93,7 @@ export const useAuthStore = create<AuthState>()(
                     if (error) throw error
 
                     set({ user: data.user, session: data.session, loading: false })
+                    window.location.reload()
                     return { success: true }
                 } catch (error: any) {
                     console.error('Signup error:', error)
