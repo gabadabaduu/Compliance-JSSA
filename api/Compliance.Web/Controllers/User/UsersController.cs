@@ -435,14 +435,15 @@ public class UsersController : ControllerBase
         {
             var userId = User.FindFirst("sub")?.Value;
 
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrWhiteSpace(userId))
             {
                 return Unauthorized(new { message = "Usuario no autenticado" });
             }
 
+            // Paso 1: Cargar el usuario solicitante
             var currentUser = await _context.Users
                 .Where(u => u.Id == Guid.Parse(userId))
-                .Select(u => new { u.Role, u.Email, u.NombreEmpresa })
+                .Select(u => new { u.Role, u.NombreEmpresa })
                 .FirstOrDefaultAsync();
 
             if (currentUser == null)
@@ -450,51 +451,73 @@ public class UsersController : ControllerBase
                 return Unauthorized(new { message = "Usuario no encontrado" });
             }
 
-            // Solo admin o superadmin pueden eliminar
+            // Validar que sea admin o superadmin
             if (currentUser.Role != "admin" && currentUser.Role != "superadmin")
             {
                 return Forbid();
             }
 
+            // Paso 2: Buscar el usuario a eliminar en la base de datos local
             var userToDelete = await _context.Users.FindAsync(id);
-
             if (userToDelete == null)
             {
                 return NotFound(new { message = "Usuario no encontrado" });
             }
 
-            // Admin solo puede eliminar usuarios de SU empresa
-            if (currentUser.Role == "admin")
+            // Paso 3: Verificar permisos según el rol
+            if (currentUser.Role == "admin" &&
+                (userToDelete.NombreEmpresa != currentUser.NombreEmpresa || userToDelete.Role == "superadmin"))
             {
-                if (userToDelete.NombreEmpresa != currentUser.NombreEmpresa)
-                {
-                    return Forbid();
-                }
+                return Forbid();
             }
 
-            // No permitir eliminar superadmins
-            if (userToDelete.Role == "superadmin")
-            {
-                return BadRequest(new { message = "No se puede eliminar un superadmin" });
-            }
-
-            // No permitir que admin elimine a otro admin
             if (currentUser.Role == "admin" && userToDelete.Role == "admin")
             {
                 return BadRequest(new { message = "No puedes eliminar a otro administrador" });
             }
 
-            _context.Users.Remove(userToDelete);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // Paso 5: Eliminar usuario de la base de datos local (Primero elimina localmente)
+                _context.Users.Remove(userToDelete);
+                await _context.SaveChangesAsync(); // Eliminar usuario localmente
+                _logger.LogInformation("Usuario eliminado de la base local: {UserId}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error eliminando el usuario localmente: {UserId}. Excepción: {Ex}", id, ex);
+                return StatusCode(500, new { message = "Error interno eliminando usuario local." });
+            }
 
-            _logger.LogInformation("Usuario eliminado: {Email} por {AdminEmail}",
-                userToDelete.Email, currentUser.Email);
+            // Llama después a la API de Supabase
+            using var httpClient = new HttpClient();
 
-            return NoContent();
+            var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
+            var serviceRoleKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_ROLE_KEY");
+
+            if (string.IsNullOrEmpty(supabaseUrl) || string.IsNullOrEmpty(serviceRoleKey))
+            {
+                _logger.LogError("Las variables de entorno 'SUPABASE_URL' o 'SUPABASE_SERVICE_ROLE_KEY' no están configuradas.");
+                return StatusCode(500, new { message = "Configuración errónea en el servidor. Contáctese con el administrador." });
+            }
+
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"{supabaseUrl}/auth/v1/admin/users/{id}");
+            request.Headers.Add("Authorization", $"Bearer {serviceRoleKey}"); // Corrección de comillas
+            request.Headers.Add("apikey", serviceRoleKey); // Corrección aquí también
+
+            var supabaseResponse = await httpClient.SendAsync(request);
+
+            if (!supabaseResponse.IsSuccessStatusCode)
+            {
+                _logger.LogError("Error eliminando usuario {UserId} de Supabase", id);
+                return StatusCode(500, new { message = "Error en la eliminación de usuario desde Supabase Auth" });
+            }
+
+            return NoContent(); // Solo llega aquí si todo salió bien
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al eliminar usuario");
+            _logger.LogError(ex, "Error eliminando usuario {UserId}", id);
             return StatusCode(500, new { message = "Error interno del servidor" });
         }
     }
