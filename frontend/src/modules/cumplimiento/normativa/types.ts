@@ -1,4 +1,4 @@
-export interface NormogramaName {
+export interface NormativaName {
     id: number;
     nombre: string;
 }
