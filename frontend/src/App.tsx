@@ -112,9 +112,9 @@ function App() {
                         <Route
                             path="normativa"
                             element={
-                               
+                                <ProtectedRoute>
                                     <NormativaPage />
-                                
+                                </ProtectedRoute>
                             }
                         />
                         {/* Habeas Data */}
@@ -132,7 +132,9 @@ function App() {
                         <Route
                             path="sancion"
                             element={
+                                <ProtectedRoute>
                                     <SancionPage />
+                                </ProtectedRoute>
                             }
                         />
 

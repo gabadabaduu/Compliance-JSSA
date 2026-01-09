@@ -4,7 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Compliance.Infrastructure.Data;
 using Compliance.Core.Modules.EPID.Interfaces;
-using Complianchttps://github.com/gabadabaduu/Compliance-JSSA/pull/56/conflict?name=api%252FCompliance.Web%252FProgram.cs&ancestor_oid=24d1d191cca39bc7e28656a4a4b1abe533b81487&base_oid=e115a5ed2f9f91f121ce4ad0be96e2cbb3d77ced&head_oid=c042f71d4f3aa9531daca30ea3f2cf79c88b6afee.Infrastructure.Modules.EPID.Repositories;
+using Compliance.Infrastructure.Modules.EPID.Repositories;
 using Compliance.Infrastructure.Modules.EPID.Services;
 using Compliance.Core.Modules.HabeasData.Interfaces;
 using Compliance.Infrastructure.Modules.HabeasData.Repositories;

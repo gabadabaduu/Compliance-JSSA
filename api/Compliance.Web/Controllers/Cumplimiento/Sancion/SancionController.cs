@@ -6,7 +6,7 @@ using Compliance.Core.Modules.Cumplimiento.Sancion.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Compliance.Web.Controllers.Sancion
+namespace Compliance.Web.Controllers.Cumplimiento.Sancion
 {
     [ApiController]
     [Route("api/[controller]")]
