@@ -20,7 +20,7 @@ export default function Sidebar() {
 
     const dropdownItems = [
         { path: '/app/normativa', label: 'Normativa', icon: '📜' },
-        { path: '/app/sanciones', label: 'Sanciones', icon: '⚖️' },
+        { path: '/app/sancion', label: 'Sanciones', icon: '⚖️' },
     ]
 
     const toggleDropdown = () => {

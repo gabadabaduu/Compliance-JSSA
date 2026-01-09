@@ -17,7 +17,7 @@ import DashboardPage from './modules/dashboard/pages/DashboardPage'
 import RATPage from './modules/rat/pages/RATPage'
 import HabeasDataPage from './modules/habeasdata/pages/HabeasDataPage'
 import EPIDPage from './modules/epid/pages/EPIDPage'
-import NormogramaPage from './modules/normograma/pages/NormogramaPage'
+import SancionPage from './modules/cumplimiento/sancion/pages/SancionPage'
 import AjustesPage from './modules/ajustes/pages/AjustesPage'
 import UsuarioPage from './modules/usuario/pages/UsuarioPage'
 import MatrizRiesgoPage from './modules/matrizriesgo/pages/MatrizRiesgoPage'
@@ -116,13 +116,11 @@ function App() {
                             }
                         />
 
-                        {/* Normograma */}
+                        {/* Sancion */}
                         <Route
-                            path="normograma"
+                            path="sancion"
                             element={
-                                <ModuleRoute requiredAccess="accessNormograma">
-                                    <NormogramaPage />
-                                </ModuleRoute>
+                                    <SancionPage />
                             }
                         />
 
