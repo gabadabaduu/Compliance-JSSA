@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Compliance.Infrastructure.Entities
 {
     [Table("Normograma")]
-    public class NormogramaEntity
+    public class NormativaEntity
     {
         [Key]
         [Column("id")]

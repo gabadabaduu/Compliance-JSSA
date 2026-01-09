@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNormogramaNames } from '../hooks/useNormogramaNames';
+import { useNormativaNames } from '../hooks/useNormativaNames';
 
-export default function NormogramaNamesList() {
-    const { data, isPending, isError, error, refetch } = useNormogramaNames();
+export default function NormativaNamesList() {
+    const { data, isPending, isError, error, refetch } = useNormativaNames();
 
-    if (isPending) return <div>Cargando Normograma...</div>;
+    if (isPending) return <div>Cargando Normativa...</div>;
 
     if (isError) return (
         <div>
