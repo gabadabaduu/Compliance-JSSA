@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<HabeasDataEntity> HabeasDatas { get; set; } = null!;
     public DbSet<RatEntity> Rats { get; set; } = null!;
     public DbSet<NormativaEntity> Normativas { get; set; } = null!;
+    public DbSet<SancionEntity> Sanciones { get; set; } = null!;
     public DbSet<MatrizRiesgoEntity> MatrizRiesgos { get; set; } = null!;
     public DbSet<AjusteEntity> Ajustes { get; set; } = null!;
     public DbSet<UsuarioEntity> Usuarios { get; set; } = null!;
@@ -79,6 +80,13 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<NormativaEntity>(eb =>
         {
             eb.ToTable("Normativa");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<SancionEntity>(eb =>
+        {
+            eb.ToTable("Sancion");
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
