@@ -16,7 +16,8 @@ public class AppDbContext : DbContext
     public DbSet<EpidEntity> Epids { get; set; }
     public DbSet<HabeasDataEntity> HabeasDatas { get; set; } = null!;
     public DbSet<RatEntity> Rats { get; set; } = null!;
-    public DbSet<NormogramaEntity> Normogramas { get; set; } = null!;
+    public DbSet<NormativaEntity> Normativas { get; set; } = null!;
+    public DbSet<SancionEntity> Sanciones { get; set; } = null!;
     public DbSet<MatrizRiesgoEntity> MatrizRiesgos { get; set; } = null!;
     public DbSet<AjusteEntity> Ajustes { get; set; } = null!;
     public DbSet<UsuarioEntity> Usuarios { get; set; } = null!;
@@ -30,7 +31,7 @@ public class AppDbContext : DbContext
             entity.ToTable("users");
             entity.HasKey(e => e.Id);
 
-            // Campos básicos
+            // Campos bï¿½sicos
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Email).HasColumnName("email").IsRequired();
             entity.Property(e => e.FullName).HasColumnName("full_name");
@@ -39,7 +40,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
-            // Campos de acceso a módulos
+            // Campos de acceso a mï¿½dulos
             entity.Property(e => e.AccessDashboard).HasColumnName("access_dashboard").HasDefaultValue(false);
             entity.Property(e => e.AccessEpid).HasColumnName("access_epid").HasDefaultValue(false);
             entity.Property(e => e.AccessRat).HasColumnName("access_rat").HasDefaultValue(false);
@@ -76,9 +77,16 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
-        modelBuilder.Entity<NormogramaEntity>(eb =>
+        modelBuilder.Entity<NormativaEntity>(eb =>
         {
-            eb.ToTable("Normograma");
+            eb.ToTable("Normativa");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+        modelBuilder.Entity<SancionEntity>(eb =>
+        {
+            eb.ToTable("Sancion");
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();

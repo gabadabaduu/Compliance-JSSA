@@ -12,7 +12,7 @@ export default function Sidebar() {
         { path: '/app/epid', label: 'EPID', access: 'accessEpid', icon: '📋' },
         { path: '/app/rat', label: 'RAT', access: 'accessRat', icon: '🔗' },
         { path: '/app/habeasdata', label: 'Habeas Data', access: 'accessHabeasdata', icon: '📄' },
-        { path: '/app/normograma', label: 'Normograma', access: 'accessNormograma', icon: '📚' },
+      //  { path: '/app/normograma', label: 'Normograma', access: 'accessNormograma', icon: '📚' },
         { path: '/app/matrizriesgo', label: 'Matriz Riesgo', access: 'accessMatrizriesgo', icon: '⚠️' },
         { path: '/app/ajustes', label: 'Ajustes', access: 'accessAjustes', icon: '⚙️' },
         { path: '/app/usuario', label: 'Mi Cuenta', access: 'accessUsuario', icon: '👤' },
@@ -20,7 +20,7 @@ export default function Sidebar() {
 
     const dropdownItems = [
         { path: '/app/normativa', label: 'Normativa', icon: '📜' },
-        { path: '/app/sanciones', label: 'Sanciones', icon: '⚖️' },
+        { path: '/app/sancion', label: 'Sanciones', icon: '⚖️' },
     ]
 
     const toggleDropdown = () => {
