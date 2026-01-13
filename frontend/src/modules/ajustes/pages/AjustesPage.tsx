@@ -1,5 +1,6 @@
 import './AjustesPage.css';
 import AjustesNamesList from '../components/AjustesNamesList';
+import ChangePasswordSection from '../../usuario/components/ChangePasswordSection/ChangePasswordSection';
 
 export default function AjustesPage() {
     return (
@@ -12,6 +13,10 @@ export default function AjustesPage() {
                     <h3>Nombres Ajustes</h3>
                     <AjustesNamesList />
                 </div>
+                
+            </div>
+            <div className="change-password-section-container">
+                <ChangePasswordSection />
             </div>
         </div>
     );
