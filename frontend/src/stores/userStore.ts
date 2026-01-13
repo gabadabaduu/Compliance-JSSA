@@ -25,21 +25,26 @@ export const useUserStore = create<UserState>()(
             loadUserData: async (forceReload = false) => {
                 const state = get()
 
+                // ✅ Verificar si los datos son recientes (menos de 5 minutos)
                 const isStale = state.lastLoadedAt
-                    ? (Date.now() - state.lastLoadedAt) > 10000  // 10 segundos
+                    ? (Date.now() - state.lastLoadedAt) > 300000  // 5 minutos
                     : true
 
-                if (!forceReload && !isStale && (state.permissionsLoading || state.permissionsLoaded)) {
+                if (!forceReload && !isStale && state.permissionsLoaded && state.userData) {
+                    console.log('✅ Permisos ya cargados - usando cache')
                     return
                 }
 
+                // ✅ Evitar llamadas duplicadas
                 if (state.permissionsLoading) {
+                    console.log('⏳ Ya se están cargando permisos - esperando.. .')
                     return
                 }
 
                 set({ permissionsLoading: true })
 
                 try {
+                    console.log('📡 Cargando datos de usuario desde API...')
                     const data = await apiClient.get<UserDto>('/users/me')
                     set({
                         userData: data,
@@ -47,8 +52,9 @@ export const useUserStore = create<UserState>()(
                         permissionsLoaded: true,
                         lastLoadedAt: Date.now()
                     })
+                    console.log('✅ Permisos cargados correctamente:', data)
                 } catch (error) {
-                    console.error('Error loading user data:', error)
+                    console.error('❌ Error loading user data:', error)
                     set({
                         userData: null,
                         permissionsLoading: false,
@@ -59,6 +65,7 @@ export const useUserStore = create<UserState>()(
             },
 
             clearUserData: () => {
+                console.log('🧹 Limpiando datos de usuario...')
                 set({
                     userData: null,
                     permissionsLoading: false,
@@ -78,11 +85,27 @@ export const useUserStore = create<UserState>()(
         }),
         {
             name: 'user-storage',
+            // ✅ FIX:  Usar partialize para solo persistir lo necesario
+            partialize: (state) => ({
+                userData: state.userData,
+                lastLoadedAt: state.lastLoadedAt,
+                // NO persistimos permissionsLoading ni permissionsLoaded
+            }),
             onRehydrateStorage: () => (state) => {
                 if (state) {
-                    state.permissionsLoaded = false
-                    state.lastLoadedAt = null
-                    console.log('🔄 Store rehidratado - permisos serán recargados')
+                    // ✅ FIX: Permitir que use los datos cacheados si son recientes
+                    const isStale = state.lastLoadedAt
+                        ? (Date.now() - state.lastLoadedAt) > 300000 // 5 minutos
+                        : true
+
+                    if (isStale) {
+                        state.permissionsLoaded = false
+                        state.lastLoadedAt = null
+                        console.log('🔄 Store rehidratado - datos obsoletos, se recargarán')
+                    } else {
+                        state.permissionsLoaded = true
+                        console.log('✅ Store rehidratado - usando datos en cache')
+                    }
                 }
             }
         }

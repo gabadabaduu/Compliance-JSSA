@@ -7,7 +7,7 @@ interface SuccessMessageProps {
 export default function SuccessMessage({ message }: SuccessMessageProps) {
     return (
         <div className="success-message">
-            <strong>¡Éxito!</strong> {message}
+            <strong>Ã‰xito!</strong> {message}
         </div>
     );
 }
