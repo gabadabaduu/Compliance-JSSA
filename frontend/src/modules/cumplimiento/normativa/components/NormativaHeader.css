@@ -1,0 +1,44 @@
+﻿.normativa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.normativa-header-content h1 {
+    font-size: 28px;
+    margin: 0 0 5px 0;
+    color: #111827;
+}
+
+.normativa-subtitle {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.btn-create-normativa {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+    .btn-create-normativa:hover {
+        background-color: #2563eb;
+    }
+
+    .btn-create-normativa . icon {
+        font-size: 18px;
+        font-weight: bold;
+    }

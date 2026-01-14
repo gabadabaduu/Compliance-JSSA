@@ -11,10 +11,28 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Services
         private readonly ISancionRepository _repo;
         public SancionService(ISancionRepository repo) => _repo = repo;
 
-        public Task<IEnumerable<SancionNameDto>> GetAllNamesAsync(CancellationToken ct = default) =>
-            _repo.GetNamesAsync(ct);
+        public Task<IEnumerable<SancionDto>> GetAllAsync(CancellationToken ct = default) =>
+            _repo.GetAllAsync(ct);
 
-        public Task<SancionNameDto?> GetByIdAsync(long id, CancellationToken ct = default) =>
+        public Task<SancionDto?> GetByIdAsync(long id, CancellationToken ct = default) =>
             _repo.GetByIdAsync(id, ct);
+
+        public Task<SancionDto> CreateAsync(CreateSancionDto dto, CancellationToken ct = default) =>
+            _repo.CreateAsync(dto, ct);
+
+        public Task<SancionDto> UpdateAsync(UpdateSancionDto dto, CancellationToken ct = default) =>
+            _repo.UpdateAsync(dto, ct);
+
+        public Task<bool> DeleteAsync(long id, CancellationToken ct = default) =>
+            _repo.DeleteAsync(id, ct);
+
+        public Task<IEnumerable<SancionDto>> GetByStatusAsync(SanctionStatus status, CancellationToken ct = default) =>
+            _repo.GetByStatusAsync(status, ct);
+
+        public Task<IEnumerable<SancionDto>> GetByStageAsync(SanctionStage stage, CancellationToken ct = default) =>
+            _repo.GetByStageAsync(stage, ct);
+
+        public Task<IEnumerable<SancionDto>> GetByEntityAsync(int entityId, CancellationToken ct = default) =>
+            _repo.GetByEntityAsync(entityId, ct);
     }
 }

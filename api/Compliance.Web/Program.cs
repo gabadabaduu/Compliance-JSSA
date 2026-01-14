@@ -6,6 +6,7 @@ using Compliance.Infrastructure.Data;
 using Compliance.Core.Modules.EPID.Interfaces;
 using Compliance.Infrastructure.Modules.EPID.Repositories;
 using Compliance.Infrastructure.Modules.EPID.Services;
+using System.Text.Json.Serialization;
 using Compliance.Core.Modules.HabeasData.Interfaces;
 using Compliance.Infrastructure.Modules.HabeasData.Repositories;
 using Compliance.Infrastructure.Modules.HabeasData.Services;
@@ -35,6 +36,15 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Permitir que los enums se serialicen/deserialicen como strings
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+
+        // Ignorar mayúsculas/minúsculas en nombres de propiedades
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

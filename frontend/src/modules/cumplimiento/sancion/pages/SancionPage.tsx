@@ -1,18 +1,60 @@
+import { useState } from 'react';
+import SancionHeader from '../components/SancionHeader';
+import SancionList from '../components/SancionList';
+import SancionForm from '../components/SancionForm';
+import { useSanctions } from '../hooks/useSancion';
+import type { Sanction } from '../types';
 import './SancionPage.css';
-import SancionNamesList from '../components/SancionNamesList';
 
 export default function SancionPage() {
-    return (
-        <div className="page-container">
-            <h2>Sancion</h2>
-            <div className="content-box">
-                <p>Contenido del módulo Sancion</p>
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedSanction, setSelectedSanction] = useState<Sanction | null>(null);
+    const { data: sanctions, isLoading, error } = useSanctions();
 
-                <div className="normograma-list-section">
-                    <h3>Nombres Sancion</h3>
-                    <SancionNamesList />
-                </div>
+    const handleCreate = () => {
+        setSelectedSanction(null);
+        setIsFormOpen(true);
+    };
+
+    const handleEdit = (sanction: Sanction) => {
+        setSelectedSanction(sanction);
+        setIsFormOpen(true);
+    };
+
+    const handleCloseForm = () => {
+        setIsFormOpen(false);
+        setSelectedSanction(null);
+    };
+
+    if (isLoading) {
+        return (
+            <div className="sancion-page">
+                <div className="loading">Cargando sanciones...</div>
             </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="sancion-page">
+                <div className="error">Error al cargar sanciones: {error.message}</div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="sancion-page">
+            <SancionHeader onCreateClick={handleCreate} />
+            <SancionList
+                sanctions={sanctions || []}
+                onEdit={handleEdit}
+            />
+            {isFormOpen && (
+                <SancionForm
+                    sanction={selectedSanction}
+                    onClose={handleCloseForm}
+                />
+            )}
         </div>
     );
 }

@@ -1,6 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Compliance.Core.Modules.User.Entities;
 using Compliance.Infrastructure.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Entities;
+using Compliance.Core.Modules.Cumplimiento.Normativa.Dtos;
+using Compliance.Core.Modules.Cumplimiento.Sancion.Dtos;
 
 namespace Compliance.Infrastructure.Data;
 
@@ -24,6 +28,11 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // CONFIGURAR ENUMS DE POSTGRESQL
+        modelBuilder.HasPostgresEnum<RegulationStatus>();
+        modelBuilder.HasPostgresEnum<SanctionStage>();
+        modelBuilder.HasPostgresEnum<SanctionStatus>();
 
         // Configurar Users
         modelBuilder.Entity<AppUser>(entity =>
@@ -77,19 +86,48 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
-        modelBuilder.Entity<NormativaEntity>(eb =>
+        modelBuilder.Entity<NormativaEntity>(entity =>
         {
-            eb.ToTable("Normativa");
-            eb.HasKey(e => e.Id);
-            eb.Property(e => e.Id).HasColumnName("id");
-            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+            entity.ToTable("regulations");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Type).HasColumnName("type").IsRequired();
+            entity.Property(e => e.Number).HasColumnName("number").IsRequired();
+            entity.Property(e => e.IssueDate).HasColumnName("issue_date").IsRequired();
+            entity.Property(e => e.Year).HasColumnName("year").IsRequired();
+            entity.Property(e => e.Regulation).HasColumnName("regulation").IsRequired();
+            entity.Property(e => e.CommonName).HasColumnName("common_name").IsRequired();
+            entity.Property(e => e.Industry).HasColumnName("industry").IsRequired();
+            entity.Property(e => e.Authority).HasColumnName("authority").IsRequired();
+            entity.Property(e => e.Title).HasColumnName("title").IsRequired();
+            entity.Property(e => e.Domain).HasColumnName("domain").IsRequired();
+            entity.Property(e => e.Status)
+                .HasColumnName("status")
+                .HasConversion<string>()  
+                .IsRequired();
+            entity.Property(e => e.Url).HasColumnName("url");
         });
-        modelBuilder.Entity<SancionEntity>(eb =>
+        modelBuilder.Entity<SancionEntity>(entity =>
         {
-            eb.ToTable("Sancion");
-            eb.HasKey(e => e.Id);
-            eb.Property(e => e.Id).HasColumnName("id");
-            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+            entity.ToTable("sanctions");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Number).HasColumnName("number").IsRequired();
+            entity.Property(e => e.Entity).HasColumnName("entity").IsRequired();
+            entity.Property(e => e.Facts).HasColumnName("facts").IsRequired();
+            entity.Property(e => e.Stage)
+                .HasColumnName("stage")
+                .HasConversion<string>()
+                .IsRequired();
+            entity.Property(e => e.Status)
+                .HasColumnName("status")
+                .HasConversion<string>()
+                .IsRequired();
+            entity.Property(e => e.Initial).HasColumnName("initial");
+            entity.Property(e => e.Reconsideration).HasColumnName("reconsideration");
+            entity.Property(e => e.Appeal).HasColumnName("appeal");
         });
         modelBuilder.Entity<MatrizRiesgoEntity>(eb =>
         {
