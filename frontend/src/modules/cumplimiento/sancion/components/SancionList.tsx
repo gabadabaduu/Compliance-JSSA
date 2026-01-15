@@ -1,27 +1,32 @@
-﻿import { useDeleteSanction } from '../hooks/useSancion';
+﻿import { useSanctions, useDeleteSanction } from '../hooks/useSancion';
+import { getStatusColor, getStageColor, SANCTION_STATUS_LABELS, SANCTION_STAGE_LABELS } from '../types';
 import type { Sanction } from '../types';
 import './SancionList.css';
 
-interface SancionListProps {
-    sanctions: Sanction[];
+interface Props {
     onEdit: (sanction: Sanction) => void;
+    onCreate: () => void;
 }
 
-export default function SancionList({ sanctions, onEdit }: SancionListProps) {
+export default function SancionList({ onEdit, onCreate }: Props) {
+    const { data: sanctions, isLoading, error } = useSanctions();
     const deleteSanction = useDeleteSanction();
 
     const handleDelete = async (id: number) => {
-        if (window.confirm('¿Estás seguro de eliminar esta sanción?')) {
-            try {
-                await deleteSanction.mutateAsync(id);
-            } catch (error) {
-                console.error('Error al eliminar sanción:', error);
-                alert('Error al eliminar la sanción');
-            }
+        if (!window.confirm('¿Estás seguro de eliminar esta sanción?')) return;
+
+        try {
+            await deleteSanction.mutateAsync(id);
+        } catch (err) {
+            console.error('Error al eliminar:', err);
+            alert('Error al eliminar la sanción');
         }
     };
 
-    if (sanctions.length === 0) {
+    if (isLoading) return <div className="loading">Cargando sanciones...</div>;
+    if (error) return <div className="error">Error al cargar sanciones: {error.message}</div>;
+
+    if (!sanctions || sanctions.length === 0) {
         return (
             <div className="sancion-list-empty">
                 <p>No hay sanciones registradas</p>
@@ -56,13 +61,13 @@ export default function SancionList({ sanctions, onEdit }: SancionListProps) {
                                 }
                             </div>
                             <div className="col-stage">
-                                <span className={`stage-badge stage-${sanction.stage.replace(/\s+/g, '-').toLowerCase()}`}>
-                                    {sanction.stage}
+                                <span className={`stage-badge stage-${getStageColor(sanction.stage)}`}>
+                                    {SANCTION_STAGE_LABELS[sanction.stage]}
                                 </span>
                             </div>
                             <div className="col-status">
-                                <span className={`status-badge status-${sanction.status.replace(/\s+/g, '-').toLowerCase()}`}>
-                                    {sanction.status}
+                                <span className={`status-badge status-${getStatusColor(sanction.status)}`}>
+                                    {SANCTION_STATUS_LABELS[sanction.status]}
                                 </span>
                             </div>
                             <div className="col-actions">

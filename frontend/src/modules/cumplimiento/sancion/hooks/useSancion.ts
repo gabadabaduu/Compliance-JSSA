@@ -9,56 +9,19 @@ import {
     getSanctionsByStage,
     getSanctionsByEntity
 } from '../services/sancionService';
-import { SanctionStage, SanctionStatus } from '../types';
 import type { CreateSanctionDto, UpdateSanctionDto, Sanction } from '../types';
 
-// Hook para obtener todas las sanctions
+// ✅ Hook para obtener todas las sanctions (AHORA USA LA API REAL)
 export function useSanctions() {
     return useQuery({
         queryKey: ['sanctions'],
-        queryFn: async (): Promise<Sanction[]> => {
-            // 🔴 DATOS QUEMADOS PARA DESARROLLO
-            return [
-                {
-                    id: 1,
-                    number: 2023001,
-                    entity: 1,
-                    facts: 'Uso indebido de datos personales sin autorización del titular.  Se evidenció el tratamiento de información sensible sin cumplir con los requisitos legales establecidos.',
-                    stage: SanctionStage.DecisionInicial,
-                    status: SanctionStatus.EnTramite,
-                    initial: 'Se inició proceso administrativo sancionatorio el 15 de enero de 2023',
-                    reconsideration: '',
-                    appeal: '',
-                },
-                {
-                    id: 2,
-                    number: 2023002,
-                    entity: 2,
-                    facts: 'Falta de implementación de medidas de seguridad adecuadas. Se presentó una vulneración de datos que afectó a 5000 usuarios.',
-                    stage: SanctionStage.RecursoReposicion,
-                    status: SanctionStatus.EnTramite,
-                    initial: 'Resolución inicial emitida el 10 de marzo de 2023 con multa de $50,000,000',
-                    reconsideration: 'Recurso de reposición presentado el 25 de marzo de 2023',
-                    appeal: '',
-                },
-                {
-                    id: 3,
-                    number: 2022015,
-                    entity: 3,
-                    facts: 'No atención oportuna a solicitudes de derechos ARCO. Múltiples solicitudes sin respuesta en los términos legales.',
-                    stage: SanctionStage.RecursoApelacion,
-                    status: SanctionStatus.EnFirme,
-                    initial: 'Resolución inicial del 5 de junio de 2022',
-                    reconsideration: 'Recurso de reposición negado el 20 de julio de 2022',
-                    appeal: 'Recurso de apelación negado el 15 de septiembre de 2022',
-                },
-            ];
-        },
+        queryFn: getAllSanctions, // ✅ Llamada real al backend
         staleTime: 1000 * 60 * 5,
         gcTime: 1000 * 60 * 30,
         retry: 1,
     });
 }
+
 // Hook para obtener sanction por ID
 export function useSanction(id: number) {
     return useQuery({
@@ -112,7 +75,6 @@ export function useCreateSanction() {
         mutationFn: (data: CreateSanctionDto) => createSanction(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sanctions'] });
-            queryClient.invalidateQueries({ queryKey: ['sanction', 'names'] });
         },
     });
 }
@@ -126,7 +88,6 @@ export function useUpdateSanction() {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['sanctions'] });
             queryClient.invalidateQueries({ queryKey: ['sanction', variables.id] });
-            queryClient.invalidateQueries({ queryKey: ['sanction', 'names'] });
         },
     });
 }
@@ -139,7 +100,6 @@ export function useDeleteSanction() {
         mutationFn: (id: number) => deleteSanction(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sanctions'] });
-            queryClient.invalidateQueries({ queryKey: ['sanction', 'names'] });
         },
     });
 }

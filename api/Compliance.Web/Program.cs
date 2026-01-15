@@ -2,11 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
 using Compliance.Infrastructure.Data;
 using Compliance.Core.Modules.EPID.Interfaces;
 using Compliance.Infrastructure.Modules.EPID.Repositories;
 using Compliance.Infrastructure.Modules.EPID.Services;
-using System.Text.Json.Serialization;
 using Compliance.Core.Modules.HabeasData.Interfaces;
 using Compliance.Infrastructure.Modules.HabeasData.Repositories;
 using Compliance.Infrastructure.Modules.HabeasData.Services;
@@ -30,7 +30,7 @@ using Compliance.Infrastructure.Modules.Usuario.Repositories;
 using Compliance.Infrastructure.Modules.Usuario.Services;
 using Compliance.Web.Hubs;
 
-// Limpiar mapeo de claim types para usar nombres cortos
+// Limpiar mapeo de claim types
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -39,17 +39,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Permitir que los enums se serialicen/deserialicen como strings
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-
-        // Ignorar mayúsculas/minúsculas en nombres de propiedades
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
-builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-// CORS
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -64,6 +61,7 @@ builder.Services.AddCors(options =>
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<IEpidRepository, EpidRepository>();
 builder.Services.AddScoped<IEpidService, EpidService>();
 builder.Services.AddScoped<IHabeasDataRepository, HabeasDataRepository>();
@@ -86,21 +84,21 @@ var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
 if (string.IsNullOrEmpty(jwtSecret))
 {
-    throw new InvalidOperationException("❌ ERROR CRÍTICO: Jwt:Secret no está configurado.  La aplicación no puede iniciar sin autenticación.");
+    throw new InvalidOperationException("❌ ERROR CRÍTICO:  Jwt: Secret no está configurado.");
 }
 
 var key = Encoding.UTF8.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
-    {
+{
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
+})
     .AddJwtBearer(options =>
     {
-    options.RequireHttpsMetadata = false;
+        options.RequireHttpsMetadata = false;
         options.SaveToken = true;
-        options.MapInboundClaims = false; // No mapear claim types a nombres largos
+        options.MapInboundClaims = false;
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -120,16 +118,12 @@ builder.Services.AddAuthentication(options =>
         {
             OnMessageReceived = context =>
             {
-                // SignalR envía el token en el query string como "access_token"
                 var accessToken = context.Request.Query["access_token"];
-
-                // Si la request es para el hub de SignalR, usar el token del query
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                 {
                     context.Token = accessToken;
                 }
-
                 return Task.CompletedTask;
             },
 

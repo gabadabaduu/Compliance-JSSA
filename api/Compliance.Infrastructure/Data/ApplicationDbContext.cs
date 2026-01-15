@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Compliance.Core.Modules.User.Entities;
 using Compliance.Infrastructure.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Entities;
@@ -16,7 +17,6 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<AppUser> Users { get; set; }
-
     public DbSet<EpidEntity> Epids { get; set; }
     public DbSet<HabeasDataEntity> HabeasDatas { get; set; } = null!;
     public DbSet<RatEntity> Rats { get; set; } = null!;
@@ -25,22 +25,28 @@ public class AppDbContext : DbContext
     public DbSet<MatrizRiesgoEntity> MatrizRiesgos { get; set; } = null!;
     public DbSet<AjusteEntity> Ajustes { get; set; } = null!;
     public DbSet<UsuarioEntity> Usuarios { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // CONFIGURAR ENUMS DE POSTGRESQL
-        modelBuilder.HasPostgresEnum<RegulationStatus>();
+        // =====================================================
+        // ENUMS POSTGRESQL
+        // =====================================================
+
         modelBuilder.HasPostgresEnum<SanctionStage>();
         modelBuilder.HasPostgresEnum<SanctionStatus>();
+        modelBuilder.HasPostgresEnum<RegulationStatus>();
 
-        // Configurar Users
+        // =====================================================
+        // USERS
+        // =====================================================
+
         modelBuilder.Entity<AppUser>(entity =>
         {
             entity.ToTable("users");
             entity.HasKey(e => e.Id);
 
-            // Campos b�sicos
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Email).HasColumnName("email").IsRequired();
             entity.Property(e => e.FullName).HasColumnName("full_name");
@@ -49,7 +55,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
-            // Campos de acceso a m�dulos
+
             entity.Property(e => e.AccessDashboard).HasColumnName("access_dashboard").HasDefaultValue(false);
             entity.Property(e => e.AccessEpid).HasColumnName("access_epid").HasDefaultValue(false);
             entity.Property(e => e.AccessRat).HasColumnName("access_rat").HasDefaultValue(false);
@@ -62,6 +68,9 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Email).IsUnique();
         });
 
+        // =====================================================
+        // ENTIDADES SIMPLES
+        // =====================================================
 
         modelBuilder.Entity<EpidEntity>(eb =>
         {
@@ -86,6 +95,11 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
+
+        // =====================================================
+        // NORMATIVAS (ENUM REGULATION STATUS)
+        // =====================================================
+
         modelBuilder.Entity<NormativaEntity>(entity =>
         {
             entity.ToTable("regulations");
@@ -102,12 +116,18 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Authority).HasColumnName("authority").IsRequired();
             entity.Property(e => e.Title).HasColumnName("title").IsRequired();
             entity.Property(e => e.Domain).HasColumnName("domain").IsRequired();
+
             entity.Property(e => e.Status)
                 .HasColumnName("status")
-                .HasConversion<string>()  
                 .IsRequired();
+
             entity.Property(e => e.Url).HasColumnName("url");
         });
+
+        // =====================================================
+        // SANCIONES (ENUMS NATIVOS POSTGRESQL)
+        // =====================================================
+
         modelBuilder.Entity<SancionEntity>(entity =>
         {
             entity.ToTable("sanctions");
@@ -117,18 +137,24 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Number).HasColumnName("number").IsRequired();
             entity.Property(e => e.Entity).HasColumnName("entity").IsRequired();
             entity.Property(e => e.Facts).HasColumnName("facts").IsRequired();
+
             entity.Property(e => e.Stage)
-                .HasColumnName("stage")
-                .HasConversion<string>()
-                .IsRequired();
+                  .HasColumnName("stage")
+                  .IsRequired();
+
             entity.Property(e => e.Status)
-                .HasColumnName("status")
-                .HasConversion<string>()
-                .IsRequired();
+                  .HasColumnName("status")
+                  .IsRequired();
+
             entity.Property(e => e.Initial).HasColumnName("initial");
             entity.Property(e => e.Reconsideration).HasColumnName("reconsideration");
             entity.Property(e => e.Appeal).HasColumnName("appeal");
         });
+
+        // =====================================================
+        // OTRAS
+        // =====================================================
+
         modelBuilder.Entity<MatrizRiesgoEntity>(eb =>
         {
             eb.ToTable("Matriz_Riesgo");
@@ -136,6 +162,7 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
+
         modelBuilder.Entity<AjusteEntity>(eb =>
         {
             eb.ToTable("Ajustes");
@@ -143,6 +170,7 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
+
         modelBuilder.Entity<UsuarioEntity>(eb =>
         {
             eb.ToTable("User");
@@ -151,6 +179,6 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
 
-            // ... otras configuraciones
-        }
+        base.OnModelCreating(modelBuilder);
+    }
 }

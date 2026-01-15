@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Compliance.Core.Modules.Cumplimiento.Sancion.Dtos;
 
 namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Entities
 {
@@ -21,18 +20,19 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Entities
         public string Facts { get; set; } = string.Empty;
 
         [Column("stage")]
-        public SanctionStage Stage { get; set; }
+        public string Stage { get; set; } = string.Empty;
 
         [Column("status")]
-        public SanctionStatus Status { get; set; }
+        public string Status { get; set; } = string.Empty;
 
+        // ✅ Nullable int
         [Column("initial")]
-        public string Initial { get; set; } = string.Empty; 
+        public int? Initial { get; set; }
 
         [Column("reconsideration")]
-        public string Reconsideration { get; set; } = string.Empty; 
+        public int? Reconsideration { get; set; }
 
         [Column("appeal")]
-        public string Appeal { get; set; } = string.Empty; 
+        public int? Appeal { get; set; }
     }
 }
