@@ -26,10 +26,10 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Services
         public Task<bool> DeleteAsync(long id, CancellationToken ct = default) =>
             _repo.DeleteAsync(id, ct);
 
-        public Task<IEnumerable<SancionDto>> GetByStatusAsync(SanctionStatus status, CancellationToken ct = default) =>
+        public Task<IEnumerable<SancionDto>> GetByStatusAsync(string status, CancellationToken ct = default) =>
             _repo.GetByStatusAsync(status, ct);
 
-        public Task<IEnumerable<SancionDto>> GetByStageAsync(SanctionStage stage, CancellationToken ct = default) =>
+        public Task<IEnumerable<SancionDto>> GetByStageAsync(string stage, CancellationToken ct = default) =>
             _repo.GetByStageAsync(stage, ct);
 
         public Task<IEnumerable<SancionDto>> GetByEntityAsync(int entityId, CancellationToken ct = default) =>

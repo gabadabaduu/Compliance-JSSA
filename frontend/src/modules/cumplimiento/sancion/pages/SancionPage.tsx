@@ -1,57 +1,50 @@
 import { useState } from 'react';
-import SancionHeader from '../components/SancionHeader';
 import SancionList from '../components/SancionList';
 import SancionForm from '../components/SancionForm';
-import { useSanctions } from '../hooks/useSancion';
 import type { Sanction } from '../types';
 import './SancionPage.css';
 
 export default function SancionPage() {
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [selectedSanction, setSelectedSanction] = useState<Sanction | null>(null);
-    const { data: sanctions, isLoading, error } = useSanctions();
+    const [showForm, setShowForm] = useState(false);
+    const [editingSanction, setEditingSanction] = useState<Sanction | null>(null);
 
     const handleCreate = () => {
-        setSelectedSanction(null);
-        setIsFormOpen(true);
+        setEditingSanction(null);
+        setShowForm(true);
     };
 
     const handleEdit = (sanction: Sanction) => {
-        setSelectedSanction(sanction);
-        setIsFormOpen(true);
+        setEditingSanction(sanction);
+        setShowForm(true);
     };
 
     const handleCloseForm = () => {
-        setIsFormOpen(false);
-        setSelectedSanction(null);
+        setShowForm(false);
+        setEditingSanction(null);
     };
-
-    if (isLoading) {
-        return (
-            <div className="sancion-page">
-                <div className="loading">Cargando sanciones...</div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="sancion-page">
-                <div className="error">Error al cargar sanciones: {error.message}</div>
-            </div>
-        );
-    }
 
     return (
         <div className="sancion-page">
-            <SancionHeader onCreateClick={handleCreate} />
+            <div className="page-header">
+                <div className="page-header-content">
+                    <div>
+                        <h1>Gestión de Sanciones</h1>
+                        <p>Administra los procesos sancionatorios de la organización</p>
+                    </div>
+                    <button onClick={handleCreate} className="btn-primary">
+                        + Nueva Sanción
+                    </button>
+                </div>
+            </div>
+
             <SancionList
-                sanctions={sanctions || []}
                 onEdit={handleEdit}
+                onCreate={handleCreate}
             />
-            {isFormOpen && (
+
+            {showForm && (
                 <SancionForm
-                    sanction={selectedSanction}
+                    sanction={editingSanction}
                     onClose={handleCloseForm}
                 />
             )}

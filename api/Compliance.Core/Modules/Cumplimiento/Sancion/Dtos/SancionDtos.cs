@@ -1,29 +1,16 @@
 namespace Compliance.Core.Modules.Cumplimiento.Sancion.Dtos
 {
-    public enum SanctionStage
-    {
-        DecisionInicial,
-        RecursoReposicion,
-        RecursoApelacion
-    }
-
-    public enum SanctionStatus
-    {
-        EnTramite,
-        EnFirme
-    }
-
     public class SancionDto
     {
         public long Id { get; set; }
         public int Number { get; set; }
         public int Entity { get; set; }
         public string Facts { get; set; } = string.Empty;
-        public SanctionStage Stage { get; set; }
-        public SanctionStatus Status { get; set; }
-        public string Initial { get; set; } = string.Empty;
-        public string Reconsideration { get; set; } = string.Empty; 
-        public string Appeal { get; set; } = string.Empty; 
+        public string Stage { get; set; } = string.Empty;  // ✅ String para coincidir con DB
+        public string Status { get; set; } = string.Empty; // ✅ String para coincidir con DB
+        public int? Initial { get; set; }
+        public int? Reconsideration { get; set; }
+        public int? Appeal { get; set; }
     }
 
     public class CreateSancionDto
@@ -31,11 +18,11 @@ namespace Compliance.Core.Modules.Cumplimiento.Sancion.Dtos
         public int Number { get; set; }
         public int Entity { get; set; }
         public string Facts { get; set; } = string.Empty;
-        public SanctionStage Stage { get; set; }
-        public SanctionStatus Status { get; set; }
-        public string Initial { get; set; } = string.Empty;  
-        public string Reconsideration { get; set; } = string.Empty; 
-        public string Appeal { get; set; } = string.Empty; 
+        public string Stage { get; set; } = string.Empty;  // ✅ String
+        public string Status { get; set; } = string.Empty; // ✅ String
+        public int? Initial { get; set; }
+        public int? Reconsideration { get; set; }
+        public int? Appeal { get; set; }
     }
 
     public class UpdateSancionDto
@@ -44,10 +31,10 @@ namespace Compliance.Core.Modules.Cumplimiento.Sancion.Dtos
         public int? Number { get; set; }
         public int? Entity { get; set; }
         public string? Facts { get; set; }
-        public SanctionStage? Stage { get; set; }
-        public SanctionStatus? Status { get; set; }
-        public string? Initial { get; set; }
-        public string? Reconsideration { get; set; }
-        public string? Appeal { get; set; } 
+        public string? Stage { get; set; }  // ✅ Nullable string
+        public string? Status { get; set; } // ✅ Nullable string
+        public int? Initial { get; set; }
+        public int? Reconsideration { get; set; }
+        public int? Appeal { get; set; }
     }
 }

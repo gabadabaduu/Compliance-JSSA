@@ -2,7 +2,9 @@ import { apiClient } from '../../../../lib/api-client';
 import type {
     Sanction,
     CreateSanctionDto,
-    UpdateSanctionDto
+    UpdateSanctionDto,
+    SanctionStatus,
+    SanctionStage
 } from '../types';
 
 // Obtener sanction por ID
@@ -31,13 +33,13 @@ export async function deleteSanction(id: number): Promise<void> {
 }
 
 // Filtrar sanctions por status
-export async function getSanctionsByStatus(status: string): Promise<Sanction[]> {
-    return apiClient.get<Sanction[]>(`/Sancion/status/${status}`);
+export async function getSanctionsByStatus(status: SanctionStatus | string): Promise<Sanction[]> {
+    return apiClient.get<Sanction[]>(`/Sancion/status/${encodeURIComponent(status)}`);
 }
 
 // Filtrar sanctions por stage
-export async function getSanctionsByStage(stage: string): Promise<Sanction[]> {
-    return apiClient.get<Sanction[]>(`/Sancion/stage/${stage}`);
+export async function getSanctionsByStage(stage: SanctionStage | string): Promise<Sanction[]> {
+    return apiClient.get<Sanction[]>(`/Sancion/stage/${encodeURIComponent(stage)}`);
 }
 
 // Filtrar sanctions por entity

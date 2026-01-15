@@ -1,45 +1,60 @@
-﻿import { useState, useEffect } from 'react';
-import { useCreateSanction, useUpdateSanction } from '../hooks/useSancion';
-import type { Sanction, CreateSanctionDto, SanctionStage, SanctionStatus } from '../types';
-import './SancionForm.css';
+﻿import { useState, useEffect } from "react";
+import { useCreateSanction, useUpdateSanction } from "../hooks/useSancion";
+import { SANCTION_STAGES, SANCTION_STATUSES } from "../types";
+import type { Sanction, CreateSanctionDto } from "../types";
+import "./SancionForm.css";
 
-interface SancionFormProps {
+interface Props {
     sanction: Sanction | null;
     onClose: () => void;
 }
 
-export default function SancionForm({ sanction, onClose }: SancionFormProps) {
+export default function SancionForm({ sanction, onClose }: Props) {
     const createSanction = useCreateSanction();
     const updateSanction = useUpdateSanction();
     const isEditing = !!sanction;
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<CreateSanctionDto>({
         number: 0,
-        entity: 1,
-        facts: '',
-        stage: 'Desicion inicial' as SanctionStage,
-        status: 'En tramite' as SanctionStatus,
-        initial: '',
-        reconsideration: '',
-        appeal: '',
+        entity: 0,
+        facts: "",
+        stage: "Decisión Inicial",
+        status: "En trámite",
+        initial: null,
+        reconsideration: null,
+        appeal: null,
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        if (sanction) {
-            setFormData(sanction);
-        }
+        if (!sanction) return;
+
+        setFormData({
+            number: sanction.number,
+            entity: sanction.entity,
+            facts: sanction.facts,
+            stage: sanction.stage,
+            status: sanction.status,
+            initial: sanction.initial,
+            reconsideration: sanction.reconsideration,
+            appeal: sanction.appeal,
+        });
     }, [sanction]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
         const { name, value } = e.target;
+
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'number' || name === 'entity'
-                ? parseInt(value) || 0
-                : value
+            [name]:
+                name === "number" || name === "entity" || name === "initial" || name === "reconsideration" || name === "appeal"
+                    ? (value === "" ? null : Number(value))
+                    : value
         }));
+
         // Limpiar error del campo
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
@@ -65,21 +80,18 @@ export default function SancionForm({ sanction, onClose }: SancionFormProps) {
         if (!validate()) return;
 
         try {
-            const payload: CreateSanctionDto = formData;
-
             if (isEditing && sanction) {
                 await updateSanction.mutateAsync({
                     id: sanction.id,
-                    ...payload,
+                    ...formData,
                 });
             } else {
-                await createSanction.mutateAsync(payload);
+                await createSanction.mutateAsync(formData);
             }
-
             onClose();
-        } catch (error) {
-            console.error('Error al guardar sanción:', error);
-            alert('Error al guardar la sanción');
+        } catch (err) {
+            console.error(err);
+            alert("Error al guardar sanción");
         }
     };
 
@@ -134,9 +146,11 @@ export default function SancionForm({ sanction, onClose }: SancionFormProps) {
                                 onChange={handleChange}
                                 className={errors.stage ? 'error' : ''}
                             >
-                                <option value="Desicion inicial">Decisión Inicial</option>
-                                <option value="Recurso de Reposicion">Recurso de Reposición</option>
-                                <option value="Recurso de Apelacion">Recurso de Apelación</option>
+                                {SANCTION_STAGES.map(stage => (
+                                    <option key={stage} value={stage}>
+                                        {stage}
+                                    </option>
+                                ))}
                             </select>
                             {errors.stage && <span className="error-message">{errors.stage}</span>}
                         </div>
@@ -150,8 +164,11 @@ export default function SancionForm({ sanction, onClose }: SancionFormProps) {
                                 onChange={handleChange}
                                 className={errors.status ? 'error' : ''}
                             >
-                                <option value="En tramite">En Trámite</option>
-                                <option value="En firme">En Firme</option>
+                                {SANCTION_STATUSES.map(status => (
+                                    <option key={status} value={status}>
+                                        {status}
+                                    </option>
+                                ))}
                             </select>
                             {errors.status && <span className="error-message">{errors.status}</span>}
                         </div>
@@ -172,37 +189,37 @@ export default function SancionForm({ sanction, onClose }: SancionFormProps) {
 
                         <div className="form-group full-width">
                             <label htmlFor="initial">Decisión Inicial</label>
-                            <textarea
+                            <input
                                 id="initial"
                                 name="initial"
-                                rows={3}
-                                value={formData.initial}
+                                type="number"
+                                value={formData.initial ?? ""}
                                 onChange={handleChange}
-                                placeholder="Información sobre la decisión inicial..."
+                                placeholder="ID de la decisión inicial..."
                             />
                         </div>
 
                         <div className="form-group full-width">
                             <label htmlFor="reconsideration">Recurso de Reposición</label>
-                            <textarea
+                            <input
                                 id="reconsideration"
                                 name="reconsideration"
-                                rows={3}
-                                value={formData.reconsideration}
+                                type="number"
+                                value={formData.reconsideration ?? ""}
                                 onChange={handleChange}
-                                placeholder="Información sobre el recurso de reposición..."
+                                placeholder="ID del recurso de reposición..."
                             />
                         </div>
 
                         <div className="form-group full-width">
                             <label htmlFor="appeal">Recurso de Apelación</label>
-                            <textarea
+                            <input
                                 id="appeal"
                                 name="appeal"
-                                rows={3}
-                                value={formData.appeal}
+                                type="number"
+                                value={formData.appeal ?? ""}
                                 onChange={handleChange}
-                                placeholder="Información sobre el recurso de apelación..."
+                                placeholder="ID del recurso de apelación..."
                             />
                         </div>
                     </div>

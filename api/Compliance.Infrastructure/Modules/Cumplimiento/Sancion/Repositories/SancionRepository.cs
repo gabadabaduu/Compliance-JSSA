@@ -43,9 +43,10 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Repositories
                 Facts = dto.Facts,
                 Stage = dto.Stage,
                 Status = dto.Status,
-                Initial = dto.Initial,
-                Reconsideration = dto.Reconsideration,
-                Appeal = dto.Appeal
+                // ✅ CAMBIO: Solo asignar si tiene valor, sino dejar null
+                Initial = dto.Initial > 0 ? dto.Initial : null,
+                Reconsideration = dto.Reconsideration > 0 ? dto.Reconsideration : null,
+                Appeal = dto.Appeal > 0 ? dto.Appeal : null
             };
 
             _db.Set<SancionEntity>().Add(entity);
@@ -65,13 +66,13 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Repositories
             if (dto.Number.HasValue) entity.Number = dto.Number.Value;
             if (dto.Entity.HasValue) entity.Entity = dto.Entity.Value;
             if (dto.Facts != null) entity.Facts = dto.Facts;
-            if (dto.Stage.HasValue) entity.Stage = dto.Stage.Value;
-            if (dto.Status.HasValue) entity.Status = dto.Status.Value;
+            if (dto.Stage != null) entity.Stage = dto.Stage;
+            if (dto.Status != null) entity.Status = dto.Status;
 
-            // ✅ CORREGIDO: string nullable no tiene . HasValue, solo verificar != null
-            if (dto.Initial != null) entity.Initial = dto.Initial;
-            if (dto.Reconsideration != null) entity.Reconsideration = dto.Reconsideration;
-            if (dto.Appeal != null) entity.Appeal = dto.Appeal;
+            // ✅ CAMBIO:  Permitir asignar null explícitamente
+            if (dto.Initial.HasValue) entity.Initial = dto.Initial.Value > 0 ? dto.Initial.Value : null;
+            if (dto.Reconsideration.HasValue) entity.Reconsideration = dto.Reconsideration.Value > 0 ? dto.Reconsideration.Value : null;
+            if (dto.Appeal.HasValue) entity.Appeal = dto.Appeal.Value > 0 ? dto.Appeal.Value : null;
 
             await _db.SaveChangesAsync(ct);
 
@@ -91,7 +92,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Repositories
             return true;
         }
 
-        public async Task<IEnumerable<SancionDto>> GetByStatusAsync(SanctionStatus status, CancellationToken ct = default)
+        public async Task<IEnumerable<SancionDto>> GetByStatusAsync(string status, CancellationToken ct = default)
         {
             return await _db.Set<SancionEntity>()
                 .AsNoTracking()
@@ -100,7 +101,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Repositories
                 .ToListAsync(ct);
         }
 
-        public async Task<IEnumerable<SancionDto>> GetByStageAsync(SanctionStage stage, CancellationToken ct = default)
+        public async Task<IEnumerable<SancionDto>> GetByStageAsync(string stage, CancellationToken ct = default)
         {
             return await _db.Set<SancionEntity>()
                 .AsNoTracking()

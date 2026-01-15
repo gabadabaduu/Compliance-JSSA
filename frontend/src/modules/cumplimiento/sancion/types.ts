@@ -1,42 +1,106 @@
+// ============================================
+// 🎯 Enums para Sanctions (UNION TYPES)
+// ============================================
 
-// Enums para Sanctions
-export enum SanctionStage {
-    DecisionInicial = 'DecisionInicial',
-    RecursoReposicion = 'RecursoReposicion', 
-    RecursoApelacion = 'RecursoApelacion' 
-}
-export enum SanctionStatus {
-    EnTramite = 'EnTramite',
-    EnFirme = 'EnFirme' 
-}
+// ✅ Union types que coinciden EXACTAMENTE con los valores de PostgreSQL
+export type SanctionStage =
+    | 'Decisión Inicial'
+    | 'Recurso de Reposición'
+    | 'Recurso de Apelación';
 
-// Interface completa para Sanction
+export type SanctionStatus =
+    | 'En trámite'
+    | 'En firme';
+
+// Helpers para trabajar con los enums
+export const SANCTION_STAGES: SanctionStage[] = [
+    'Decisión Inicial',
+    'Recurso de Reposición',
+    'Recurso de Apelación'
+];
+
+export const SANCTION_STATUSES: SanctionStatus[] = [
+    'En trámite',
+    'En firme'
+];
+
+// Labels amigables para mostrar en UI
+export const SANCTION_STAGE_LABELS: Record<SanctionStage, string> = {
+    'Decisión Inicial': 'Decisión Inicial',
+    'Recurso de Reposición': 'Recurso de Reposición',
+    'Recurso de Apelación': 'Recurso de Apelación'
+};
+
+export const SANCTION_STATUS_LABELS: Record<SanctionStatus, string> = {
+    'En trámite': 'En Trámite',
+    'En firme': 'En Firme'
+};
+
+// ============================================
+// 📋 Interfaces
+// ============================================
+
 export interface Sanction {
     id: number;
     number: number;
-    entity: number; 
+    entity: number;
     facts: string;
     stage: SanctionStage;
     status: SanctionStatus;
-    initial: string;
-    reconsideration: string;
-    appeal: string;
+    initial: number | null;
+    reconsideration: number | null;
+    appeal: number | null;
 }
 
-
-// DTO para creaci�n de sanction
 export interface CreateSanctionDto {
     number: number;
     entity: number;
     facts: string;
     stage: SanctionStage;
     status: SanctionStatus;
-    initial: string;
-    reconsideration: string;
-    appeal: string;
+    initial?: number | null;
+    reconsideration?: number | null;
+    appeal?: number | null;
 }
 
-// DTO para actualizaci�n de sanction
 export interface UpdateSanctionDto extends Partial<CreateSanctionDto> {
     id: number;
+}
+
+// ============================================
+// 🔍 Helpers para validación
+// ============================================
+
+export function isValidSanctionStage(stage: string): stage is SanctionStage {
+    return SANCTION_STAGES.includes(stage as SanctionStage);
+}
+
+export function isValidSanctionStatus(status: string): status is SanctionStatus {
+    return SANCTION_STATUSES.includes(status as SanctionStatus);
+}
+
+// Helper para obtener color de badge según status
+export function getStatusColor(status: SanctionStatus): string {
+    switch (status) {
+        case 'En trámite':
+            return 'orange';
+        case 'En firme':
+            return 'green';
+        default:
+            return 'gray';
+    }
+}
+
+// Helper para obtener color de badge según stage
+export function getStageColor(stage: SanctionStage): string {
+    switch (stage) {
+        case 'Decisión Inicial':
+            return 'blue';
+        case 'Recurso de Reposición':
+            return 'purple';
+        case 'Recurso de Apelación':
+            return 'red';
+        default:
+            return 'gray';
+    }
 }
