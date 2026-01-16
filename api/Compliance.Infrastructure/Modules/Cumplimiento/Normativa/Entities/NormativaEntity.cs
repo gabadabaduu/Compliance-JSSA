@@ -43,7 +43,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Entities
         public int Domain { get; set; }
 
         [Column("status")]
-        public RegulationStatus Status { get; set; }
+        public string Status { get; set; } = string.Empty;
 
         [Column("url")]
         public string Url { get; set; } = string.Empty;

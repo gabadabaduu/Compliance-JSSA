@@ -20,7 +20,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
         {
             return await _db.Set<NormativaEntity>()
                 .AsNoTracking()
-                .OrderByDescending(e => e.Id)
+                .OrderByDescending(e => e.IssueDate)
                 .Select(e => MapToDto(e))
                 .ToListAsync(ct);
         }
@@ -76,7 +76,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
             if (dto.Authority.HasValue) entity.Authority = dto.Authority.Value;
             if (dto.Title != null) entity.Title = dto.Title;
             if (dto.Domain.HasValue) entity.Domain = dto.Domain.Value;
-            if (dto.Status.HasValue) entity.Status = dto.Status.Value;
+            if (dto.Status != null) entity.Status = dto.Status;
             if (dto.Url != null) entity.Url = dto.Url;
 
             await _db.SaveChangesAsync(ct);
@@ -97,11 +97,29 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
             return true;
         }
 
-        public async Task<IEnumerable<NormativaDto>> GetByStatusAsync(RegulationStatus status, CancellationToken ct = default)
+        public async Task<IEnumerable<NormativaDto>> GetByStatusAsync(string status, CancellationToken ct = default)
         {
             return await _db.Set<NormativaEntity>()
                 .AsNoTracking()
                 .Where(e => e.Status == status)
+                .Select(e => MapToDto(e))
+                .ToListAsync(ct);
+        }
+
+        public async Task<IEnumerable<NormativaDto>> GetByIndustryAsync(int industryId, CancellationToken ct = default)
+        {
+            return await _db.Set<NormativaEntity>()
+                .AsNoTracking()
+                .Where(e => e.Industry == industryId)
+                .Select(e => MapToDto(e))
+                .ToListAsync(ct);
+        }
+
+        public async Task<IEnumerable<NormativaDto>> GetByAuthorityAsync(int authorityId, CancellationToken ct = default)
+        {
+            return await _db.Set<NormativaEntity>()
+                .AsNoTracking()
+                .Where(e => e.Authority == authorityId)
                 .Select(e => MapToDto(e))
                 .ToListAsync(ct);
         }

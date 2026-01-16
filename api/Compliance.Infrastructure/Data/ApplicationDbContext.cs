@@ -4,7 +4,10 @@ using Compliance.Core.Modules.User.Entities;
 using Compliance.Infrastructure.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Entities;
-using Compliance.Core.Modules.Cumplimiento.Normativa.Dtos;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegTypes.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegDomains.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegAuthorities.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Entities;
 using Compliance.Core.Modules.Cumplimiento.Sancion.Dtos;
 
 namespace Compliance.Infrastructure.Data;
@@ -26,17 +29,23 @@ public class AppDbContext : DbContext
     public DbSet<AjusteEntity> Ajustes { get; set; } = null!;
     public DbSet<UsuarioEntity> Usuarios { get; set; } = null!;
 
+    // ✅ Catálogos de Regulaciones
+    public DbSet<RegTypeEntity> RegTypes { get; set; } = null!;
+    public DbSet<RegDomainEntity> RegDomains { get; set; } = null!;
+    public DbSet<RegAuthorityEntity> RegAuthorities { get; set; } = null!;
+    public DbSet<RegIndustryEntity> RegIndustries { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
         // =====================================================
-        // ENUMS POSTGRESQL
+        // ENUMS POSTGRESQL (solo para sanciones)
         // =====================================================
 
         modelBuilder.HasPostgresEnum<SanctionStage>();
         modelBuilder.HasPostgresEnum<SanctionStatus>();
-        modelBuilder.HasPostgresEnum<RegulationStatus>();
+        // ❌ ELIMINADO: modelBuilder.HasPostgresEnum<RegulationStatus>();
 
         // =====================================================
         // USERS
@@ -97,7 +106,7 @@ public class AppDbContext : DbContext
         });
 
         // =====================================================
-        // NORMATIVAS (ENUM REGULATION STATUS)
+        // NORMATIVAS (STATUS COMO STRING)
         // =====================================================
 
         modelBuilder.Entity<NormativaEntity>(entity =>
@@ -117,9 +126,11 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Title).HasColumnName("title").IsRequired();
             entity.Property(e => e.Domain).HasColumnName("domain").IsRequired();
 
+            // ✅ Status como STRING (sin enum)
             entity.Property(e => e.Status)
                 .HasColumnName("status")
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(50);
 
             entity.Property(e => e.Url).HasColumnName("url");
         });
@@ -149,6 +160,42 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Initial).HasColumnName("initial");
             entity.Property(e => e.Reconsideration).HasColumnName("reconsideration");
             entity.Property(e => e.Appeal).HasColumnName("appeal");
+        });
+
+        // =====================================================
+        // CATÁLOGOS DE REGULACIONES
+        // =====================================================
+
+        modelBuilder.Entity<RegTypeEntity>(eb =>
+        {
+            eb.ToTable("reg_types");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Type).HasColumnName("type").IsRequired();
+        });
+
+        modelBuilder.Entity<RegDomainEntity>(eb =>
+        {
+            eb.ToTable("reg_domains");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+        modelBuilder.Entity<RegAuthorityEntity>(eb =>
+        {
+            eb.ToTable("reg_authorities");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+        modelBuilder.Entity<RegIndustryEntity>(eb =>
+        {
+            eb.ToTable("reg_industries");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
 
         // =====================================================

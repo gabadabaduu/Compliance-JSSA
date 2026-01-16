@@ -19,6 +19,18 @@ using Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Services;
 using Compliance.Core.Modules.Cumplimiento.Sancion.Interfaces;
 using Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Repositories;
 using Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Services;
+using Compliance.Core.Modules.Cumplimiento.RegTypes.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegTypes.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegTypes.Services;
+using Compliance.Core.Modules.Cumplimiento.RegDomains.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegDomains.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegDomains.Services;
+using Compliance.Core.Modules.Cumplimiento.RegAuthorities.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegAuthorities.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegAuthorities.Services;
+using Compliance.Core.Modules.Cumplimiento.RegIndustries.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Services;
 using Compliance.Core.Modules.MatrizRiesgo.Interfaces;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Repositories;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Services;
@@ -62,6 +74,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Módulos principales
 builder.Services.AddScoped<IEpidRepository, EpidRepository>();
 builder.Services.AddScoped<IEpidService, EpidService>();
 builder.Services.AddScoped<IHabeasDataRepository, HabeasDataRepository>();
@@ -79,12 +92,22 @@ builder.Services.AddScoped<IAjusteService, AjusteService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
+// ✅ Catálogos de Regulaciones
+builder.Services.AddScoped<IRegTypeRepository, RegTypeRepository>();
+builder.Services.AddScoped<IRegTypeService, RegTypeService>();
+builder.Services.AddScoped<IRegDomainRepository, RegDomainRepository>();
+builder.Services.AddScoped<IRegDomainService, RegDomainService>();
+builder.Services.AddScoped<IRegAuthorityRepository, RegAuthorityRepository>();
+builder.Services.AddScoped<IRegAuthorityService, RegAuthorityService>();
+builder.Services.AddScoped<IRegIndustryRepository, RegIndustryRepository>();
+builder.Services.AddScoped<IRegIndustryService, RegIndustryService>();
+
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
 if (string.IsNullOrEmpty(jwtSecret))
 {
-    throw new InvalidOperationException("❌ ERROR CRÍTICO:  Jwt: Secret no está configurado.");
+    throw new InvalidOperationException("❌ ERROR CRÍTICO:   Jwt:  Secret no está configurado.");
 }
 
 var key = Encoding.UTF8.GetBytes(jwtSecret);

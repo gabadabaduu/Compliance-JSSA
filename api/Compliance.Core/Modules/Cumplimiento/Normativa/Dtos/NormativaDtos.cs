@@ -1,11 +1,6 @@
 namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
 {
-    // Enum para el status (debe coincidir con la BD)
-    public enum RegulationStatus
-    {
-        Vigente,
-        Compilada
-    }
+   
 
     // DTO completo para Normativa
     public class NormativaDto
@@ -21,11 +16,11 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
         public int Authority { get; set; }
         public string Title { get; set; } = string.Empty;
         public int Domain { get; set; }
-        public RegulationStatus Status { get; set; }
+        public string Status { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
     }
 
-    // DTO para creación
+    // DTO para creaciï¿½n
     public class CreateNormativaDto
     {
         public int Type { get; set; }
@@ -38,11 +33,11 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
         public int Authority { get; set; }
         public string Title { get; set; } = string.Empty;
         public int Domain { get; set; }
-        public RegulationStatus Status { get; set; }
+        public string Status { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
     }
 
-    // DTO para actualización
+    // DTO para actualizaciï¿½n
     public class UpdateNormativaDto
     {
         public long Id { get; set; }
@@ -56,7 +51,7 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
         public int? Authority { get; set; }
         public string? Title { get; set; }
         public int? Domain { get; set; }
-        public RegulationStatus? Status { get; set; }
+        public string? Status { get; set; }
         public string? Url { get; set; }
     }
 }
