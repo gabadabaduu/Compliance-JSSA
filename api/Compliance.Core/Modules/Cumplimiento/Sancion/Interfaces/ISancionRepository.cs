@@ -7,7 +7,15 @@ namespace Compliance.Core.Modules.Cumplimiento.Sancion.Interfaces
 {
     public interface ISancionRepository
     {
-        Task<IEnumerable<SancionNameDto>> GetNamesAsync(CancellationToken ct = default);
-        Task<SancionNameDto?> GetByIdAsync(long id, CancellationToken ct = default);
+        Task<IEnumerable<SancionDto>> GetAllAsync(CancellationToken ct = default);
+        Task<SancionDto?> GetByIdAsync(long id, CancellationToken ct = default);
+        Task<SancionDto> CreateAsync(CreateSancionDto dto, CancellationToken ct = default);
+        Task<SancionDto> UpdateAsync(UpdateSancionDto dto, CancellationToken ct = default);
+        Task<bool> DeleteAsync(long id, CancellationToken ct = default);
+
+        // ✅ CAMBIADO: Reciben string
+        Task<IEnumerable<SancionDto>> GetByStatusAsync(string status, CancellationToken ct = default);
+        Task<IEnumerable<SancionDto>> GetByStageAsync(string stage, CancellationToken ct = default);
+        Task<IEnumerable<SancionDto>> GetByEntityAsync(int entityId, CancellationToken ct = default);
     }
 }

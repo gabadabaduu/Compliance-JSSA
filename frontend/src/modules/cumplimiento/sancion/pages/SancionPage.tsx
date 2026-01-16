@@ -1,18 +1,53 @@
+import { useState } from 'react';
+import SancionList from '../components/SancionList';
+import SancionForm from '../components/SancionForm';
+import type { Sanction } from '../types';
 import './SancionPage.css';
-import SancionNamesList from '../components/SancionNamesList';
 
 export default function SancionPage() {
-    return (
-        <div className="page-container">
-            <h2>Sancion</h2>
-            <div className="content-box">
-                <p>Contenido del módulo Sancion</p>
+    const [showForm, setShowForm] = useState(false);
+    const [editingSanction, setEditingSanction] = useState<Sanction | null>(null);
 
-                <div className="normograma-list-section">
-                    <h3>Nombres Sancion</h3>
-                    <SancionNamesList />
+    const handleCreate = () => {
+        setEditingSanction(null);
+        setShowForm(true);
+    };
+
+    const handleEdit = (sanction: Sanction) => {
+        setEditingSanction(sanction);
+        setShowForm(true);
+    };
+
+    const handleCloseForm = () => {
+        setShowForm(false);
+        setEditingSanction(null);
+    };
+
+    return (
+        <div className="sancion-page">
+            <div className="page-header">
+                <div className="page-header-content">
+                    <div>
+                        <h1>Gestión de Sanciones</h1>
+                        <p>Administra los procesos sancionatorios de la organización</p>
+                    </div>
+                    <button onClick={handleCreate} className="btn-primary">
+                        + Nueva Sanción
+                    </button>
                 </div>
             </div>
+
+            <SancionList
+                onEdit={handleEdit}
+                onCreate={handleCreate}
+            />
+
+            {showForm && (
+                <SancionForm
+                    sanction={editingSanction}
+                    onClose={handleCloseForm}
+                />
+            )}
         </div>
     );
 }

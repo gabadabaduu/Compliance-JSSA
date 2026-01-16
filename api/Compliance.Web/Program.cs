@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
 using Compliance.Infrastructure.Data;
 using Compliance.Core.Modules.EPID.Interfaces;
 using Compliance.Infrastructure.Modules.EPID.Repositories;
@@ -18,6 +19,18 @@ using Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Services;
 using Compliance.Core.Modules.Cumplimiento.Sancion.Interfaces;
 using Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Repositories;
 using Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Services;
+using Compliance.Core.Modules.Cumplimiento.RegTypes.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegTypes.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegTypes.Services;
+using Compliance.Core.Modules.Cumplimiento.RegDomains.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegDomains.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegDomains.Services;
+using Compliance.Core.Modules.Cumplimiento.RegAuthorities.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegAuthorities.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegAuthorities.Services;
+using Compliance.Core.Modules.Cumplimiento.RegIndustries.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Services;
 using Compliance.Core.Modules.MatrizRiesgo.Interfaces;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Repositories;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Services;
@@ -29,17 +42,23 @@ using Compliance.Infrastructure.Modules.Usuario.Repositories;
 using Compliance.Infrastructure.Modules.Usuario.Services;
 using Compliance.Web.Hubs;
 
-// Limpiar mapeo de claim types para usar nombres cortos
+// Limpiar mapeo de claim types
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-// CORS
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -54,6 +73,8 @@ builder.Services.AddCors(options =>
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Módulos principales
 builder.Services.AddScoped<IEpidRepository, EpidRepository>();
 builder.Services.AddScoped<IEpidService, EpidService>();
 builder.Services.AddScoped<IHabeasDataRepository, HabeasDataRepository>();
@@ -71,26 +92,36 @@ builder.Services.AddScoped<IAjusteService, AjusteService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
+// ✅ Catálogos de Regulaciones
+builder.Services.AddScoped<IRegTypeRepository, RegTypeRepository>();
+builder.Services.AddScoped<IRegTypeService, RegTypeService>();
+builder.Services.AddScoped<IRegDomainRepository, RegDomainRepository>();
+builder.Services.AddScoped<IRegDomainService, RegDomainService>();
+builder.Services.AddScoped<IRegAuthorityRepository, RegAuthorityRepository>();
+builder.Services.AddScoped<IRegAuthorityService, RegAuthorityService>();
+builder.Services.AddScoped<IRegIndustryRepository, RegIndustryRepository>();
+builder.Services.AddScoped<IRegIndustryService, RegIndustryService>();
+
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
 if (string.IsNullOrEmpty(jwtSecret))
 {
-    throw new InvalidOperationException("❌ ERROR CRÍTICO: Jwt:Secret no está configurado.  La aplicación no puede iniciar sin autenticación.");
+    throw new InvalidOperationException("❌ ERROR CRÍTICO:   Jwt:  Secret no está configurado.");
 }
 
 var key = Encoding.UTF8.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
-    {
+{
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
+})
     .AddJwtBearer(options =>
     {
-    options.RequireHttpsMetadata = false;
+        options.RequireHttpsMetadata = false;
         options.SaveToken = true;
-        options.MapInboundClaims = false; // No mapear claim types a nombres largos
+        options.MapInboundClaims = false;
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -110,16 +141,12 @@ builder.Services.AddAuthentication(options =>
         {
             OnMessageReceived = context =>
             {
-                // SignalR envía el token en el query string como "access_token"
                 var accessToken = context.Request.Query["access_token"];
-
-                // Si la request es para el hub de SignalR, usar el token del query
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                 {
                     context.Token = accessToken;
                 }
-
                 return Task.CompletedTask;
             },
 

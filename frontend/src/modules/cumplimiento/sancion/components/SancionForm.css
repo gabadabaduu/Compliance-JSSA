@@ -1,0 +1,107 @@
+﻿.sancion-form-modal {
+    max-width: 700px;
+}
+
+.sancion-form {
+    padding: 24px;
+}
+
+    .sancion-form . form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .sancion-form . form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .sancion-form .form-group. full-width {
+            grid-column: 1 / -1;
+        }
+
+        .sancion-form . form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .sancion-form . form-group input,
+        .sancion-form .form-group select,
+        .sancion-form . form-group textarea {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+            .sancion-form . form-group input:focus,
+            .sancion-form .form-group select:focus,
+            .sancion-form .form-group textarea:focus {
+                outline: none;
+                border-color: #8b5cf6;
+            }
+
+            .sancion-form .form-group input.error,
+            . sancion-form .form-group select.error,
+            .sancion-form .form-group textarea. error {
+                border-color: #ef4444;
+            }
+
+    .sancion-form .error-message {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .sancion-form . form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .sancion-form .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    . sancion-form .btn-cancel,
+    .sancion-form .btn-submit {
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .sancion-form .btn-cancel {
+        background-color: #f3f4f6;
+        color: #374151;
+    }
+
+        . sancion-form .btn-cancel:hover {
+            background-color: #e5e7eb;
+        }
+
+    .sancion-form .btn-submit {
+        background-color: #8b5cf6;
+        color: white;
+    }
+
+        .sancion-form .btn-submit:hover {
+            background-color: #7c3aed;
+        }
+
+        .sancion-form . btn-submit:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
