@@ -23,8 +23,9 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Services
         public Task<bool> DeleteAsync(int id, CancellationToken ct = default)
             => _repository.DeleteAsync(id, ct);
 
-        public Task<IEnumerable<SncResolutionDto>> GetBySanctionAsync(int sanctionId, CancellationToken ct = default)
-            => _repository.GetBySanctionAsync(sanctionId, ct);
+        // ✅ CORREGIDO: Parámetro string sanctions
+        public Task<IEnumerable<SncResolutionDto>> GetBySanctionAsync(string sanctions, CancellationToken ct = default)
+            => _repository.GetBySanctionAsync(sanctions, ct);
 
         public Task<IEnumerable<SncResolutionDto>> GetByYearAsync(int year, CancellationToken ct = default)
             => _repository.GetByYearAsync(year, ct);

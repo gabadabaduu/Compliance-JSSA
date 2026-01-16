@@ -8,6 +8,9 @@ using Compliance.Infrastructure.Modules.Cumplimiento.RegTypes.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.RegDomains.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.RegAuthorities.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncType.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncInfringements.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Entities;
 using Compliance.Core.Modules.Cumplimiento.Sancion.Dtos;
 
 namespace Compliance.Infrastructure.Data;
@@ -35,6 +38,11 @@ public class AppDbContext : DbContext
     public DbSet<RegAuthorityEntity> RegAuthorities { get; set; } = null!;
     public DbSet<RegIndustryEntity> RegIndustries { get; set; } = null!;
 
+    // ✅ Catálogos de Sanciones
+    public DbSet<SncTypeEntity> SncTypes { get; set; } = null!;
+    public DbSet<SncInfringementEntity> SncInfringements { get; set; } = null!;
+    public DbSet<SncResolutionEntity> SncResolutions { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -45,7 +53,6 @@ public class AppDbContext : DbContext
 
         modelBuilder.HasPostgresEnum<SanctionStage>();
         modelBuilder.HasPostgresEnum<SanctionStatus>();
-        // ❌ ELIMINADO: modelBuilder.HasPostgresEnum<RegulationStatus>();
 
         // =====================================================
         // USERS
@@ -126,7 +133,6 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Title).HasColumnName("title").IsRequired();
             entity.Property(e => e.Domain).HasColumnName("domain").IsRequired();
 
-            // ✅ Status como STRING (sin enum)
             entity.Property(e => e.Status)
                 .HasColumnName("status")
                 .IsRequired()
@@ -196,6 +202,52 @@ public class AppDbContext : DbContext
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+        // =====================================================
+        // CATÁLOGOS DE SANCIONES
+        // =====================================================
+
+        modelBuilder.Entity<SncTypeEntity>(eb =>
+        {
+            eb.ToTable("snc_type");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+        modelBuilder.Entity<SncInfringementEntity>(eb =>
+        {
+            eb.ToTable("snc_infringements");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Statute).HasColumnName("statute").IsRequired();
+            eb.Property(e => e.Article).HasColumnName("article").IsRequired();
+            eb.Property(e => e.Section).HasColumnName("section").IsRequired();
+            eb.Property(e => e.Description).HasColumnName("description").IsRequired();
+            eb.Property(e => e.Interpretation).HasColumnName("interpretation").IsRequired();
+        });
+
+        modelBuilder.Entity<SncResolutionEntity>(eb =>
+        {
+            eb.ToTable("snc_resolutions");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Sanctions).HasColumnName("sanctions").IsRequired();  // ✅ STRING
+            eb.Property(e => e.Number).HasColumnName("number").IsRequired();
+            eb.Property(e => e.IssueDate).HasColumnName("issue_date").IsRequired();
+            eb.Property(e => e.Year).HasColumnName("year").IsRequired();
+            eb.Property(e => e.Resolution).HasColumnName("resolution").IsRequired();
+            eb.Property(e => e.ResolutionType).HasColumnName("resolution_type").IsRequired();
+            eb.Property(e => e.Infringements).HasColumnName("infringements").IsRequired();
+            eb.Property(e => e.LegalGrounds).HasColumnName("legal_grounds").IsRequired();
+            eb.Property(e => e.SanctionType).HasColumnName("sanction_type").IsRequired();
+            eb.Property(e => e.Amount).HasColumnName("amount").IsRequired();
+            eb.Property(e => e.Description).HasColumnName("description").IsRequired();
+            eb.Property(e => e.Outcome).HasColumnName("outcome").IsRequired().HasMaxLength(50);
+            eb.Property(e => e.Orders).HasColumnName("orders").IsRequired();
+            eb.Property(e => e.Attachment).HasColumnName("attachment");
+            eb.Property(e => e.Url).HasColumnName("url");
         });
 
         // =====================================================

@@ -11,7 +11,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Entities
         public int Id { get; set; }
 
         [Column("sanctions")]
-        public int Sanctions { get; set; }
+        public string Sanctions { get; set; } = string.Empty;  // ✅ STRING
 
         [Column("number")]
         public int Number { get; set; }
@@ -44,7 +44,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Entities
         public string Description { get; set; } = string.Empty;
 
         [Column("outcome")]
-        public string Outcome { get; set; } = string.Empty;  // ✅ STRING (no enum)
+        public string Outcome { get; set; } = string.Empty;
 
         [Column("orders")]
         public string Orders { get; set; } = string.Empty;

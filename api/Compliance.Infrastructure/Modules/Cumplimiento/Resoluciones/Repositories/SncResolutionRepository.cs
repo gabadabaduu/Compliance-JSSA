@@ -38,7 +38,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Reposito
         {
             var entity = new SncResolutionEntity
             {
-                Sanctions = dto.Sanctions,
+                Sanctions = dto.Sanctions,  // ✅ STRING directo
                 Number = dto.Number,
                 IssueDate = dto.IssueDate,
                 Year = dto.Year,
@@ -49,7 +49,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Reposito
                 SanctionType = dto.SanctionType,
                 Amount = dto.Amount,
                 Description = dto.Description,
-                Outcome = dto.Outcome,  // ✅ STRING directo
+                Outcome = dto.Outcome,
                 Orders = dto.Orders,
                 Attachment = dto.Attachment,
                 Url = dto.Url
@@ -69,7 +69,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Reposito
             if (entity == null)
                 throw new Exception($"SncResolution with ID {dto.Id} not found");
 
-            if (dto.Sanctions.HasValue) entity.Sanctions = dto.Sanctions.Value;
+            if (dto.Sanctions != null) entity.Sanctions = dto.Sanctions;  // ✅ STRING nullable
             if (dto.Number.HasValue) entity.Number = dto.Number.Value;
             if (dto.IssueDate.HasValue) entity.IssueDate = dto.IssueDate.Value;
             if (dto.Year.HasValue) entity.Year = dto.Year.Value;
@@ -80,7 +80,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Reposito
             if (dto.SanctionType.HasValue) entity.SanctionType = dto.SanctionType.Value;
             if (dto.Amount.HasValue) entity.Amount = dto.Amount.Value;
             if (dto.Description != null) entity.Description = dto.Description;
-            if (dto.Outcome != null) entity.Outcome = dto.Outcome;  // ✅ STRING nullable
+            if (dto.Outcome != null) entity.Outcome = dto.Outcome;
             if (dto.Orders != null) entity.Orders = dto.Orders;
             if (dto.Attachment != null) entity.Attachment = dto.Attachment;
             if (dto.Url != null) entity.Url = dto.Url;
@@ -103,11 +103,11 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Reposito
             return true;
         }
 
-        public async Task<IEnumerable<SncResolutionDto>> GetBySanctionAsync(int sanctionId, CancellationToken ct = default)
+        public async Task<IEnumerable<SncResolutionDto>> GetBySanctionAsync(string sanctions, CancellationToken ct = default)
         {
             return await _db.Set<SncResolutionEntity>()
                 .AsNoTracking()
-                .Where(e => e.Sanctions == sanctionId)
+                .Where(e => e.Sanctions == sanctions)  // ✅ Comparación STRING directa
                 .Select(e => MapToDto(e))
                 .ToListAsync(ct);
         }
@@ -125,7 +125,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Reposito
         {
             return await _db.Set<SncResolutionEntity>()
                 .AsNoTracking()
-                .Where(e => e.Outcome == outcome)  // ✅ Comparación STRING directa
+                .Where(e => e.Outcome == outcome)
                 .Select(e => MapToDto(e))
                 .ToListAsync(ct);
         }
@@ -135,7 +135,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Reposito
             return new SncResolutionDto
             {
                 Id = entity.Id,
-                Sanctions = entity.Sanctions,
+                Sanctions = entity.Sanctions,  // ✅ STRING directo
                 Number = entity.Number,
                 IssueDate = entity.IssueDate,
                 Year = entity.Year,
@@ -146,7 +146,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Reposito
                 SanctionType = entity.SanctionType,
                 Amount = entity.Amount,
                 Description = entity.Description,
-                Outcome = entity.Outcome,  // ✅ STRING directo
+                Outcome = entity.Outcome,
                 Orders = entity.Orders,
                 Attachment = entity.Attachment,
                 Url = entity.Url
