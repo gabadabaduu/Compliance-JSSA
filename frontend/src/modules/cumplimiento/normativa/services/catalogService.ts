@@ -1,10 +1,20 @@
-import { apiClient } from '../../../../lib/api-client';
+﻿import { apiClient } from '../../../../lib/api-client';
 import type { CatalogItem } from '../types';
 
 export const catalogService = {
-    // Obtener todos los items de un cat�logo
+    // Obtener todos los items de un catálogo
     getAll: async (endpoint: string): Promise<CatalogItem[]> => {
-        return apiClient.get<CatalogItem[]>(`/Normativa/catalog/${endpoint}`);
+        const response = await apiClient.get<any[]>(`/Normativa/catalog/${endpoint}`);
+
+        // Transformar "type" a "name" para el endpoint "types"
+        if (endpoint === 'types') {
+            return response.map(item => ({
+                id: item.id,
+                name: item.type  // 👈 Mapear "type" a "name"
+            }));
+        }
+
+        return response;
     },
 
     // Crear un nuevo item
@@ -12,7 +22,22 @@ export const catalogService = {
         endpoint: string,
         data: Omit<CatalogItem, 'id'>
     ): Promise<CatalogItem> => {
-        return apiClient.post<CatalogItem>(`/Normativa/catalog/${endpoint}`, data);
+        // Transformar "name" a "type" para el endpoint "types"
+        const payload = endpoint === 'types'
+            ? { type: data.name }  // 👈 Enviar como "type"
+            : data;                 // Enviar como "name"
+
+        const response = await apiClient.post<any>(`/Normativa/catalog/${endpoint}`, payload);
+
+        // Transformar respuesta
+        if (endpoint === 'types') {
+            return {
+                id: response.id,
+                name: response.type  // 👈 Mapear "type" a "name"
+            };
+        }
+
+        return response;
     },
 
     // Actualizar un item existente
@@ -21,7 +46,22 @@ export const catalogService = {
         id: number,
         data: Partial<CatalogItem>
     ): Promise<CatalogItem> => {
-        return apiClient.put<CatalogItem>(`/Normativa/catalog/${endpoint}/${id}`, data);
+        // Transformar "name" a "type" para el endpoint "types"
+        const payload = endpoint === 'types' && data.name
+            ? { type: data.name }  // 👈 Enviar como "type"
+            : data;                 // Enviar como "name"
+
+        const response = await apiClient.put<any>(`/Normativa/catalog/${endpoint}/${id}`, payload);
+
+        // Transformar respuesta
+        if (endpoint === 'types') {
+            return {
+                id: response.id,
+                name: response.type  // 👈 Mapear "type" a "name"
+            };
+        }
+
+        return response;
     },
 
     // Eliminar un item
