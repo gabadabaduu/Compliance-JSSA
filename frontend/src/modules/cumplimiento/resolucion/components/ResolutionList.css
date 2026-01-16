@@ -1,0 +1,133 @@
+﻿.resolution-list-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.resolution-list-empty {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+    .resolution-list-empty p {
+        font-size: 1.1rem;
+        color: #6c757d;
+        margin: 0.5rem 0;
+    }
+
+.empty-subtitle {
+    font-size: 0.9rem !important;
+    color: #adb5bd !important;
+}
+
+.resolution-table {
+    display: flex;
+    flex-direction: column;
+}
+
+.resolution-table-header {
+    display: grid;
+    grid-template-columns: 60px 100px 200px 80px 120px 140px 150px 140px;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+. resolution-table-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.resolution-table-row {
+    display: grid;
+    grid-template-columns: 60px 100px 200px 80px 120px 140px 150px 140px;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+    .resolution-table-row:hover {
+        background-color: #f8f9fa;
+    }
+
+.col-id {
+    font-weight: 500;
+    color: #6c757d;
+}
+
+. col-sanctions,
+.col-resolution {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.outcome-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.outcome-acogida {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+. outcome-no-acogida {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.outcome-parcialmente-acogida {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.col-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-start;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: transform 0.2s;
+}
+
+    .btn-icon:hover {
+        transform: scale(1.2);
+    }
+
+    .btn-icon: disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+.btn-link {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.btn-edit {
+    color: #ffc107;
+}
+
+.btn-delete {
+    color: #dc3545;
+}

@@ -1,0 +1,243 @@
+﻿.catalog-manager {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+.catalog-loading,
+.catalog-error {
+    padding: 2rem;
+    text-align: center;
+}
+
+.catalog-error {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border-radius: 8px;
+}
+
+.catalog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.catalog-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+    .catalog-item:hover {
+        background-color: #e9ecef;
+    }
+
+.catalog-item-name {
+    font-weight: 500;
+    color: #495057;
+}
+
+.catalog-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+. catalog-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #6c757d;
+}
+
+.btn-edit,
+. btn-delete {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: transform 0.2s;
+}
+
+    .btn-edit:hover,
+    .btn-delete:hover {
+        transform: scale(1.2);
+    }
+
+/* 🆕 Estilos para Infringement List (tabla) */
+.infringement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.infringement-table-header {
+    display: grid;
+    grid-template-columns: 100px 100px 120px 1fr 100px;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #e9ecef;
+    font-weight: 600;
+    color: #495057;
+    border-radius: 6px 6px 0 0;
+}
+
+.infringement-table-row {
+    display: grid;
+    grid-template-columns: 100px 100px 120px 1fr 100px;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+    .infringement-table-row:hover {
+        background-color: #f8f9fa;
+    }
+
+    .infringement-table-row:last-child {
+        border-radius: 0 0 6px 6px;
+    }
+
+/* 🆕 Formulario grande para Infringement */
+.catalog-form-large {
+    max-width: 700px !important;
+}
+
+.catalog-form-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.catalog-form {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.catalog-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+    .catalog-form-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: #2c3e50;
+    }
+
+. btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+    .btn-close:hover {
+        background-color: #f8f9fa;
+    }
+
+.catalog-form form {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #495057;
+        font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid #e9ecef;
+}
+
+.btn-cancel,
+.btn-submit {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+. btn-cancel {
+    background-color: #6c757d;
+    color: white;
+}
+
+    .btn-cancel:hover {
+        background-color: #5a6268;
+    }
+
+.btn-submit {
+    background-color: #007bff;
+    color: white;
+}
+
+    .btn-submit:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-submit:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+    }

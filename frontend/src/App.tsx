@@ -22,7 +22,7 @@ import SancionPage from './modules/cumplimiento/sancion/pages/SancionPage'
 import AjustesPage from './modules/ajustes/pages/AjustesPage'
 import UsuarioPage from './modules/usuario/pages/UsuarioPage'
 import MatrizRiesgoPage from './modules/matrizriesgo/pages/MatrizRiesgoPage'
-
+import ResolutionPage from './modules/cumplimiento/resolucion/pages/ResolutionPage'
 // Route components
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
@@ -127,6 +127,15 @@ function App() {
                             }
                         />
 
+                        {/* Resolución */}
+                        <Route
+                            path="resolucion"
+                            element={
+                                <ProtectedRoute>
+                                    <ResolutionPage />
+                                </ProtectedRoute>
+                                }
+                        />
 
                         {/* Sancion */}
                         <Route
