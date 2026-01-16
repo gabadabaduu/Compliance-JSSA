@@ -8,72 +8,82 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Compliance.Web.Controllers.Cumplimiento.Normativa
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class NormativaController : ControllerBase
     {
         private readonly INormativaService _service;
-        public NormativaController(INormativaService service) => _service = service;
 
-        // GET: api/Normativa
+        public NormativaController(INormativaService service)
+        {
+            _service = service;
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<NormativaDto>>> GetAll(CancellationToken ct)
         {
-            var items = await _service.GetAllAsync(ct);
-            return Ok(items);
+            var result = await _service.GetAllAsync(ct);
+            return Ok(result);
         }
 
-        // GET: api/Normativa/{id}
-        [HttpGet("{id:long}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<NormativaDto>> GetById(long id, CancellationToken ct)
         {
-            var item = await _service.GetByIdAsync(id, ct);
-            if (item == null) return NotFound();
-            return Ok(item);
+            var result = await _service.GetByIdAsync(id, ct);
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
-        // POST: api/Normativa
         [HttpPost]
         public async Task<ActionResult<NormativaDto>> Create([FromBody] CreateNormativaDto dto, CancellationToken ct)
         {
-            var created = await _service.CreateAsync(dto, ct);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            var result = await _service.CreateAsync(dto, ct);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        // PUT: api/Normativa/{id}
-        [HttpPut("{id:long}")]
+        [HttpPut("{id}")]
         public async Task<ActionResult<NormativaDto>> Update(long id, [FromBody] UpdateNormativaDto dto, CancellationToken ct)
         {
-            if (id != dto.Id) return BadRequest("ID mismatch");
-
-            var updated = await _service.UpdateAsync(dto, ct);
-            return Ok(updated);
+            if (id != dto.Id) return BadRequest();
+            var result = await _service.UpdateAsync(dto, ct);
+            return Ok(result);
         }
 
-        // DELETE: api/Normativa/{id}
-        [HttpDelete("{id:long}")]
+        [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(long id, CancellationToken ct)
         {
-            var deleted = await _service.DeleteAsync(id, ct);
-            if (!deleted) return NotFound();
+            var result = await _service.DeleteAsync(id, ct);
+            if (!result) return NotFound();
             return NoContent();
         }
 
-        // GET: api/Normativa/status/{status}
         [HttpGet("status/{status}")]
-        public async Task<ActionResult<IEnumerable<NormativaDto>>> GetByStatus(RegulationStatus status, CancellationToken ct)
+        public async Task<ActionResult<IEnumerable<NormativaDto>>> GetByStatus(string status, CancellationToken ct)
         {
-            var items = await _service.GetByStatusAsync(status, ct);
-            return Ok(items);
+            var result = await _service.GetByStatusAsync(status, ct);
+            return Ok(result);
         }
 
-        // GET:  api/Normativa/year/{year}
-        [HttpGet("year/{year:int}")]
+        [HttpGet("industry/{industryId}")]
+        public async Task<ActionResult<IEnumerable<NormativaDto>>> GetByIndustry(int industryId, CancellationToken ct)
+        {
+            var result = await _service.GetByIndustryAsync(industryId, ct);
+            return Ok(result);
+        }
+
+        [HttpGet("authority/{authorityId}")]
+        public async Task<ActionResult<IEnumerable<NormativaDto>>> GetByAuthority(int authorityId, CancellationToken ct)
+        {
+            var result = await _service.GetByAuthorityAsync(authorityId, ct);
+            return Ok(result);
+        }
+
+        [HttpGet("year/{year}")]
         public async Task<ActionResult<IEnumerable<NormativaDto>>> GetByYear(int year, CancellationToken ct)
         {
-            var items = await _service.GetByYearAsync(year, ct);
-            return Ok(items);
+            var result = await _service.GetByYearAsync(year, ct);
+            return Ok(result);
         }
     }
 }
