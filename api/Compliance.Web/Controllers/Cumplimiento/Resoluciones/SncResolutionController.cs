@@ -55,10 +55,10 @@ namespace Compliance.Web.Controllers.Cumplimiento.SncResolutions
             return NoContent();
         }
 
-        [HttpGet("sanction/{sanctionId}")]
-        public async Task<ActionResult<IEnumerable<SncResolutionDto>>> GetBySanction(int sanctionId, CancellationToken ct)
+        [HttpGet("sanction/{sanctions}")]  // ✅ STRING en la ruta
+        public async Task<ActionResult<IEnumerable<SncResolutionDto>>> GetBySanction(string sanctions, CancellationToken ct)
         {
-            var result = await _service.GetBySanctionAsync(sanctionId, ct);
+            var result = await _service.GetBySanctionAsync(sanctions, ct);
             return Ok(result);
         }
 
