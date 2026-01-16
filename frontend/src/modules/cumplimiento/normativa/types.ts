@@ -42,3 +42,14 @@ export interface CreateRegulationDto {
 export interface UpdateRegulationDto extends Partial<CreateRegulationDto> {
     id: number;
 }
+export interface CatalogItem {
+    id: number;
+    name: string;
+}
+
+export interface CatalogConfig {
+    endpoint: string;        // Ej: 'industries', 'types', 'authorities', 'domains'
+    title: string;          // Ej: 'Industrias', 'Tipos de Normativa'
+    singularName: string;   // Ej: 'industria', 'tipo'
+    pluralName: string;     // Ej: 'industrias', 'tipos'
+}

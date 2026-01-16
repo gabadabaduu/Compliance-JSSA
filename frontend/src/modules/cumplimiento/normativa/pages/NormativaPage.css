@@ -1,4 +1,4 @@
-. normativa-page {
+﻿. normativa-page {
     padding: 20px;
     max-width: 1400px;
     margin: 0 auto;
@@ -20,3 +20,31 @@
     .normativa-page .loading {
         color: #666;
     }
+/* 🆕 Estilos para los catálogos */
+.normativa-main-section {
+    margin-bottom: 3rem;
+}
+
+.catalogs-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.catalogs-title {
+    font-size: 1.5rem;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+.catalogs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .catalogs-grid {
+        grid-template-columns: 1fr;
+    }
+}
