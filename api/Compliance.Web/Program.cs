@@ -31,6 +31,15 @@ using Compliance.Infrastructure.Modules.Cumplimiento.RegAuthorities.Services;
 using Compliance.Core.Modules.Cumplimiento.RegIndustries.Interfaces;
 using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Repositories;
 using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Services;
+using Compliance.Core.Modules.Cumplimiento.SncType.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncType.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncType.Services;
+using Compliance.Core.Modules.Cumplimiento.SncInfringements.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncInfringements.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncInfringements.Services;
+using Compliance.Core.Modules.Cumplimiento.SncResolutions.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Services;
 using Compliance.Core.Modules.MatrizRiesgo.Interfaces;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Repositories;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Services;
@@ -102,12 +111,20 @@ builder.Services.AddScoped<IRegAuthorityService, RegAuthorityService>();
 builder.Services.AddScoped<IRegIndustryRepository, RegIndustryRepository>();
 builder.Services.AddScoped<IRegIndustryService, RegIndustryService>();
 
+// ✅ Catálogos de Sanciones
+builder.Services.AddScoped<ISncTypeRepository, SncTypeRepository>();
+builder.Services.AddScoped<ISncTypeService, SncTypeService>();
+builder.Services.AddScoped<ISncInfringementRepository, SncInfringementRepository>();
+builder.Services.AddScoped<ISncInfringementService, SncInfringementService>();
+builder.Services.AddScoped<ISncResolutionRepository, SncResolutionRepository>();
+builder.Services.AddScoped<ISncResolutionService, SncResolutionService>();
+
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
 if (string.IsNullOrEmpty(jwtSecret))
 {
-    throw new InvalidOperationException("❌ ERROR CRÍTICO:   Jwt:  Secret no está configurado.");
+    throw new InvalidOperationException("❌ ERROR CRÍTICO: Jwt: Secret no está configurado.");
 }
 
 var key = Encoding.UTF8.GetBytes(jwtSecret);
