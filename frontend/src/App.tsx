@@ -27,18 +27,20 @@ import ResolutionPage from './modules/cumplimiento/resolucion/pages/ResolutionPa
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
 import ModuleRoute from './components/ModuleRoute'
+import { useTheme } from './hooks/useTheme'
 
 const queryClient = new QueryClient()
 
 function App() {
     const { checkAuth } = useAuthStore()
-
+    useTheme() 
     useEffect(() => {
         checkAuth()
     }, [checkAuth])
 
     return (
         <QueryClientProvider client={queryClient}>
+
             <BrowserRouter>
                 <Routes>
                     {/* Rutas públicas */}
