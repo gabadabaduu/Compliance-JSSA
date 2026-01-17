@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend: 
+    build:
+      context: . 
+      dockerfile: ./api/Dockerfile
+    container_name: compliance-backend
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=aws-1-us-east-1.pooler.supabase.com;Port=6543;Username=postgres.zyzmaaeoutsfstapbgmc;Password=CompliaceSpace12;Database=postgres;SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;Connection Lifetime=0;Keepalive=10;No Reset On Close=true;Server Compatibility Mode=NoTypeLoading
+      - Jwt__Secret=TbcNmp/2Q3w31OjdZJKxjquNTy+joXitwws6FVu/8r0=
+      - JWT_SECRET=xVTha/RnXLSlcvHWhmHzi+HfKSdjOtHOSCsjn9xk0dvtyLHQbYmsyCTX9ICUeHzFJHZtj5xNrKQusTeb2QA6ZA==
+      - Jwt__Issuer=CompliancePlatform
+      - Jwt__Audience=CompliancePlatformUsers
+      - Jwt__ExpiryMinutes=60
+      - Jwt__RefreshTokenExpiryDays=7
+      - AllowedOrigins=http://localhost:3000,http://localhost:5173
+      - SUPABASE_URL=https://zyzmaaeoutsfstapbgmc.supabase.co
+      - SUPABASE_ANON_KEY=sb_publishable_LMCPeGJlx-MyhjKVHq1New_9nhbxjAB
+      - Supabase__Url=https://zyzmaaeoutsfstapbgmc. supabase.co
+      - Supabase__JwtIssuer=https://zyzmaaeoutsfstapbgmc.supabase.co/auth/v1
+      - Supabase__JwtSecret=xVTha/RnXLSlcvHWhmHzi+HfKSdjOtHOSCsjn9xk0dvtyLHQbYmsyCTX9ICUeHzFJHZtj5xNrKQusTeb2QA6ZA==
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5em1hYWVvdXRzZnN0YXBiZ21jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzY3ODAwMywiZXhwIjoyMDc5MjU0MDAzfQ.T7w7KTgOrFXhpugKuqgvLxdbWIM6Ndc56fY_oSt2v2M
+    ports:
+      - "5000:8080"
