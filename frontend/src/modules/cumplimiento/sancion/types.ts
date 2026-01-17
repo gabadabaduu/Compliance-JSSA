@@ -1,8 +1,7 @@
 // ============================================
-// 🎯 Enums para Sanctions (UNION TYPES)
+// 🎯 SANCTIONS - Enums (UNION TYPES)
 // ============================================
 
-// ✅ Union types que coinciden EXACTAMENTE con los valores de PostgreSQL
 export type SanctionStage =
     | 'Decisión Inicial'
     | 'Recurso de Reposición'
@@ -37,19 +36,19 @@ export const SANCTION_STATUS_LABELS: Record<SanctionStatus, string> = {
 };
 
 // ============================================
-// 📋 Interfaces
+// 📋 SANCTION - Interface Principal
 // ============================================
 
 export interface Sanction {
     id: number;
     number: number;
-    entity: number;
+    entity: number;           // FK a snc_entities
     facts: string;
     stage: SanctionStage;
     status: SanctionStatus;
-    initial: number | null;
-    reconsideration: number | null;
-    appeal: number | null;
+    initial: number | null;   // FK a snc_resolutions
+    reconsideration: number | null;  // FK a snc_resolutions
+    appeal: number | null;    // FK a snc_resolutions
 }
 
 export interface CreateSanctionDto {
@@ -68,7 +67,69 @@ export interface UpdateSanctionDto extends Partial<CreateSanctionDto> {
 }
 
 // ============================================
-// 🔍 Helpers para validación
+// 📋 ENTITY - Tabla Compleja (snc_entities)
+// ============================================
+
+export interface Entity {
+    id: number;
+    name: string;
+    industry: number;     // FK a general_industries
+    description: string;
+}
+
+export interface CreateEntityDto {
+    name: string;
+    industry: number;
+    description: string;
+}
+
+export interface UpdateEntityDto extends Partial<CreateEntityDto> {
+    id: number;
+}
+
+// ============================================
+// 📋 INDUSTRY - Tabla Simple (general_industries)
+// ============================================
+
+export interface Industry {
+    id: number;
+    name: string;
+}
+
+export interface CreateIndustryDto {
+    name: string;
+}
+
+export interface UpdateIndustryDto extends Partial<CreateIndustryDto> {
+    id: number;
+}
+
+// ============================================
+// 📦 CATALOG - Tipos Genéricos
+// ============================================
+
+export type CatalogItem = Entity | Industry;
+
+export type CreateCatalogDto = CreateEntityDto | CreateIndustryDto;
+
+export type UpdateCatalogDto = UpdateEntityDto | UpdateIndustryDto;
+
+// ============================================
+// ⚙️ CATALOG CONFIG
+// ============================================
+
+export type CatalogType = 'simple' | 'entity';
+
+export interface CatalogConfig {
+    endpoint: string;
+    title: string;
+    singularName: string;
+    pluralName: string;
+    type: CatalogType;
+}
+
+// ============================================
+// 🔍 HELPERS para validación
 // ============================================
 
 export function isValidSanctionStage(stage: string): stage is SanctionStage {
