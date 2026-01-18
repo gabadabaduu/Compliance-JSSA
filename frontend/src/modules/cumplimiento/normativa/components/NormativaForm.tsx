@@ -1,7 +1,8 @@
 ﻿import { useState, useEffect } from 'react';
+import { Icon } from '@iconify/react';
 import { useCreateRegulation, useUpdateRegulation } from '../hooks/useNormativa';
 import type { Regulation, CreateRegulationDto, RegulationStatus } from '../types';
-import './NormativaForm.css';
+import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
 
 interface NormativaFormProps {
     regulation: Regulation | null;
@@ -47,7 +48,6 @@ export default function NormativaForm({ regulation, onClose }: NormativaFormProp
                 ? parseInt(value) || 0
                 : value
         }));
-        // Limpiar error del campo
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -55,26 +55,23 @@ export default function NormativaForm({ regulation, onClose }: NormativaFormProp
 
     const validate = () => {
         const newErrors: Record<string, string> = {};
-
-        if (!formData.number || formData.number < 0) newErrors.number = 'El número es requerido';
+        if (!formData.number || formData.number < 0) newErrors.number = 'Requerido';
         if (!formData.year || formData.year < 1900 || formData.year > 2100) newErrors.year = 'Año inválido';
-        if (!formData.issueDate) newErrors.issueDate = 'La fecha es requerida';
-        if (!formData.status) newErrors.status = 'El estado es requerido';
-        if (!formData.title.trim()) newErrors.title = 'El título es requerido';
-        if (!formData.commonName.trim()) newErrors.commonName = 'El nombre común es requerido';
-        if (!formData.regulation.trim()) newErrors.regulation = 'La regulación es requerida';
-        if (!formData.type || formData.type < 1) newErrors.type = 'El tipo es requerido';
-        if (!formData.industry || formData.industry < 1) newErrors.industry = 'La industria es requerida';
-        if (!formData.authority || formData.authority < 1) newErrors.authority = 'La autoridad es requerida';
-        if (!formData.domain || formData.domain < 1) newErrors.domain = 'El dominio es requerido';
-
+        if (!formData.issueDate) newErrors.issueDate = 'Requerido';
+        if (!formData.status) newErrors.status = 'Requerido';
+        if (!formData.title.trim()) newErrors.title = 'Requerido';
+        if (!formData.commonName.trim()) newErrors.commonName = 'Requerido';
+        if (!formData.regulation.trim()) newErrors.regulation = 'Requerido';
+        if (!formData.type || formData.type < 1) newErrors.type = 'Requerido';
+        if (!formData.industry || formData.industry < 1) newErrors.industry = 'Requerido';
+        if (!formData.authority || formData.authority < 1) newErrors.authority = 'Requerido';
+        if (!formData.domain || formData.domain < 1) newErrors.domain = 'Requerido';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!validate()) return;
 
         try {
@@ -84,14 +81,10 @@ export default function NormativaForm({ regulation, onClose }: NormativaFormProp
             };
 
             if (isEditing && regulation) {
-                await updateRegulation.mutateAsync({
-                    id: regulation.id,
-                    ...payload,
-                });
+                await updateRegulation.mutateAsync({ id: regulation.id, ...payload });
             } else {
                 await createRegulation.mutateAsync(payload);
             }
-
             onClose();
         } catch (error) {
             console.error('Error al guardar normativa:', error);
@@ -99,196 +92,133 @@ export default function NormativaForm({ regulation, onClose }: NormativaFormProp
         }
     };
 
-    const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (e.target === e.currentTarget) {
-            onClose();
-        }
-    };
+    const inputClass = (field: string) => `
+        w-full h-[40px] px-4 rounded-lg border 
+        ${errors[field] ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-700'}
+        bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
+        placeholder-gray-400 dark:placeholder-gray-500 
+        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent 
+        transition-colors
+    `;
+
+    const isPending = createRegulation.isPending || updateRegulation.isPending;
 
     return (
-        <div className="modal-overlay" onClick={handleOverlayClick}>
-            <div className="modal-content normativa-form-modal">
-                <div className="modal-header">
-                    <h2>{isEditing ? 'Editar Normativa' : 'Nueva Normativa'}</h2>
-                    <button className="btn-close" onClick={onClose}>✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+            <div className="relative bg-white dark:bg-[#151824] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
+                            <Icon icon={isEditing ? "mdi:pencil" : "mdi:plus"} width="24" height="24" className="text-indigo-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                                {isEditing ? 'Editar Normativa' : 'Nueva Normativa'}
+                            </h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {isEditing ? 'Modifica los datos de la normativa' : 'Registra una nueva regulación'}
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        <Icon icon="mdi:close" width="24" height="24" className="text-gray-500" />
+                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="normativa-form">
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label htmlFor="number">Número *</label>
-                            <input
-                                id="number"
-                                name="number"
-                                type="number"
-                                value={formData.number}
-                                onChange={handleChange}
-                                className={errors.number ? 'error' : ''}
-                            />
-                            {errors.number && <span className="error-message">{errors.number}</span>}
+                {/* Body */}
+                <div className="overflow-y-auto p-6">
+                    <form onSubmit={handleSubmit} id="normativa-form" className="space-y-4">
+                        {/* Fila 1: Número, Año, Fecha, Estado */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Número *</label>
+                                <input type="number" name="number" value={formData.number} onChange={handleChange} className={inputClass('number')} />
+                                {errors.number && <span className="text-xs text-red-500">{errors.number}</span>}
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Año *</label>
+                                <input type="number" name="year" value={formData.year} onChange={handleChange} className={inputClass('year')} />
+                                {errors.year && <span className="text-xs text-red-500">{errors.year}</span>}
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha Emisión *</label>
+                                <input type="date" name="issueDate" value={formData.issueDate} onChange={handleChange} className={inputClass('issueDate')} />
+                                {errors.issueDate && <span className="text-xs text-red-500">{errors.issueDate}</span>}
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Estado *</label>
+                                <select name="status" value={formData.status} onChange={handleChange} className={inputClass('status')}>
+                                    <option value="Vigente">Vigente</option>
+                                    <option value="Compilada">Compilada</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="year">Año *</label>
-                            <input
-                                id="year"
-                                name="year"
-                                type="number"
-                                value={formData.year}
-                                onChange={handleChange}
-                                className={errors.year ? 'error' : ''}
-                            />
-                            {errors.year && <span className="error-message">{errors.year}</span>}
+                        {/* Título */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Título *</label>
+                            <input type="text" name="title" value={formData.title} onChange={handleChange} className={inputClass('title')} placeholder="Título de la normativa" />
+                            {errors.title && <span className="text-xs text-red-500">{errors.title}</span>}
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="issueDate">Fecha de Emisión *</label>
-                            <input
-                                id="issueDate"
-                                name="issueDate"
-                                type="date"
-                                value={formData.issueDate}
-                                onChange={handleChange}
-                                className={errors.issueDate ? 'error' : ''}
-                            />
-                            {errors.issueDate && <span className="error-message">{errors.issueDate}</span>}
+                        {/* Nombre Común */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nombre Común *</label>
+                            <input type="text" name="commonName" value={formData.commonName} onChange={handleChange} className={inputClass('commonName')} placeholder="Ej: Ley de Protección de Datos" />
+                            {errors.commonName && <span className="text-xs text-red-500">{errors.commonName}</span>}
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="status">Estado *</label>
-                            <select
-                                id="status"
-                                name="status"
-                                value={formData.status}
-                                onChange={handleChange}
-                                className={errors.status ? 'error' : ''}
-                            >
-                                <option value="Vigente">Vigente</option>
-                                <option value="Compilada">Compilada</option>
-                            </select>
-                            {errors.status && <span className="error-message">{errors.status}</span>}
+                        {/* Regulación */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Descripción de la Regulación *</label>
+                            <textarea name="regulation" rows={3} value={formData.regulation} onChange={handleChange} className={`${inputClass('regulation')} !h-auto py-2`} placeholder="Descripción detallada..." />
+                            {errors.regulation && <span className="text-xs text-red-500">{errors.regulation}</span>}
                         </div>
 
-                        <div className="form-group full-width">
-                            <label htmlFor="title">Título *</label>
-                            <input
-                                id="title"
-                                name="title"
-                                type="text"
-                                value={formData.title}
-                                onChange={handleChange}
-                                className={errors.title ? 'error' : ''}
-                            />
-                            {errors.title && <span className="error-message">{errors.title}</span>}
+                        {/* URL */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">URL del documento</label>
+                            <input type="url" name="url" value={formData.url} onChange={handleChange} className={inputClass('url')} placeholder="https://ejemplo.com/documento.pdf" />
                         </div>
 
-                        <div className="form-group full-width">
-                            <label htmlFor="commonName">Nombre Común *</label>
-                            <input
-                                id="commonName"
-                                name="commonName"
-                                type="text"
-                                value={formData.commonName}
-                                onChange={handleChange}
-                                className={errors.commonName ? 'error' : ''}
-                            />
-                            {errors.commonName && <span className="error-message">{errors.commonName}</span>}
+                        {/* Fila de catálogos */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo *</label>
+                                <input type="number" name="type" value={formData.type} onChange={handleChange} className={inputClass('type')} />
+                                {errors.type && <span className="text-xs text-red-500">{errors.type}</span>}
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Industria *</label>
+                                <input type="number" name="industry" value={formData.industry} onChange={handleChange} className={inputClass('industry')} />
+                                {errors.industry && <span className="text-xs text-red-500">{errors.industry}</span>}
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Autoridad *</label>
+                                <input type="number" name="authority" value={formData.authority} onChange={handleChange} className={inputClass('authority')} />
+                                {errors.authority && <span className="text-xs text-red-500">{errors.authority}</span>}
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Dominio *</label>
+                                <input type="number" name="domain" value={formData.domain} onChange={handleChange} className={inputClass('domain')} />
+                                {errors.domain && <span className="text-xs text-red-500">{errors.domain}</span>}
+                            </div>
                         </div>
+                    </form>
+                </div>
 
-                        <div className="form-group full-width">
-                            <label htmlFor="regulation">Regulación *</label>
-                            <textarea
-                                id="regulation"
-                                name="regulation"
-                                rows={3}
-                                value={formData.regulation}
-                                onChange={handleChange}
-                                className={errors.regulation ? 'error' : ''}
-                            />
-                            {errors.regulation && <span className="error-message">{errors.regulation}</span>}
-                        </div>
-
-                        <div className="form-group full-width">
-                            <label htmlFor="url">URL</label>
-                            <input
-                                id="url"
-                                name="url"
-                                type="url"
-                                value={formData.url}
-                                onChange={handleChange}
-                                placeholder="https://ejemplo.com/documento.pdf"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="type">Tipo *</label>
-                            <input
-                                id="type"
-                                name="type"
-                                type="number"
-                                value={formData.type}
-                                onChange={handleChange}
-                                className={errors.type ? 'error' : ''}
-                            />
-                            {errors.type && <span className="error-message">{errors.type}</span>}
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="industry">Industria *</label>
-                            <input
-                                id="industry"
-                                name="industry"
-                                type="number"
-                                value={formData.industry}
-                                onChange={handleChange}
-                                className={errors.industry ? 'error' : ''}
-                            />
-                            {errors.industry && <span className="error-message">{errors.industry}</span>}
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="authority">Autoridad *</label>
-                            <input
-                                id="authority"
-                                name="authority"
-                                type="number"
-                                value={formData.authority}
-                                onChange={handleChange}
-                                className={errors.authority ? 'error' : ''}
-                            />
-                            {errors.authority && <span className="error-message">{errors.authority}</span>}
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="domain">Dominio *</label>
-                            <input
-                                id="domain"
-                                name="domain"
-                                type="number"
-                                value={formData.domain}
-                                onChange={handleChange}
-                                className={errors.domain ? 'error' : ''}
-                            />
-                            {errors.domain && <span className="error-message">{errors.domain}</span>}
-                        </div>
-                    </div>
-
-                    <div className="form-actions">
-                        <button type="button" className="btn-cancel" onClick={onClose}>
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn-submit"
-                            disabled={createRegulation.isPending || updateRegulation.isPending}
-                        >
-                            {createRegulation.isPending || updateRegulation.isPending
-                                ? 'Guardando...'
-                                : isEditing ? 'Actualizar' : 'Crear'
-                            }
-                        </button>
-                    </div>
-                </form>
+                {/* Footer */}
+                <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button type="button" onClick={onClose} disabled={isPending} className="flex-1 h-[40px] bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" form="normativa-form" disabled={isPending} className="flex-1 h-[40px] bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors disabled:bg-gray-400 flex items-center justify-center">
+                        {isPending ? <LoadingSpinner size="small" /> : isEditing ? 'Actualizar' : 'Crear'}
+                    </button>
+                </div>
             </div>
         </div>
     );
