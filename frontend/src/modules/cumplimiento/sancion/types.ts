@@ -165,3 +165,26 @@ export function getStageColor(stage: SanctionStage): string {
             return 'gray';
     }
 }
+
+// ============================================
+// 📋 ENTITY - Tabla Compleja (snc_entities)
+// ============================================
+
+export interface Entity {
+    id: number;
+    name: string;
+    taxId: string;           // ✅ Agregar
+    industry: number;        // FK a general_industries
+    companySize: string;     // ✅ Agregar (company_size desde DB)
+}
+
+export interface CreateEntityDto {
+    name: string;
+    taxId: string;
+    industry: number;
+    companySize: string;
+}
+
+export interface UpdateEntityDto extends Partial<CreateEntityDto> {
+    id: number;
+}

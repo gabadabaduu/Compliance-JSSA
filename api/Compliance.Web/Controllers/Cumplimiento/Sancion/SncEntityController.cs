@@ -7,7 +7,7 @@ namespace Compliance.Web.Controllers.Cumplimiento.SncEntities
 {
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/Sanctions/catalog/entities")]
     public class SncEntityController : ControllerBase
     {
         private readonly ISncEntityService _service;
