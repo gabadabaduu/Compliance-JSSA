@@ -1,7 +1,7 @@
 ﻿import { Icon } from '@iconify/react';
 import { useSanctions, useDeleteSanction } from '../hooks/useSancion';
 import { getStatusColor, getStageColor, SANCTION_STATUS_LABELS, SANCTION_STAGE_LABELS } from '../types';
-import type { Sanction } from '../types';
+import type { Sanction, SanctionStage, SanctionStatus } from '../types';
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
 
 interface Props {
@@ -24,7 +24,7 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         }
     };
 
-    const getStageStyle = (stage: string) => {
+    const getStageStyle = (stage: SanctionStage) => {
         const color = getStageColor(stage);
         switch (color) {
             case 'blue':
@@ -38,7 +38,7 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         }
     };
 
-    const getStatusStyle = (status: string) => {
+    const getStatusStyle = (status: SanctionStatus) => {
         const color = getStatusColor(status);
         switch (color) {
             case 'green':
