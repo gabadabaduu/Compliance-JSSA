@@ -11,6 +11,8 @@ using Compliance.Infrastructure.Modules.Cumplimiento.RegIndustries.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncType.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncInfringements.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncEntities.Entities;
+using Compliance.Infrastructure.Modules.Cumplimiento.GeneralIndustries.Entities;
 using Compliance.Core.Modules.Cumplimiento.Sancion.Dtos;
 
 namespace Compliance.Infrastructure.Data;
@@ -42,6 +44,8 @@ public class AppDbContext : DbContext
     public DbSet<SncTypeEntity> SncTypes { get; set; } = null!;
     public DbSet<SncInfringementEntity> SncInfringements { get; set; } = null!;
     public DbSet<SncResolutionEntity> SncResolutions { get; set; } = null!;
+    public DbSet<SncEntityEntity> SncEntities { get; set; } = null!;
+    public DbSet<GeneralIndustryEntity> GeneralIndustries { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,8 +55,7 @@ public class AppDbContext : DbContext
         // ENUMS POSTGRESQL (solo para sanciones)
         // =====================================================
 
-        modelBuilder.HasPostgresEnum<SanctionStage>();
-        modelBuilder.HasPostgresEnum<SanctionStatus>();
+        // (Vacío por ahora - puedes agregar enums aquí si los necesitas)
 
         // =====================================================
         // USERS
@@ -233,7 +236,7 @@ public class AppDbContext : DbContext
             eb.ToTable("snc_resolutions");
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
-            eb.Property(e => e.Sanctions).HasColumnName("sanctions").IsRequired();  // ✅ STRING
+            eb.Property(e => e.Sanctions).HasColumnName("sanctions").IsRequired();
             eb.Property(e => e.Number).HasColumnName("number").IsRequired();
             eb.Property(e => e.IssueDate).HasColumnName("issue_date").IsRequired();
             eb.Property(e => e.Year).HasColumnName("year").IsRequired();
@@ -248,6 +251,25 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Orders).HasColumnName("orders").IsRequired();
             eb.Property(e => e.Attachment).HasColumnName("attachment");
             eb.Property(e => e.Url).HasColumnName("url");
+        });
+
+        modelBuilder.Entity<SncEntityEntity>(eb =>
+        {
+            eb.ToTable("snc_entities");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+            eb.Property(e => e.TaxId).HasColumnName("tax_id").IsRequired();
+            eb.Property(e => e.Industry).HasColumnName("industry").IsRequired();
+            eb.Property(e => e.CompanySize).HasColumnName("company_size").IsRequired();
+        });
+
+        modelBuilder.Entity<GeneralIndustryEntity>(eb =>
+        {
+            eb.ToTable("general_industries");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired();
         });
 
         // =====================================================

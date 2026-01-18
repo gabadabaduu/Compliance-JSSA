@@ -1,47 +1,40 @@
 import { usePermissions } from '../../../hooks/usePermissions'
 import ChangePasswordSection from '../components/ChangePasswordSection'
 import AdminUsuario from '../components/AdminUsuario'
-import LogoutSection from '../components/LogoutSection'
-import Cruduser from '../components/CrudUsuario/CrudUsuario'
-import './UsuarioPage.css'
+import UserProfileCard from '../components/UserProfileCard/UserProfileCard'
+import LoadingSpinner from '../../../components/LoadingSpinner/LoadingSpinner'
 
 export default function UsuarioPage() {
-    const { role, loading, userData } = usePermissions()
-
-    // DEBUG - Quitar después
-    console.log('🔍 UsuarioPage - role:', role)
-    console.log('🔍 UsuarioPage - loading:', loading)
-    console.log('🔍 UsuarioPage - userData:', userData)
+    const { role, loading } = usePermissions()
 
     if (loading) {
         return (
-            <div className="usuario-page">
-                <p className="usuario-loading">Cargando...</p>
+            <div className="min-h-full flex items-center justify-center">
+                <LoadingSpinner size="large" text="Cargando..." />
             </div>
         )
     }
 
-    // DEBUG - Ver qué condiciones se evalúan
-    console.log('🔍 role === user:', role === 'user')
-    console.log('🔍 role === admin || superadmin:', role === 'admin' || role === 'superadmin')
-
     return (
-        <div className="usuario-page">
-            <h1 className="usuario-title">Mi Cuenta</h1>
+        <div className="min-h-full p-6">
+            <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-10 text-center">
+                Mi Cuenta
+            </h1>
 
-            {/* Solo para usuarios normales */}
-            {role === 'user' && <ChangePasswordSection />}
+            <div className="space-y-6">
+                {/* Card superior: Perfil + Crear Usuario */}
+                <UserProfileCard showCreateUser={role === 'admin' || role === 'superadmin'} />
 
-            {/* Solo para admin/superadmin */}
-            {(role === 'admin' || role === 'superadmin') && (
-                <>
-                    <AdminUsuario />
-                    <Cruduser />
-                </>
-            )}
+                {/* Tabla de usuarios (solo admin/superadmin) */}
+                {(role === 'admin' || role === 'superadmin') && <AdminUsuario />}
 
-            {/* Siempre visible */}
-            <LogoutSection />
+                {/* Cambio de contraseña (solo usuarios normales) */}
+                {role === 'user' && (
+                    <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
+                        <ChangePasswordSection />
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

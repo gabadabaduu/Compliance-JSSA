@@ -60,30 +60,9 @@ namespace Compliance.Web.Controllers.Cumplimiento.Sancion
             return NoContent();
         }
 
-        // GET: api/Sancion/status/{status}
-        // ✅ VOLVER A USAR ENUM EN EL PARÁMETRO
-        [HttpGet("status/{status}")]
-        public async Task<ActionResult<IEnumerable<SancionDto>>> GetByStatus(SanctionStatus status, CancellationToken ct)
-        {
-            var items = await _service.GetByStatusAsync(status.ToString(), ct);
-            return Ok(items);
-        }
+        
 
-        // GET: api/Sancion/stage/{stage}
-        // ✅ VOLVER A USAR ENUM EN EL PARÁMETRO
-        [HttpGet("stage/{stage}")]
-        public async Task<ActionResult<IEnumerable<SancionDto>>> GetByStage(SanctionStage stage, CancellationToken ct)
-        {
-            var items = await _service.GetByStageAsync(stage.ToString(), ct);
-            return Ok(items);
-        }
+        
 
-        // GET: api/Sancion/entity/{entityId}
-        [HttpGet("entity/{entityId:int}")]
-        public async Task<ActionResult<IEnumerable<SancionDto>>> GetByEntity(int entityId, CancellationToken ct)
-        {
-            var items = await _service.GetByEntityAsync(entityId, ct);
-            return Ok(items);
-        }
     }
 }

@@ -1,13 +1,13 @@
 ﻿import { useState } from 'react';
+import { Icon } from '@iconify/react';
 import NormativaHeader from '../components/NormativaHeader';
 import NormativaList from '../components/NormativaList';
 import NormativaForm from '../components/NormativaForm';
 import CatalogManager from '../components/CatalogManager/CatalogManager';
 import { useRegulations } from '../hooks/useNormativa';
 import type { Regulation, CatalogConfig } from '../types';
-import './NormativaPage.css';
+import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
 
-// 🆕 Configuración de los 4 catálogos
 const CATALOG_CONFIGS: CatalogConfig[] = [
     {
         endpoint: 'industries',
@@ -57,46 +57,55 @@ export default function NormativaPage() {
 
     if (isLoading) {
         return (
-            <div className="normativa-page">
-                <div className="loading">Cargando normativas... </div>
+            <div className="min-h-full flex items-center justify-center">
+                <LoadingSpinner size="large" text="Cargando normativas..." />
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="normativa-page">
-                <div className="error">Error al cargar normativas: {error.message}</div>
+            <div className="min-h-full flex items-center justify-center">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 flex items-center gap-3">
+                    <Icon icon="mdi:alert-circle" width="24" height="24" className="text-red-500" />
+                    <span className="text-red-700 dark:text-red-400">Error al cargar normativas: {error.message}</span>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="normativa-page">
-            {/* SECCIÓN PRINCIPAL:  Normativas */}
-            <section className="normativa-main-section">
+        <div className="min-h-full p-6 space-y-6">
+            {/* Sección principal */}
+            <div className="space-y-6">
                 <NormativaHeader onCreateClick={handleCreate} />
-                <NormativaList
-                    regulations={regulations || []}
-                    onEdit={handleEdit}
-                />
-                {isFormOpen && (
-                    <NormativaForm
-                        regulation={selectedRegulation}
-                        onClose={handleCloseForm}
-                    />
-                )}
-            </section>
+                <NormativaList regulations={regulations || []} onEdit={handleEdit} />
+            </div>
 
-            {/* 🆕 SECCIÓN DE CATÁLOGOS */}
-            <section className="catalogs-section">
-                <h2 className="catalogs-title">Catálogos Auxiliares</h2>
-                <div className="catalogs-grid">
+            {/* Sección de catálogos */}
+            <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <Icon icon="mdi:folder-cog" width="28" height="28" className="text-blue-400" />
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                            Catálogos Auxiliares
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Administra las categorías de clasificación
+                        </p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {CATALOG_CONFIGS.map((config) => (
                         <CatalogManager key={config.endpoint} config={config} />
                     ))}
                 </div>
-            </section>
+            </div>
+
+            {/* Modal del formulario */}
+            {isFormOpen && (
+                <NormativaForm regulation={selectedRegulation} onClose={handleCloseForm} />
+            )}
         </div>
     );
 }

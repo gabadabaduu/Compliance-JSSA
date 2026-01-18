@@ -40,6 +40,12 @@ using Compliance.Infrastructure.Modules.Cumplimiento.SncInfringements.Services;
 using Compliance.Core.Modules.Cumplimiento.SncResolutions.Interfaces;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Repositories;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Services;
+using Compliance.Core.Modules.Cumplimiento.SncEntities.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncEntities.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.SncEntities.Services;
+using Compliance.Core.Modules.Cumplimiento.GeneralIndustries.Interfaces;
+using Compliance.Infrastructure.Modules.Cumplimiento.GeneralIndustries.Repositories;
+using Compliance.Infrastructure.Modules.Cumplimiento.GeneralIndustries.Services;
 using Compliance.Core.Modules.MatrizRiesgo.Interfaces;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Repositories;
 using Compliance.Infrastructure.Modules.MatrizRiesgo.Services;
@@ -118,13 +124,17 @@ builder.Services.AddScoped<ISncInfringementRepository, SncInfringementRepository
 builder.Services.AddScoped<ISncInfringementService, SncInfringementService>();
 builder.Services.AddScoped<ISncResolutionRepository, SncResolutionRepository>();
 builder.Services.AddScoped<ISncResolutionService, SncResolutionService>();
+builder.Services.AddScoped<ISncEntityRepository, SncEntityRepository>();
+builder.Services.AddScoped<ISncEntityService, SncEntityService>();
+builder.Services.AddScoped<IGeneralIndustryRepository, GeneralIndustryRepository>();
+builder.Services.AddScoped<IGeneralIndustryService, GeneralIndustryService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
 if (string.IsNullOrEmpty(jwtSecret))
 {
-    throw new InvalidOperationException("❌ ERROR CRÍTICO: Jwt: Secret no está configurado.");
+    throw new InvalidOperationException("❌ ERROR CRÍTICO:  Jwt:  Secret no está configurado.");
 }
 
 var key = Encoding.UTF8.GetBytes(jwtSecret);

@@ -1,7 +1,9 @@
 ﻿import { useState, useEffect } from 'react';
+import { Icon } from '@iconify/react';
 import { useQuery } from '@tanstack/react-query';
 import { getAllRegulations } from '../../services/resolutionService';
 import type { CatalogItem, CatalogType, Infringement, SanctionType, CreateCatalogDto } from '../../types';
+import LoadingSpinner from '../../../../../components/LoadingSpinner/LoadingSpinner';
 
 interface Props {
     title: string;
@@ -9,7 +11,7 @@ interface Props {
     onSubmit: (data: CreateCatalogDto) => void;
     onClose: () => void;
     isLoading: boolean;
-    catalogType: CatalogType;  // 🆕
+    catalogType: CatalogType;
 }
 
 export default function CatalogForm({ title, initialData, onSubmit, onClose, isLoading, catalogType }: Props) {
@@ -71,19 +73,48 @@ export default function CatalogForm({ title, initialData, onSubmit, onClose, isL
         }));
     };
 
+    const inputClass = `
+        w-full h-[40px] px-4 rounded-lg border border-gray-300 dark:border-gray-700
+        bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
+        placeholder-gray-400 dark:placeholder-gray-500 
+        focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent 
+        transition-colors
+    `;
+
+    const textareaClass = `
+        w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
+        bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
+        placeholder-gray-400 dark:placeholder-gray-500 
+        focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent 
+        transition-colors resize-none
+    `;
+
     return (
-        <div className="catalog-form-overlay" onClick={onClose}>
-            <div className={`catalog-form ${catalogType === 'infringement' ? 'catalog-form-large' : ''}`} onClick={(e) => e.stopPropagation()}>
-                <div className="catalog-form-header">
-                    <h3>{title}</h3>
-                    <button className="btn-close" onClick={onClose}>✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+            <div className={`relative bg-white dark:bg-[#151824] rounded-xl shadow-2xl w-full ${catalogType === 'infringement' ? 'max-w-lg' : 'max-w-sm'}`}>
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                        {title}
+                    </h3>
+                    <button 
+                        onClick={onClose} 
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                    >
+                        <Icon icon="mdi:close" width="20" height="20" className="text-gray-500" />
+                    </button>
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="p-4">
                     {catalogType === 'simple' ? (
-                        // 🟢 FORMULARIO SIMPLE
-                        <div className="form-group">
-                            <label htmlFor="name">Nombre</label>
+                        // Formulario Simple
+                        <div className="flex flex-col gap-2 mb-4">
+                            <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Nombre
+                            </label>
                             <input
                                 id="name"
                                 type="text"
@@ -92,19 +123,23 @@ export default function CatalogForm({ title, initialData, onSubmit, onClose, isL
                                 placeholder="Ingrese el nombre"
                                 required
                                 autoFocus
+                                className={inputClass}
                             />
                         </div>
                     ) : (
-                        // 🟡 FORMULARIO INFRINGEMENT
-                        <>
-                            <div className="form-group">
-                                <label htmlFor="statute">Estatuto (Regulación) *</label>
+                        // Formulario Infringement
+                        <div className="space-y-4 mb-4">
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="statute" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Estatuto (Regulación) *
+                                </label>
                                 <select
                                     id="statute"
                                     name="statute"
                                     value={infringementData.statute}
                                     onChange={handleInfringementChange}
                                     required
+                                    className={inputClass}
                                 >
                                     {regulations?.map((reg) => (
                                         <option key={reg.id} value={reg.id}>
@@ -114,32 +149,42 @@ export default function CatalogForm({ title, initialData, onSubmit, onClose, isL
                                 </select>
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="article">Artículo *</label>
-                                <input
-                                    id="article"
-                                    name="article"
-                                    type="number"
-                                    value={infringementData.article}
-                                    onChange={handleInfringementChange}
-                                    required
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="flex flex-col gap-2">
+                                    <label htmlFor="article" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Artículo *
+                                    </label>
+                                    <input
+                                        id="article"
+                                        name="article"
+                                        type="number"
+                                        value={infringementData.article}
+                                        onChange={handleInfringementChange}
+                                        required
+                                        className={inputClass}
+                                    />
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <label htmlFor="section" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Sección *
+                                    </label>
+                                    <input
+                                        id="section"
+                                        name="section"
+                                        type="text"
+                                        value={infringementData.section}
+                                        onChange={handleInfringementChange}
+                                        required
+                                        className={inputClass}
+                                    />
+                                </div>
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="section">Sección *</label>
-                                <input
-                                    id="section"
-                                    name="section"
-                                    type="text"
-                                    value={infringementData.section}
-                                    onChange={handleInfringementChange}
-                                    required
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="description">Descripción *</label>
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Descripción *
+                                </label>
                                 <textarea
                                     id="description"
                                     name="description"
@@ -147,11 +192,14 @@ export default function CatalogForm({ title, initialData, onSubmit, onClose, isL
                                     value={infringementData.description}
                                     onChange={handleInfringementChange}
                                     required
+                                    className={textareaClass}
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label htmlFor="interpretation">Interpretación *</label>
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="interpretation" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Interpretación *
+                                </label>
                                 <textarea
                                     id="interpretation"
                                     name="interpretation"
@@ -159,17 +207,27 @@ export default function CatalogForm({ title, initialData, onSubmit, onClose, isL
                                     value={infringementData.interpretation}
                                     onChange={handleInfringementChange}
                                     required
+                                    className={textareaClass}
                                 />
                             </div>
-                        </>
+                        </div>
                     )}
 
-                    <div className="form-actions">
-                        <button type="button" className="btn-cancel" onClick={onClose}>
+                    <div className="flex gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={isLoading}
+                            className="flex-1 h-[36px] bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors"
+                        >
                             Cancelar
                         </button>
-                        <button type="submit" className="btn-submit" disabled={isLoading}>
-                            {isLoading ? 'Guardando...' : 'Guardar'}
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="flex-1 h-[36px] bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors disabled:bg-gray-400 flex items-center justify-center"
+                        >
+                            {isLoading ? <LoadingSpinner size="small" /> : 'Guardar'}
                         </button>
                     </div>
                 </form>
