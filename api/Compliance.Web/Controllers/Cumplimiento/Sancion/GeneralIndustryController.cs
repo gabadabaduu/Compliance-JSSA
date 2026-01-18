@@ -7,7 +7,7 @@ namespace Compliance.Web.Controllers.Cumplimiento.GeneralIndustries
 {
 	[Authorize]
 	[ApiController]
-	[Route("api/[controller]")]
+	[Route("api/Sanctions/catalog/industries")]
 	public class GeneralIndustryController : ControllerBase
 	{
 		private readonly IGeneralIndustryService _service;
