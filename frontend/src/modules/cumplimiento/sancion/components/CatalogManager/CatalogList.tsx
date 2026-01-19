@@ -39,12 +39,12 @@ export default function CatalogList({ items, onEdit, onDelete, singularName, cat
                     {(items as Entity[]).map((item) => (
                         <div
                             key={item.id}
-                            className="grid grid-cols-[1fr_120px_1fr_100px_80px] gap-2 px-4 py-2.5 border-b border-gray-100 dark: border-gray-800 last: border-b-0 hover: bg-gray-50 dark: hover:bg-gray-800/30 transition-colors items-center"
+                            className="grid grid-cols-[1fr_120px_1fr_100px_80px] gap-2 px-4 py-2.5 border-b border-gray-100 dark:border-gray-800 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors items-center"
                         >
                             <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
                                 {item.name}
                             </span>
-                            <span className="text-sm text-gray-700 dark: text-gray-300 truncate">
+                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
                                 {item.taxId}
                             </span>
                             <span className="text-sm text-gray-700 dark:text-gray-300">
