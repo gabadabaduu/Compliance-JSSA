@@ -5,13 +5,21 @@ import {
     createRegulation,
     updateRegulation,
     deleteRegulation,
-    getRegulationsByStatus,
-    getRegulationsByYear
+    getRegulationsFiltered,
+    getTypesForFilter,
+    getYearsForFilter,
+    getAuthoritiesForFilter,
+    getIndustriesForFilter,
+    getDomainsForFilter,
+    getStatusesForFilter,
+    type RegulationFilters
 } from '../services/normativaService';
-import { RegulationStatus } from '../types';
-import type { CreateRegulationDto, UpdateRegulationDto, Regulation } from '../types';
+import type { CreateRegulationDto, UpdateRegulationDto } from '../types';
 
-// Hook para obtener todas las regulations
+// ============================================
+// 📋 HOOKS CRUD
+// ============================================
+
 export function useRegulations() {
     return useQuery({
         queryKey: ['regulations'],
@@ -21,7 +29,7 @@ export function useRegulations() {
         retry: 1,
     });
 }
-// Hook para obtener regulation por ID
+
 export function useRegulation(id: number) {
     return useQuery({
         queryKey: ['regulation', id],
@@ -33,32 +41,8 @@ export function useRegulation(id: number) {
     });
 }
 
-// Hook para obtener regulations por status
-export function useRegulationsByStatus(status: string) {
-    return useQuery({
-        queryKey: ['regulations', 'status', status],
-        queryFn: () => getRegulationsByStatus(status),
-        enabled: !!status,
-        staleTime: 1000 * 60 * 5,
-        gcTime: 1000 * 60 * 30,
-    });
-}
-
-// Hook para obtener regulations por año
-export function useRegulationsByYear(year: number) {
-    return useQuery({
-        queryKey: ['regulations', 'year', year],
-        queryFn: () => getRegulationsByYear(year),
-        enabled: !!year,
-        staleTime: 1000 * 60 * 5,
-        gcTime: 1000 * 60 * 30,
-    });
-}
-
-// Hook para crear regulation
 export function useCreateRegulation() {
     const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: (data: CreateRegulationDto) => createRegulation(data),
         onSuccess: () => {
@@ -68,10 +52,8 @@ export function useCreateRegulation() {
     });
 }
 
-// Hook para actualizar regulation
 export function useUpdateRegulation() {
     const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: (data: UpdateRegulationDto) => updateRegulation(data),
         onSuccess: (_, variables) => {
@@ -82,15 +64,81 @@ export function useUpdateRegulation() {
     });
 }
 
-// Hook para eliminar regulation
 export function useDeleteRegulation() {
     const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: (id: number) => deleteRegulation(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['regulations'] });
             queryClient.invalidateQueries({ queryKey: ['regulation', 'names'] });
         },
+    });
+}
+
+// ============================================
+// 🔍 HOOKS PARA FILTROS
+// ============================================
+
+export function useRegulationsFiltered(filters: RegulationFilters) {
+    return useQuery({
+        queryKey: ['regulations', 'filtered', filters],
+        queryFn: () => getRegulationsFiltered(filters),
+        staleTime: 1000 * 60 * 5,
+        gcTime: 1000 * 60 * 30,
+        retry: 1,
+    });
+}
+
+export function useTypesForFilter() {
+    return useQuery({
+        queryKey: ['types', 'filter-options'],
+        queryFn: getTypesForFilter,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useYearsForFilter() {
+    return useQuery({
+        queryKey: ['regulations', 'years', 'filter-options'],
+        queryFn: getYearsForFilter,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useAuthoritiesForFilter() {
+    return useQuery({
+        queryKey: ['authorities', 'filter-options'],
+        queryFn: getAuthoritiesForFilter,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useIndustriesForFilter() {
+    return useQuery({
+        queryKey: ['industries', 'filter-options'],
+        queryFn: getIndustriesForFilter,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useDomainsForFilter() {
+    return useQuery({
+        queryKey: ['domains', 'filter-options'],
+        queryFn: getDomainsForFilter,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useStatusesForFilter() {
+    return useQuery({
+        queryKey: ['statuses', 'filter-options'],
+        queryFn: getStatusesForFilter,
+        staleTime: 1000 * 60 * 60,
+        gcTime: 1000 * 60 * 60,
     });
 }
