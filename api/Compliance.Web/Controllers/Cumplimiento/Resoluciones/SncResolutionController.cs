@@ -55,7 +55,11 @@ namespace Compliance.Web.Controllers.Cumplimiento.SncResolutions
             return NoContent();
         }
 
-        [HttpGet("sanction/{sanctions}")]  // ✅ STRING en la ruta
+        // ============================================
+        // 🔍 FILTROS INDIVIDUALES (Mantener compatibilidad)
+        // ============================================
+
+        [HttpGet("sanction/{sanctions}")]
         public async Task<ActionResult<IEnumerable<SncResolutionDto>>> GetBySanction(string sanctions, CancellationToken ct)
         {
             var result = await _service.GetBySanctionAsync(sanctions, ct);
@@ -73,6 +77,30 @@ namespace Compliance.Web.Controllers.Cumplimiento.SncResolutions
         public async Task<ActionResult<IEnumerable<SncResolutionDto>>> GetByOutcome(string outcome, CancellationToken ct)
         {
             var result = await _service.GetByOutcomeAsync(outcome, ct);
+            return Ok(result);
+        }
+
+        // ============================================
+        // 🔍 FILTRO COMBINADO (Nuevo)
+        // ============================================
+
+        /// <summary>
+        /// GET: api/Resolutions/filter?year=2024&outcome=Acogida&sanctionType=1
+        /// </summary>
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<SncResolutionDto>>> GetFiltered(
+            [FromQuery] string? sanctions,
+            [FromQuery] string? issueDate,
+            [FromQuery] int? year,
+            [FromQuery] string? resolutionType,
+            [FromQuery] int? infringements,
+            [FromQuery] int? sanctionType,
+            [FromQuery] string? outcome,
+            CancellationToken ct)
+        {
+            var result = await _service.GetFilteredAsync(
+                sanctions, issueDate, year, resolutionType, infringements, sanctionType, outcome, ct);
+
             return Ok(result);
         }
     }

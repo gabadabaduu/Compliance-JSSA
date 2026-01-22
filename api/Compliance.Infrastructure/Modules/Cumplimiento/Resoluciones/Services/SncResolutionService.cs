@@ -32,5 +32,18 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Services
 
         public Task<IEnumerable<SncResolutionDto>> GetByOutcomeAsync(string outcome, CancellationToken ct = default)
             => _repository.GetByOutcomeAsync(outcome, ct);
+
+        public Task<IEnumerable<SncResolutionDto>> GetFilteredAsync(
+    string? sanctions,
+    string? issueDate,
+    int? year,
+    string? resolutionType,
+    int? infringements,
+    int? sanctionType,
+    string? outcome,
+    CancellationToken ct = default)
+        {
+            return _repository.GetFilteredAsync(sanctions, issueDate, year, resolutionType, infringements, sanctionType, outcome, ct);
+        }
     }
 }

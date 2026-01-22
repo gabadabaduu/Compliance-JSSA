@@ -58,6 +58,10 @@ namespace Compliance.Web.Controllers.Cumplimiento.Normativa
             return NoContent();
         }
 
+        // ============================================
+        // 🔍 FILTROS INDIVIDUALES (Mantener compatibilidad)
+        // ============================================
+
         [HttpGet("status/{status}")]
         public async Task<ActionResult<IEnumerable<NormativaDto>>> GetByStatus(string status, CancellationToken ct)
         {
@@ -83,6 +87,31 @@ namespace Compliance.Web.Controllers.Cumplimiento.Normativa
         public async Task<ActionResult<IEnumerable<NormativaDto>>> GetByYear(int year, CancellationToken ct)
         {
             var result = await _service.GetByYearAsync(year, ct);
+            return Ok(result);
+        }
+
+        // ============================================
+        // 🔍 FILTRO COMBINADO (Nuevo)
+        // ============================================
+
+        /// <summary>
+        /// GET: api/Normativa/filter?type=1&year=2024&status=Vigente&authority=2
+        /// </summary>
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<NormativaDto>>> GetFiltered(
+            [FromQuery] int? type,
+            [FromQuery] string? issueDate,
+            [FromQuery] int? year,
+            [FromQuery] string? regulation,
+            [FromQuery] int? authority,
+            [FromQuery] int? industry,
+            [FromQuery] int? domain,
+            [FromQuery] string? status,
+            CancellationToken ct)
+        {
+            var result = await _service.GetFilteredAsync(
+                type, issueDate, year, regulation, authority, industry, domain, status, ct);
+
             return Ok(result);
         }
     }
