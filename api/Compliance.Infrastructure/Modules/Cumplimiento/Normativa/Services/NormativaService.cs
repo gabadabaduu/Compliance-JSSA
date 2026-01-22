@@ -37,5 +37,18 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Services
 
         public Task<IEnumerable<NormativaDto>> GetByYearAsync(int year, CancellationToken ct = default)
             => _repository.GetByYearAsync(year, ct);
+        public Task<IEnumerable<NormativaDto>> GetFilteredAsync(
+    int? type,
+    string? issueDate,
+    int? year,
+    string? regulation,
+    int? authority,
+    int? industry,
+    int? domain,
+    string? status,
+    CancellationToken ct = default)
+        {
+            return _repository.GetFilteredAsync(type, issueDate, year, regulation, authority, industry, domain, status, ct);
+        }
     }
 }

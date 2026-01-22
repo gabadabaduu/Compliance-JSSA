@@ -33,7 +33,7 @@ namespace Compliance.Web.Controllers.Cumplimiento.Sancion
             return Ok(item);
         }
 
-        // POST:  api/Sancion
+        // POST: api/Sancion
         [HttpPost]
         public async Task<ActionResult<SancionDto>> Create([FromBody] CreateSancionDto dto, CancellationToken ct)
         {
@@ -41,7 +41,7 @@ namespace Compliance.Web.Controllers.Cumplimiento.Sancion
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        // PUT:  api/Sancion/{id}
+        // PUT: api/Sancion/{id}
         [HttpPut("{id:long}")]
         public async Task<ActionResult<SancionDto>> Update(long id, [FromBody] UpdateSancionDto dto, CancellationToken ct)
         {
@@ -60,9 +60,26 @@ namespace Compliance.Web.Controllers.Cumplimiento.Sancion
             return NoContent();
         }
 
-        
+        // ============================================
+        // 🔍 FILTRO COMBINADO (Nuevo)
+        // ============================================
 
-        
+        /// <summary>
+        /// GET: api/Sancion/filter?entity=1&stage=Decisión Inicial&status=En trámite
+        /// </summary>
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<SancionDto>>> GetFiltered(
+            [FromQuery] int? entity,
+            [FromQuery] string? stage,
+            [FromQuery] int? initial,
+            [FromQuery] int? reconsideration,
+            [FromQuery] int? appeal,
+            CancellationToken ct)
+        {
+            var result = await _service.GetFilteredAsync(
+                entity, stage, initial, reconsideration, appeal, ct);
 
+            return Ok(result);
+        }
     }
 }

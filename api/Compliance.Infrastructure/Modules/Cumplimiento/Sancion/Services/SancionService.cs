@@ -34,5 +34,16 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Services
 
         public Task<IEnumerable<SancionDto>> GetByEntityAsync(int entityId, CancellationToken ct = default) =>
             _repo.GetByEntityAsync(entityId, ct);
+
+        public Task<IEnumerable<SancionDto>> GetFilteredAsync(
+    int? entity,
+    string? stage,
+    int? initial,
+    int? reconsideration,
+    int? appeal,
+    CancellationToken ct = default)
+        {
+            return _repo.GetFilteredAsync(entity, stage, initial, reconsideration, appeal, ct);
+        }
     }
 }

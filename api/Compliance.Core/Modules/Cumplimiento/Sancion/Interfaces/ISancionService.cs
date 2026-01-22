@@ -17,5 +17,12 @@ namespace Compliance.Core.Modules.Cumplimiento.Sancion.Interfaces
         Task<IEnumerable<SancionDto>> GetByStatusAsync(string status, CancellationToken ct = default);
         Task<IEnumerable<SancionDto>> GetByStageAsync(string stage, CancellationToken ct = default);
         Task<IEnumerable<SancionDto>> GetByEntityAsync(int entityId, CancellationToken ct = default);
+        Task<IEnumerable<SancionDto>> GetFilteredAsync(
+    int? entity,
+    string? stage,
+    int? initial,
+    int? reconsideration,
+    int? appeal,
+    CancellationToken ct = default);
     }
 }

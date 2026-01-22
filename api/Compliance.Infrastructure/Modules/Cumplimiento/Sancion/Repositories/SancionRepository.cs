@@ -119,6 +119,39 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Sancion.Repositories
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<SancionDto>> GetFilteredAsync(
+    int? entity,
+    string? stage,
+    int? initial,
+    int? reconsideration,
+    int? appeal,
+    CancellationToken ct = default)
+        {
+            var query = _db.Set<SancionEntity>().AsNoTracking().AsQueryable();
+
+            if (entity.HasValue)
+                query = query.Where(s => s.Entity == entity.Value);
+
+            if (!string.IsNullOrWhiteSpace(stage))
+                query = query.Where(s => s.Stage == stage);
+
+            if (initial.HasValue)
+                query = query.Where(s => s.Initial == initial.Value);
+
+            if (reconsideration.HasValue)
+                query = query.Where(s => s.Reconsideration == reconsideration.Value);
+
+            if (appeal.HasValue)
+                query = query.Where(s => s.Appeal == appeal.Value);
+
+            var results = await query
+                .OrderByDescending(s => s.Id)
+                .Select(s => MapToDto(s))
+                .ToListAsync(ct);
+
+            return results;
+        }
+
         private static SancionDto MapToDto(SancionEntity entity)
         {
             return new SancionDto

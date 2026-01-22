@@ -12,5 +12,14 @@ namespace Compliance.Core.Modules.Cumplimiento.SncResolutions.Interfaces
         Task<IEnumerable<SncResolutionDto>> GetBySanctionAsync(string sanctions, CancellationToken ct = default);  // ✅ STRING
         Task<IEnumerable<SncResolutionDto>> GetByYearAsync(int year, CancellationToken ct = default);
         Task<IEnumerable<SncResolutionDto>> GetByOutcomeAsync(string outcome, CancellationToken ct = default);
+        Task<IEnumerable<SncResolutionDto>> GetFilteredAsync(
+    string? sanctions,
+    string? issueDate,
+    int? year,
+    string? resolutionType,
+    int? infringements,
+    int? sanctionType,
+    string? outcome,
+    CancellationToken ct = default);
     }
 }
