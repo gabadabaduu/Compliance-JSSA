@@ -58,14 +58,14 @@ export default function ResolutionPage() {
             <div className="min-h-full flex items-center justify-center">
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 flex items-center gap-3">
                     <Icon icon="mdi:alert-circle" width="24" height="24" className="text-red-500" />
-                    <span className="text-red-700 dark:text-red-400">Error al cargar resoluciones: {error.message}</span>
+                    <span className="text-red-700 dark:text-red-400">Error al cargar resoluciones:  {error.message}</span>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-full p-6 space-y-6">
+        <div className="min-h-full max-w-[calc(100vw-280px)] p-6 space-y-6">  {/* ✅ AGREGAR max-w */}
             {/* Sección principal */}
             <div className="space-y-6">
                 <ResolutionHeader onCreateClick={handleCreate} />

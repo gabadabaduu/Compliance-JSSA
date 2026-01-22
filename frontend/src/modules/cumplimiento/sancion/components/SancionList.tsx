@@ -28,11 +28,11 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         const color = getStageColor(stage);
         switch (color) {
             case 'blue':
-                return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
-            case 'yellow':
-                return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
+                return 'bg-blue-100 dark: bg-blue-900/30 text-blue-700 dark: text-blue-300';
             case 'purple':
                 return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300';
+            case 'red':
+                return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
             default:
                 return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300';
         }
@@ -43,10 +43,8 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         switch (color) {
             case 'green':
                 return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
-            case 'red':
-                return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
-            case 'yellow':
-                return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
+            case 'orange':
+                return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
             default:
                 return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300';
         }
@@ -89,8 +87,8 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
             {/* Header de la tabla */}
             <div className="flex items-center gap-3 mb-6">
-                <Icon icon="mdi:format-list-bulleted" width="24" height="24" className="text-rose-400" />
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                <Icon icon="mdi: format-list-bulleted" width="24" height="24" className="text-rose-400" />
+                <h2 className="text-lg font-semibold text-gray-800 dark: text-gray-200">
                     Listado de Sanciones
                 </h2>
                 <span className="px-2 py-0.5 text-xs font-medium bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded-full">
@@ -103,48 +101,86 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-gray-200 dark:border-gray-700">
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Número</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entidad</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Hechos</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Etapa</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
-                            <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                            {/* ✅ ORDEN EXACTO DEL EXCEL */}
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Number</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entity</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">Facts</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stage</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark: text-gray-400 uppercase tracking-wider hidden md:table-cell">Initial Res</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Reconsideration Res</th>
+                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Appeal Res</th>
+                            <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark: text-gray-400 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                         {sanctions.map((sanction) => (
-                            <tr 
-                                key={sanction.id} 
-                                className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                            <tr
+                                key={sanction.id}
+                                className="hover:bg-gray-50 dark:hover: bg-gray-800/50 transition-colors"
                             >
+                                {/* ✅ MISMO ORDEN QUE LAS COLUMNAS DEL HEADER */}
+
+                                {/* 1. Number */}
                                 <td className="py-4 px-4">
                                     <span className="font-mono text-sm font-medium text-gray-800 dark:text-gray-200">
                                         {sanction.number}
                                     </span>
                                 </td>
+
+                                {/* 2. Entity */}
                                 <td className="py-4 px-4">
                                     <span className="text-sm text-gray-600 dark:text-gray-400">
                                         {sanction.entity}
                                     </span>
                                 </td>
-                                <td className="py-4 px-4 hidden md:table-cell">
-                                    <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2" title={sanction.facts}>
-                                        {sanction.facts.length > 50
-                                            ? `${sanction.facts.substring(0, 50)}...`
+
+                                {/* 3. Facts */}
+                                <td className="py-4 px-4 hidden lg:table-cell">
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 max-w-md" title={sanction.facts}>
+                                        {sanction.facts.length > 100
+                                            ? `${sanction.facts.substring(0, 100)}...`
                                             : sanction.facts
                                         }
                                     </p>
                                 </td>
+
+                                {/* 4. Stage */}
                                 <td className="py-4 px-4">
                                     <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStageStyle(sanction.stage)}`}>
                                         {SANCTION_STAGE_LABELS[sanction.stage] || sanction.stage}
                                     </span>
                                 </td>
+
+                                {/* 5. Status */}
                                 <td className="py-4 px-4">
                                     <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStatusStyle(sanction.status)}`}>
                                         {SANCTION_STATUS_LABELS[sanction.status] || sanction.status}
                                     </span>
                                 </td>
+
+                                {/* 6. Initial Res */}
+                                <td className="py-4 px-4 hidden md:table-cell">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        {sanction.initial ? `#${sanction.initial}` : '-'}
+                                    </span>
+                                </td>
+
+                                {/* 7. Reconsideration Res */}
+                                <td className="py-4 px-4 hidden md:table-cell">
+                                    <span className="text-sm text-gray-600 dark: text-gray-400">
+                                        {sanction.reconsideration ? `#${sanction.reconsideration}` : '-'}
+                                    </span>
+                                </td>
+
+                                {/* 8. Appeal Res */}
+                                <td className="py-4 px-4 hidden md:table-cell">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                        {sanction.appeal ? `#${sanction.appeal}` : '-'}
+                                    </span>
+                                </td>
+
+                                {/* 9. Acciones */}
                                 <td className="py-4 px-4">
                                     <div className="flex items-center justify-center gap-1">
                                         <button
