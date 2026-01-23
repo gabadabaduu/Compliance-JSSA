@@ -66,7 +66,7 @@ export async function getSanctionsFiltered(filters?: SanctionFilters): Promise<S
 // ============================================
 
 export async function getEntitiesForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const entities = await apiClient.get<Entity[]>('/entities');
+    const entities = await apiClient.get<Entity[]>('/Sanctions/catalog/entities');
     return entities.map(e => ({ value: e.id, label: e.name }));
 }
 

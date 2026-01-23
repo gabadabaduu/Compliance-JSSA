@@ -160,7 +160,11 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                         {displayRegulations.map((regulation) => (
                             <tr key={regulation.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                <td className="py-4 px-4"><span className="text-sm text-gray-600 dark:text-gray-400">{regulation.type}</span></td>
+                                <td className="py-4 px-4">
+                                    <span className="text-sm text-red-500">
+                                        {JSON.stringify(regulation.type)}
+                                    </span>
+                                </td>
                                 <td className="py-4 px-4"><span className="font-mono text-sm font-medium text-gray-800 dark:text-gray-200">{regulation.number}</span></td>
                                 <td className="py-4 px-4 hidden md:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400">{formatDate(regulation.issueDate)}</span></td>
                                 <td className="py-4 px-4"><span className="text-sm text-gray-600 dark:text-gray-400">{regulation.year}</span></td>

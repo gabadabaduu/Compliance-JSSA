@@ -70,7 +70,7 @@ export async function getRegulationsFiltered(filters?: RegulationFilters): Promi
 // ============================================
 
 export async function getTypesForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const types = await apiClient.get<CatalogItem[]>('/types');
+    const types = await apiClient.get<CatalogItem[]>('/Normativa/catalog/types');
     return types.map(t => ({ value: t.id, label: t.name }));
 }
 
@@ -81,17 +81,17 @@ export async function getYearsForFilter(): Promise<Array<{ value: number; label:
 }
 
 export async function getAuthoritiesForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const authorities = await apiClient.get<CatalogItem[]>('/authorities');
+    const authorities = await apiClient.get<CatalogItem[]>('/Normativa/catalog/authorities');
     return authorities.map(a => ({ value: a.id, label: a.name }));
 }
 
 export async function getIndustriesForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const industries = await apiClient.get<CatalogItem[]>('/industries');
+    const industries = await apiClient.get<CatalogItem[]>('/Normativa/catalog/industries');
     return industries.map(i => ({ value: i.id, label: i.name }));
 }
 
 export async function getDomainsForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const domains = await apiClient.get<CatalogItem[]>('/domains');
+    const domains = await apiClient.get<CatalogItem[]>('/Normativa/catalog/domains');
     return domains.map(d => ({ value: d.id, label: d.name }));
 }
 

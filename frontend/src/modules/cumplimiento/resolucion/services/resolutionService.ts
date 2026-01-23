@@ -87,12 +87,12 @@ export async function getResolutionTypesForFilter(): Promise<Array<{ value: stri
 }
 
 export async function getInfringementsForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const infringements = await apiClient.get<Infringement[]>('/infringements');
+    const infringements = await apiClient.get<Infringement[]>('/Resolutions/catalog/infringements');
     return infringements.map(i => ({ value: i.id, label: `${i.article} - ${i.section}` }));
 }
 
 export async function getSanctionTypesForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const types = await apiClient.get<SanctionType[]>('/sanction-types');
+    const types = await apiClient.get<SanctionType[]>('/Resolutions/catalog/sanction-types');
     return types.map(t => ({ value: t.id, label: t.name }));
 }
 
