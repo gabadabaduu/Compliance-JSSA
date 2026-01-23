@@ -133,6 +133,52 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<NormativaDto>> GetFilteredAsync(
+    int? type,
+    string? issueDate,
+    int? year,
+    string? regulation,
+    int? authority,
+    int? industry,
+    int? domain,
+    string? status,
+    CancellationToken ct = default)
+        {
+            var query = _db.Set<NormativaEntity>().AsNoTracking().AsQueryable();
+
+            if (type.HasValue)
+                query = query.Where(r => r.Type == type.Value);
+
+            if (!string.IsNullOrWhiteSpace(issueDate) && DateTime.TryParse(issueDate, out var parsedDate))
+                query = query.Where(r => r.IssueDate.Date == parsedDate.Date);
+
+            if (year.HasValue)
+                query = query.Where(r => r.Year == year.Value);
+
+            if (!string.IsNullOrWhiteSpace(regulation))
+                query = query.Where(r => r.Regulation.Contains(regulation));
+
+            if (authority.HasValue)
+                query = query.Where(r => r.Authority == authority.Value);
+
+            if (industry.HasValue)
+                query = query.Where(r => r.Industry == industry.Value);
+
+            if (domain.HasValue)
+                query = query.Where(r => r.Domain == domain.Value);
+
+            if (!string.IsNullOrWhiteSpace(status))
+                query = query.Where(r => r.Status == status);
+
+            var results = await query
+                .OrderByDescending(r => r.Id)
+                .Select(r => MapToDto(r))
+                .ToListAsync(ct);
+
+            return results;
+        }
+
+
         private static NormativaDto MapToDto(NormativaEntity entity)
         {
             return new NormativaDto

@@ -1,8 +1,8 @@
 ﻿import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllRegulations } from '../../services/resolutionService';
-import type { CatalogItem, CatalogType, Infringement, SanctionType, CreateCatalogDto } from '../../types';
+import { getAllResolutions } from '../../services/resolutionService';
+import type { CatalogItem, CatalogType, Infringement, SanctionType, CreateCatalogDto, Resolution } from '../../types';
 import LoadingSpinner from '../../../../../components/LoadingSpinner/LoadingSpinner';
 
 interface Props {
@@ -30,7 +30,7 @@ export default function CatalogForm({ title, initialData, onSubmit, onClose, isL
     // Cargar regulations para el select de statute
     const { data: regulations } = useQuery({
         queryKey: ['regulations'],
-        queryFn: () => getAllRegulations(),
+        queryFn: () => getAllResolutions(),
         enabled: catalogType === 'infringement',
     });
 
@@ -141,9 +141,9 @@ export default function CatalogForm({ title, initialData, onSubmit, onClose, isL
                                     required
                                     className={inputClass}
                                 >
-                                    {regulations?.map((reg) => (
+                                    {regulations?.map((reg: Resolution) => (
                                         <option key={reg.id} value={reg.id}>
-                                            {reg.commonName || reg.title}
+                                            {reg.number} - {reg.resolution}
                                         </option>
                                     ))}
                                 </select>

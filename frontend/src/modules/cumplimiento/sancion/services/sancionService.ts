@@ -4,45 +4,73 @@ import type {
     CreateSanctionDto,
     UpdateSanctionDto,
     SanctionStatus,
-    SanctionStage
+    SanctionStage,
+    Entity
 } from '../types';
 
-// Obtener sanction por ID
+// ============================================
+// 📋 CRUD BÁSICO
+// ============================================
+
 export async function getSanctionById(id: number): Promise<Sanction> {
     return apiClient.get<Sanction>(`/Sancion/${id}`);
 }
 
-// Obtener todas las sanctions
 export async function getAllSanctions(): Promise<Sanction[]> {
     return apiClient.get<Sanction[]>('/Sancion');
 }
 
-// Crear nueva sanction
 export async function createSanction(data: CreateSanctionDto): Promise<Sanction> {
     return apiClient.post<Sanction>('/Sancion', data);
 }
 
-// Actualizar sanction existente
 export async function updateSanction(data: UpdateSanctionDto): Promise<Sanction> {
     return apiClient.put<Sanction>(`/Sancion/${data.id}`, data);
 }
 
-// Eliminar sanction
 export async function deleteSanction(id: number): Promise<void> {
     return apiClient.delete(`/Sancion/${id}`);
 }
 
-// Filtrar sanctions por status
-export async function getSanctionsByStatus(status: SanctionStatus | string): Promise<Sanction[]> {
-    return apiClient.get<Sanction[]>(`/Sancion/status/${encodeURIComponent(status)}`);
+// ============================================
+// 🔍 FILTROS
+// ============================================
+
+export interface SanctionFilters {
+    entity?: number;
+    stage?: string;
+    initial?: number;
+    reconsideration?: number;
+    appeal?: number;
 }
 
-// Filtrar sanctions por stage
-export async function getSanctionsByStage(stage: SanctionStage | string): Promise<Sanction[]> {
-    return apiClient.get<Sanction[]>(`/Sancion/stage/${encodeURIComponent(stage)}`);
+export async function getSanctionsFiltered(filters?: SanctionFilters): Promise<Sanction[]> {
+    if (!filters || Object.keys(filters).length === 0) {
+        return getAllSanctions();
+    }
+
+    const params = new URLSearchParams();
+    
+    if (filters.entity) params.append('entity', filters.entity.toString());
+    if (filters.stage) params.append('stage', filters.stage);
+    if (filters.initial) params.append('initial', filters.initial.toString());
+    if (filters.reconsideration) params.append('reconsideration', filters.reconsideration.toString());
+    if (filters.appeal) params.append('appeal', filters.appeal.toString());
+
+    const queryString = params.toString();
+    return apiClient.get<Sanction[]>(`/Sancion/filter?${queryString}`);
 }
 
-// Filtrar sanctions por entity
-export async function getSanctionsByEntity(entityId: number): Promise<Sanction[]> {
-    return apiClient.get<Sanction[]>(`/Sancion/entity/${entityId}`);
+// ============================================
+// 📦 OPCIONES PARA DROPDOWNS DE FILTROS
+// ============================================
+
+export async function getEntitiesForFilter(): Promise<Array<{ value: number; label: string }>> {
+    const entities = await apiClient.get<Entity[]>('/Sanctions/catalog/entities');
+    return entities.map(e => ({ value: e.id, label: e.name }));
+}
+
+export async function getResolutionsForFilter(): Promise<Array<{ value: number; label: string }>> {
+    const resolutions = await apiClient.get<Array<{ id: number; number: number }>>('/Resolutions');
+    return resolutions.map(r => ({ value: r.id, label: `Resolución #${r.number}` }));
 }
