@@ -7,7 +7,7 @@ on:
     branches: [ "develop", "main" ]
 
 jobs:
-  # Lint del frontend (si usas React/Vue/Angular con npm)
+  # Lint del frontend
   frontend-lint:
     name: Frontend Lint
     runs-on: ubuntu-latest
@@ -30,12 +30,15 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint --if-present
-        continue-on-error: true  # No falla el build, solo reporta
+        continue-on-error: true
 
   # Verificar que el backend compila
   backend-build:
     name: Backend Build Check
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
     
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +49,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore Compliance.Web/Compliance.Web.csproj
 
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build Compliance.Web/Compliance.Web.csproj --no-restore --configuration Release
