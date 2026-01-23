@@ -70,10 +70,12 @@ export async function getRegulationsFiltered(filters?: RegulationFilters): Promi
 // ============================================
 
 export async function getTypesForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const types = await apiClient.get<CatalogItem[]>('/Normativa/catalog/types');
-    return types.map(t => ({ value: t.id, label: t.name }));
+    const types = await apiClient.get<Array<{ id: number; type: string }>>('/Normativa/catalog/types');
+    return types.map(t => ({ 
+        value: t.id, 
+        label: t.type  
+    }));
 }
-
 export async function getYearsForFilter(): Promise<Array<{ value: number; label: string }>> {
     const regulations = await apiClient.get<Regulation[]>('/Normativa');
     const years = [...new Set(regulations.map(r => r.year))].sort((a, b) => b - a);
