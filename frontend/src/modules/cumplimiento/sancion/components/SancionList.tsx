@@ -5,6 +5,7 @@ import { getStatusColor, getStageColor, SANCTION_STATUS_LABELS, SANCTION_STAGE_L
 import type { Sanction, SanctionStage, SanctionStatus } from '../types';
 import TableFilter, { FilterConfig } from '../../TableFilter';
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
+import DetailModal from '../../DetailModal';
 
 interface Props {
     onEdit: (sanction: Sanction) => void;
@@ -13,6 +14,7 @@ interface Props {
 
 export default function SancionList({ onEdit, onCreate }: Props) {
     const [filters, setFilters] = useState<Record<string, any>>({});
+    const [selectedSanction, setSelectedSanction] = useState<Sanction | null>(null);
     
     const { data: sanctions, isLoading, error } = useSanctionsFiltered(filters);
     const { data: entitiesOptions } = useEntitiesForFilter();
@@ -57,7 +59,8 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         setFilters(newFilters);
     };
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: number, e: React.MouseEvent) => {
+        e.stopPropagation();
         if (!window.confirm('¿Estás seguro de eliminar esta sanción?')) return;
         try {
             await deleteSanction.mutateAsync(id);
@@ -65,6 +68,15 @@ export default function SancionList({ onEdit, onCreate }: Props) {
             console.error('Error al eliminar:', err);
             alert('Error al eliminar la sanción');
         }
+    };
+
+    const handleRowClick = (sanction: Sanction) => {
+        setSelectedSanction(sanction);
+    };
+
+    const handleEditClick = (sanction: Sanction, e: React.MouseEvent) => {
+        e.stopPropagation();
+        onEdit(sanction);
     };
 
     const getStageStyle = (stage: SanctionStage) => {
@@ -85,6 +97,32 @@ export default function SancionList({ onEdit, onCreate }: Props) {
             default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300';
         }
     };
+
+    // Campos para el modal de detalle
+    const getDetailFields = (sanction: Sanction) => [
+        { label: 'Número', value: sanction.number },
+        { label: 'Entidad', value: sanction.entity },
+        { 
+            label: 'Etapa', 
+            value: (
+                <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStageStyle(sanction.stage)}`}>
+                    {SANCTION_STAGE_LABELS[sanction.stage] || sanction.stage}
+                </span>
+            )
+        },
+        { 
+            label: 'Estado', 
+            value: (
+                <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStatusStyle(sanction.status)}`}>
+                    {SANCTION_STATUS_LABELS[sanction.status] || sanction.status}
+                </span>
+            )
+        },
+        { label: 'Resolución Inicial', value: sanction.initial ? `#${sanction.initial}` : '-' },
+        { label: 'Recurso de Reposición', value: sanction.reconsideration ? `#${sanction.reconsideration}` : '-' },
+        { label: 'Recurso de Apelación', value: sanction.appeal ? `#${sanction.appeal}` : '-' },
+        { label: 'Hechos', value: sanction.facts, fullWidth: true },
+    ];
 
     if (isLoading) {
         return (
@@ -121,106 +159,124 @@ export default function SancionList({ onEdit, onCreate }: Props) {
     }
 
     return (
-        <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
-            {/* Header de la tabla */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <Icon icon="mdi:format-list-bulleted" width="24" height="24" className="text-rose-400" />
-                    <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                        Listado de Sanciones
-                    </h2>
-                    <span className="px-2 py-0.5 text-xs font-medium bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded-full">
-                        {sanctions.length}
-                    </span>
+        <>
+            <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
+                {/* Header de la tabla */}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <Icon icon="mdi:format-list-bulleted" width="24" height="24" className="text-rose-400" />
+                        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                            Listado de Sanciones
+                        </h2>
+                        <span className="px-2 py-0.5 text-xs font-medium bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 rounded-full">
+                            {sanctions.length}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Filtros */}
+                <TableFilter filters={filterConfig} onFilterChange={handleFilterChange} className="mb-4" />
+
+                {/* Tabla */}
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-gray-200 dark:border-gray-700">
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Number</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entity</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">Facts</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stage</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Initial Res</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Reconsideration Res</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Appeal Res</th>
+                                <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {sanctions.map((sanction) => (
+                                <tr 
+                                    key={sanction.id} 
+                                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                                    onClick={() => handleRowClick(sanction)}
+                                >
+                                    <td className="py-4 px-4">
+                                        <span className="font-mono text-sm font-medium text-gray-800 dark:text-gray-200">
+                                            {sanction.number}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-4">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            {sanction.entity}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-4 hidden lg:table-cell">
+                                        <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 max-w-md" title={sanction.facts}>
+                                            {sanction.facts.length > 100 ? `${sanction.facts.substring(0, 100)}...` : sanction.facts}
+                                        </p>
+                                    </td>
+                                    <td className="py-4 px-4">
+                                        <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStageStyle(sanction.stage)}`}>
+                                            {SANCTION_STAGE_LABELS[sanction.stage] || sanction.stage}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-4">
+                                        <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStatusStyle(sanction.status)}`}>
+                                            {SANCTION_STATUS_LABELS[sanction.status] || sanction.status}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-4 hidden md:table-cell">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            {sanction.initial ? `#${sanction.initial}` : '-'}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-4 hidden md:table-cell">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            {sanction.reconsideration ? `#${sanction.reconsideration}` : '-'}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-4 hidden md:table-cell">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            {sanction.appeal ? `#${sanction.appeal}` : '-'}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-4">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <button
+                                                onClick={(e) => handleEditClick(sanction, e)}
+                                                className="p-2 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg transition-colors"
+                                                title="Editar"
+                                            >
+                                                <Icon icon="mdi:pencil" width="18" height="18" className="text-rose-500" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => handleDelete(sanction.id, e)}
+                                                className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
+                                                title="Eliminar"
+                                                disabled={deleteSanction.isPending}
+                                            >
+                                                <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* Filtros */}
-            <TableFilter filters={filterConfig} onFilterChange={handleFilterChange} className="mb-4" />
-
-            {/* Tabla */}
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-gray-200 dark:border-gray-700">
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Number</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entity</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">Facts</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stage</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Initial Res</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Reconsideration Res</th>
-                            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Appeal Res</th>
-                            <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                        {sanctions.map((sanction) => (
-                            <tr key={sanction.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                <td className="py-4 px-4">
-                                    <span className="font-mono text-sm font-medium text-gray-800 dark:text-gray-200">
-                                        {sanction.number}
-                                    </span>
-                                </td>
-                                <td className="py-4 px-4">
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        {sanction.entity}
-                                    </span>
-                                </td>
-                                <td className="py-4 px-4 hidden lg:table-cell">
-                                    <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 max-w-md" title={sanction.facts}>
-                                        {sanction.facts.length > 100 ? `${sanction.facts.substring(0, 100)}...` : sanction.facts}
-                                    </p>
-                                </td>
-                                <td className="py-4 px-4">
-                                    <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStageStyle(sanction.stage)}`}>
-                                        {SANCTION_STAGE_LABELS[sanction.stage] || sanction.stage}
-                                    </span>
-                                </td>
-                                <td className="py-4 px-4">
-                                    <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStatusStyle(sanction.status)}`}>
-                                        {SANCTION_STATUS_LABELS[sanction.status] || sanction.status}
-                                    </span>
-                                </td>
-                                <td className="py-4 px-4 hidden md:table-cell">
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        {sanction.initial ? `#${sanction.initial}` : '-'}
-                                    </span>
-                                </td>
-                                <td className="py-4 px-4 hidden md:table-cell">
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        {sanction.reconsideration ? `#${sanction.reconsideration}` : '-'}
-                                    </span>
-                                </td>
-                                <td className="py-4 px-4 hidden md:table-cell">
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        {sanction.appeal ? `#${sanction.appeal}` : '-'}
-                                    </span>
-                                </td>
-                                <td className="py-4 px-4">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <button
-                                            onClick={() => onEdit(sanction)}
-                                            className="p-2 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg transition-colors"
-                                            title="Editar"
-                                        >
-                                            <Icon icon="mdi:pencil" width="18" height="18" className="text-rose-500" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(sanction.id)}
-                                            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
-                                            title="Eliminar"
-                                            disabled={deleteSanction.isPending}
-                                        >
-                                            <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            {/* Modal de detalle */}
+            {selectedSanction && (
+                <DetailModal
+                    isOpen={!!selectedSanction}
+                    onClose={() => setSelectedSanction(null)}
+                    title={`Sanción ${selectedSanction.number}`}
+                    icon="mdi:file-document-alert-outline"
+                    iconColor="text-rose-400"
+                    fields={getDetailFields(selectedSanction)}
+                />
+            )}
+        </>
     );
 }
