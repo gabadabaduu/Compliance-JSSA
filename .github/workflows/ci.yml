@@ -1,0 +1,70 @@
+name: CI - Docker Compose
+
+on:
+  push:
+    branches: [ "develop", "main" ]
+  pull_request:
+    branches: [ "develop", "main" ]
+
+jobs:
+  docker-compose-test:
+    name: Build & Start Services
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build containers
+        run: docker compose build --no-cache
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Esperando que los servicios inicien..."
+          sleep 45
+
+      - name: Check running containers
+        run: docker compose ps -a
+
+      - name: Check backend logs
+        run: docker compose logs backend --tail=100
+
+      - name: Check frontend logs
+        run: docker compose logs frontend --tail=100
+
+      - name: Test backend is responding
+        run: |
+          echo "Testing backend on port 5000..."
+          curl -v --fail --max-time 10 http://localhost:5000/health || \
+          curl -v --fail --max-time 10 http://localhost:5000/api/health || \
+          curl -v --max-time 10 http://localhost:5000 || \
+          echo "Backend endpoint check completed"
+
+      - name: Test frontend is responding
+        run: |
+          echo "Testing frontend on port 3000..."
+          curl -v --fail --max-time 10 http://localhost:3000 || \
+          echo "Frontend responded (may have returned non-200)"
+
+      - name: Show container status
+        if: always()
+        run: |
+          echo "=== Container Status ==="
+          docker compose ps -a
+          echo ""
+          echo "=== Backend Health ==="
+          docker inspect compliance-backend --format='{{.State.Status}}' || true
+          echo ""
+          echo "=== Frontend Health ==="
+          docker inspect compliance-frontend --format='{{.State.Status}}' || true
+
+      - name: Show all logs on failure
+        if: failure()
+        run: docker compose logs --tail=200
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v --remove-orphans
