@@ -1,7 +1,7 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
-import { 
-    useResolutionsFiltered, 
+import {
+    useResolutionsFiltered,
     useDeleteResolution,
     useSanctionsForFilter,
     useYearsForFilter,
@@ -17,12 +17,19 @@ import DetailModal from '../../DetailModal';
 interface ResolutionListProps {
     resolutions: Resolution[];
     onEdit: (resolution: Resolution) => void;
+    autoOpenResolutionId?: number | null; // ✅ Nuevo prop
+    onModalOpened?: () => void; // ✅ Callback cuando se abre el modal
 }
 
-export default function ResolutionList({ resolutions: initialResolutions, onEdit }: ResolutionListProps) {
+export default function ResolutionList({
+    resolutions: initialResolutions,
+    onEdit,
+    autoOpenResolutionId,
+    onModalOpened
+}: ResolutionListProps) {
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [selectedResolution, setSelectedResolution] = useState<Resolution | null>(null);
-    
+
     const { data: resolutions } = useResolutionsFiltered(filters);
     const { data: sanctionsOptions } = useSanctionsForFilter();
     const { data: yearsOptions } = useYearsForFilter();
@@ -31,6 +38,9 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
     const { data: sanctionTypesOptions } = useSanctionTypesForFilter();
     const { data: outcomesOptions } = useOutcomesForFilter();
     const deleteResolution = useDeleteResolution();
+
+    // ✅ Determinar qué resoluciones mostrar
+    const displayResolutions = resolutions || initialResolutions;
 
     // Configuración de filtros
     const filterConfig: FilterConfig[] = [
@@ -76,6 +86,17 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
             options: outcomesOptions || [],
         },
     ];
+
+    // ✅ Auto-abrir modal cuando viene un ID desde Sanciones
+    useEffect(() => {
+        if (autoOpenResolutionId && displayResolutions.length > 0) {
+            const resolution = displayResolutions.find(r => r.id === autoOpenResolutionId);
+            if (resolution) {
+                setSelectedResolution(resolution);
+                onModalOpened?.(); // Notificar que se abrió
+            }
+        }
+    }, [autoOpenResolutionId, displayResolutions, onModalOpened]);
 
     const handleFilterChange = (newFilters: Record<string, any>) => {
         setFilters(newFilters);
@@ -137,8 +158,8 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
         { label: 'Infracción', value: `#${resolution.infringements}` },
         { label: 'Tipo de Sanción', value: `#${resolution.sanctionType}` },
         { label: 'Monto', value: formatCurrency(resolution.amount) },
-        { 
-            label: 'Resultado', 
+        {
+            label: 'Resultado',
             value: (
                 <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getOutcomeStyle(resolution.outcome)}`}>
                     {resolution.outcome}
@@ -149,16 +170,16 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
         { label: 'Fundamentos Legales', value: resolution.legalGrounds, fullWidth: true },
         { label: 'Descripción', value: resolution.description, fullWidth: true },
         { label: 'Órdenes', value: resolution.orders, fullWidth: true },
-        { 
-            label: 'Adjunto', 
+        {
+            label: 'Adjunto',
             value: resolution.attachment ? (
                 <a href={resolution.attachment} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 hover:underline flex items-center gap-1">
                     <Icon icon="mdi:paperclip" width="16" height="16" />Ver adjunto
                 </a>
             ) : '-'
         },
-        { 
-            label: 'URL', 
+        {
+            label: 'URL',
             value: resolution.url ? (
                 <a href={resolution.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 hover:underline flex items-center gap-1">
                     <Icon icon="mdi:link-variant" width="16" height="16" />Ver enlace
@@ -166,8 +187,6 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
             ) : '-'
         },
     ];
-
-    const displayResolutions = resolutions || initialResolutions;
 
     if (displayResolutions.length === 0) {
         return (
@@ -210,28 +229,28 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="border-b-2 border-gray-200 dark:border-gray-700">
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Sanctions</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[100px]">Number</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Issue Date</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[80px]">Year</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[200px]">Resolution</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[150px]">Resolution Type</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Infringements</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[250px]">Legal Grounds</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[130px]">Sanction Type</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Amount</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[250px]">Description</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[150px]">Outcome</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[250px]">Orders</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Attachment</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[100px]">URL</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Sanción</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[100px]">Número</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Fecha</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[80px]">Año</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[200px]">Resolución</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[150px]">Tipo de Resolución</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Normas incumplidas</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[250px]">Argumento de la autoridad</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[130px]">Tipo de sanción</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Valor de la multa</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[250px]">Orden Administrativa</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[150px]">Resultado</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[250px]">Decisión</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Adjunto</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[100px]">Enlace</th>
                                 <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[150px] sticky right-0 bg-white dark:bg-[#151824]">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {displayResolutions.map((resolution) => (
-                                <tr 
-                                    key={resolution.id} 
+                                <tr
+                                    key={resolution.id}
                                     className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                                     onClick={() => handleRowClick(resolution)}
                                 >
@@ -250,10 +269,10 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
                                     <td className="py-4 px-4"><p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2" title={resolution.orders}>{resolution.orders}</p></td>
                                     <td className="py-4 px-4">
                                         {resolution.attachment ? (
-                                            <a 
-                                                href={resolution.attachment} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
+                                            <a
+                                                href={resolution.attachment}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="text-sm text-blue-500 hover:text-blue-600 hover:underline flex items-center gap-1"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
@@ -263,10 +282,10 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
                                     </td>
                                     <td className="py-4 px-4">
                                         {resolution.url ? (
-                                            <a 
-                                                href={resolution.url} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
+                                            <a
+                                                href={resolution.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="text-sm text-blue-500 hover:text-blue-600 hover:underline"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
@@ -277,28 +296,28 @@ export default function ResolutionList({ resolutions: initialResolutions, onEdit
                                     <td className="py-4 px-4 sticky right-0 bg-white dark:bg-[#151824]">
                                         <div className="flex items-center justify-center gap-1">
                                             {resolution.url && (
-                                                <a 
-                                                    href={resolution.url} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors" 
+                                                <a
+                                                    href={resolution.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                                                     title="Ver documento"
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
                                                     <Icon icon="mdi:open-in-new" width="18" height="18" className="text-blue-500" />
                                                 </a>
                                             )}
-                                            <button 
-                                                onClick={(e) => handleEditClick(resolution, e)} 
-                                                className="p-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors" 
+                                            <button
+                                                onClick={(e) => handleEditClick(resolution, e)}
+                                                className="p-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
                                                 title="Editar"
                                             >
                                                 <Icon icon="mdi:pencil" width="18" height="18" className="text-amber-500" />
                                             </button>
-                                            <button 
-                                                onClick={(e) => handleDelete(resolution.id, e)} 
-                                                className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50" 
-                                                title="Eliminar" 
+                                            <button
+                                                onClick={(e) => handleDelete(resolution.id, e)}
+                                                className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
+                                                title="Eliminar"
                                                 disabled={deleteResolution.isPending}
                                             >
                                                 <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />

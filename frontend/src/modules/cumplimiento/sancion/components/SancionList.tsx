@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ AGREGAR
 import { Icon } from '@iconify/react';
 import { useSanctionsFiltered, useDeleteSanction, useEntitiesForFilter, useResolutionsForFilter } from '../hooks/useSancion';
 import { getStatusColor, getStageColor, SANCTION_STATUS_LABELS, SANCTION_STAGE_LABELS, SANCTION_STAGES } from '../types';
@@ -13,9 +14,10 @@ interface Props {
 }
 
 export default function SancionList({ onEdit, onCreate }: Props) {
+    const navigate = useNavigate(); // ✅ AGREGAR
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [selectedSanction, setSelectedSanction] = useState<Sanction | null>(null);
-    
+
     const { data: sanctions, isLoading, error } = useSanctionsFiltered(filters);
     const { data: entitiesOptions } = useEntitiesForFilter();
     const { data: resolutionsOptions } = useResolutionsForFilter();
@@ -79,6 +81,14 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         onEdit(sanction);
     };
 
+    // ✅ NUEVO: Handler para navegar a resoluciones
+    const handleResolutionClick = (resolutionId: number | null, e: React.MouseEvent) => {
+        e.stopPropagation(); // Evitar que abra el modal de sanción
+        if (resolutionId) {
+            navigate(`/app/resolucion?resolutionId=${resolutionId}`);
+        }
+    };
+
     const getStageStyle = (stage: SanctionStage) => {
         const color = getStageColor(stage);
         switch (color) {
@@ -102,16 +112,16 @@ export default function SancionList({ onEdit, onCreate }: Props) {
     const getDetailFields = (sanction: Sanction) => [
         { label: 'Número', value: sanction.number },
         { label: 'Entidad', value: sanction.entity },
-        { 
-            label: 'Etapa', 
+        {
+            label: 'Etapa',
             value: (
                 <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStageStyle(sanction.stage)}`}>
                     {SANCTION_STAGE_LABELS[sanction.stage] || sanction.stage}
                 </span>
             )
         },
-        { 
-            label: 'Estado', 
+        {
+            label: 'Estado',
             value: (
                 <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${getStatusStyle(sanction.status)}`}>
                     {SANCTION_STATUS_LABELS[sanction.status] || sanction.status}
@@ -182,21 +192,21 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-gray-200 dark:border-gray-700">
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Number</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entity</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">Facts</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stage</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Initial Res</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Reconsideration Res</th>
-                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Appeal Res</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Número</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sancionado</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">Hechos</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Etapa</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Resolución Inicial</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Resolución de Reposición</th>
+                                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Resolución de Apelación</th>
                                 <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {sanctions.map((sanction) => (
-                                <tr 
-                                    key={sanction.id} 
+                                <tr
+                                    key={sanction.id}
                                     className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                                     onClick={() => handleRowClick(sanction)}
                                 >
@@ -225,21 +235,55 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                                             {SANCTION_STATUS_LABELS[sanction.status] || sanction.status}
                                         </span>
                                     </td>
+
+                                    {/* ✅ RESOLUCIÓN INICIAL - Ahora clickeable */}
                                     <td className="py-4 px-4 hidden md:table-cell">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {sanction.initial ? `#${sanction.initial}` : '-'}
-                                        </span>
+                                        {sanction.initial ? (
+                                            <button
+                                                onClick={(e) => handleResolutionClick(sanction.initial, e)}
+                                                className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                                                title="Ver resolución inicial"
+                                            >
+                                                <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                                                #{sanction.initial}
+                                            </button>
+                                        ) : (
+                                            <span className="text-sm text-gray-400">-</span>
+                                        )}
                                     </td>
+
+                                    {/* ✅ RECURSO DE REPOSICIÓN - Ahora clickeable */}
                                     <td className="py-4 px-4 hidden md:table-cell">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {sanction.reconsideration ? `#${sanction.reconsideration}` : '-'}
-                                        </span>
+                                        {sanction.reconsideration ? (
+                                            <button
+                                                onClick={(e) => handleResolutionClick(sanction.reconsideration, e)}
+                                                className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                                                title="Ver recurso de reposición"
+                                            >
+                                                <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                                                #{sanction.reconsideration}
+                                            </button>
+                                        ) : (
+                                            <span className="text-sm text-gray-400">-</span>
+                                        )}
                                     </td>
+
+                                    {/* ✅ RECURSO DE APELACIÓN - Ahora clickeable */}
                                     <td className="py-4 px-4 hidden md:table-cell">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {sanction.appeal ? `#${sanction.appeal}` : '-'}
-                                        </span>
+                                        {sanction.appeal ? (
+                                            <button
+                                                onClick={(e) => handleResolutionClick(sanction.appeal, e)}
+                                                className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                                                title="Ver recurso de apelación"
+                                            >
+                                                <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                                                #{sanction.appeal}
+                                            </button>
+                                        ) : (
+                                            <span className="text-sm text-gray-400">-</span>
+                                        )}
                                     </td>
+
                                     <td className="py-4 px-4">
                                         <div className="flex items-center justify-center gap-1">
                                             <button
