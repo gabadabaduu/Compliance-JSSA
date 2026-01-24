@@ -1,4 +1,5 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import ResolutionHeader from '../components/ResolutionHeader';
 import ResolutionList from '../components/ResolutionList';
@@ -26,9 +27,24 @@ const CATALOG_CONFIGS: CatalogConfig[] = [
 ];
 
 export default function ResolutionPage() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedResolution, setSelectedResolution] = useState<Resolution | null>(null);
+    const [shouldOpenModal, setShouldOpenModal] = useState<number | null>(null);
+
     const { data: resolutions, isLoading, error } = useResolutions();
+
+    // ✅ Detectar si viene un resolutionId en la URL
+    useEffect(() => {
+        const resolutionId = searchParams.get('resolutionId');
+        if (resolutionId && resolutions) {
+            const id = parseInt(resolutionId, 10);
+            setShouldOpenModal(id);
+            // Limpiar el parámetro de la URL
+            searchParams.delete('resolutionId');
+            setSearchParams(searchParams);
+        }
+    }, [searchParams, resolutions, setSearchParams]);
 
     const handleCreate = () => {
         setSelectedResolution(null);
@@ -58,18 +74,23 @@ export default function ResolutionPage() {
             <div className="min-h-full flex items-center justify-center">
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 flex items-center gap-3">
                     <Icon icon="mdi:alert-circle" width="24" height="24" className="text-red-500" />
-                    <span className="text-red-700 dark:text-red-400">Error al cargar resoluciones:  {error.message}</span>
+                    <span className="text-red-700 dark:text-red-400">Error al cargar resoluciones: {error.message}</span>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-full max-w-[calc(100vw-280px)] p-6 space-y-6">  {/* ✅ AGREGAR max-w */}
+        <div className="min-h-full max-w-[calc(100vw-280px)] p-6 space-y-6">
             {/* Sección principal */}
             <div className="space-y-6">
                 <ResolutionHeader onCreateClick={handleCreate} />
-                <ResolutionList resolutions={resolutions || []} onEdit={handleEdit} />
+                <ResolutionList
+                    resolutions={resolutions || []}
+                    onEdit={handleEdit}
+                    autoOpenResolutionId={shouldOpenModal} // ✅ Pasar ID para abrir automáticamente
+                    onModalOpened={() => setShouldOpenModal(null)} // ✅ Resetear después de abrir
+                />
             </div>
 
             {/* Sección de catálogos */}
