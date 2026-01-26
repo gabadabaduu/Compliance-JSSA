@@ -149,8 +149,22 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
             if (type.HasValue)
                 query = query.Where(r => r.Type == type.Value);
 
-            if (!string.IsNullOrWhiteSpace(issueDate) && DateTime.TryParse(issueDate, out var parsedDate))
-                query = query.Where(r => r.IssueDate.Date == parsedDate.Date);
+            // ✅ CORRECCIÓN: Comparar solo año, mes y día
+            if (!string.IsNullOrWhiteSpace(issueDate))
+            {
+                if (DateTime.TryParseExact(issueDate, "yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None,
+                    out var parsedDate))
+                {
+                    // Comparar año, mes y día por separado (más confiable)
+                    query = query.Where(r =>
+                        r.IssueDate.Year == parsedDate.Year &&
+                        r.IssueDate.Month == parsedDate.Month &&
+                        r.IssueDate.Day == parsedDate.Day
+                    );
+                }
+            }
 
             if (year.HasValue)
                 query = query.Where(r => r.Year == year.Value);
