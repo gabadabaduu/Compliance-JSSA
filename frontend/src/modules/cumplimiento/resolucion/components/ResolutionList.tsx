@@ -13,7 +13,7 @@ import {
 import type { Resolution } from '../types';
 import TableFilter, { FilterConfig } from '../../TableFilter';
 import DetailModal from '../../DetailModal';
-
+import { usePermissions } from '../../../../hooks/usePermissions';
 interface ResolutionListProps {
     resolutions: Resolution[];
     onEdit: (resolution: Resolution) => void;
@@ -27,6 +27,7 @@ export default function ResolutionList({
     autoOpenResolutionId,
     onModalOpened
 }: ResolutionListProps) {
+    const { isSuperAdmin } = usePermissions();
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [selectedResolution, setSelectedResolution] = useState<Resolution | null>(null);
 
@@ -293,7 +294,7 @@ export default function ResolutionList({
                                             </a>
                                         ) : (<span className="text-sm text-gray-400">-</span>)}
                                     </td>
-                                    <td className="py-4 px-4 sticky right-0 bg-white dark:bg-[#151824]">
+                                                                       <td className="py-4 px-4 sticky right-0 bg-white dark:bg-[#151824]">
                                         <div className="flex items-center justify-center gap-1">
                                             {resolution.url && (
                                                 <a
@@ -307,21 +308,25 @@ export default function ResolutionList({
                                                     <Icon icon="mdi:open-in-new" width="18" height="18" className="text-blue-500" />
                                                 </a>
                                             )}
-                                            <button
-                                                onClick={(e) => handleEditClick(resolution, e)}
-                                                className="p-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
-                                                title="Editar"
-                                            >
-                                                <Icon icon="mdi:pencil" width="18" height="18" className="text-amber-500" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => handleDelete(resolution.id, e)}
-                                                className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
-                                                title="Eliminar"
-                                                disabled={deleteResolution.isPending}
-                                            >
-                                                <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
-                                            </button>
+                                            {isSuperAdmin && (
+                                                <>
+                                                    <button
+                                                        onClick={(e) => handleEditClick(resolution, e)}
+                                                        className="p-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
+                                                        title="Editar"
+                                                    >
+                                                        <Icon icon="mdi:pencil" width="18" height="18" className="text-amber-500" />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => handleDelete(resolution.id, e)}
+                                                        className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
+                                                        title="Eliminar"
+                                                        disabled={deleteResolution.isPending}
+                                                    >
+                                                        <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

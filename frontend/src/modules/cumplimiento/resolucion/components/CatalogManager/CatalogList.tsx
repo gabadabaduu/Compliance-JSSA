@@ -1,4 +1,5 @@
 ﻿import { Icon } from '@iconify/react';
+import { usePermissions } from '../../../../../hooks/usePermissions';
 import type { CatalogItem, CatalogType, Infringement, SanctionType } from '../../types';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function CatalogList({ items, onEdit, onDelete, singularName, catalogType }: Props) {
+    const { isSuperAdmin } = usePermissions();
     if (items.length === 0) {
         return (
             <div className="p-6 text-center">
@@ -53,20 +55,24 @@ export default function CatalogList({ items, onEdit, onDelete, singularName, cat
                                     : item.description}
                             </span>
                             <div className="flex items-center justify-center gap-1">
-                                <button
-                                    onClick={() => onEdit(item)}
-                                    className="p-1 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded transition-colors"
-                                    title="Editar"
-                                >
-                                    <Icon icon="mdi:pencil" width="14" height="14" className="text-amber-500" />
-                                </button>
-                                <button
-                                    onClick={() => onDelete(item.id)}
-                                    className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
-                                    title="Eliminar"
-                                >
-                                    <Icon icon="mdi:delete" width="14" height="14" className="text-red-500" />
-                                </button>
+                                {isSuperAdmin && (
+                                    <>
+                                        <button
+                                            onClick={() => onEdit(item)}
+                                            className="p-1 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded transition-colors"
+                                            title="Editar"
+                                        >
+                                            <Icon icon="mdi:pencil" width="14" height="14" className="text-amber-500" />
+                                        </button>
+                                        <button
+                                            onClick={() => onDelete(item.id)}
+                                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                                            title="Eliminar"
+                                        >
+                                            <Icon icon="mdi:delete" width="14" height="14" className="text-red-500" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -87,20 +93,24 @@ export default function CatalogList({ items, onEdit, onDelete, singularName, cat
                         {item.name}
                     </span>
                     <div className="flex items-center gap-1 ml-2">
-                        <button
-                            onClick={() => onEdit(item)}
-                            className="p-1 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded transition-colors"
-                            title="Editar"
-                        >
-                            <Icon icon="mdi:pencil" width="14" height="14" className="text-amber-500" />
-                        </button>
-                        <button
-                            onClick={() => onDelete(item.id)}
-                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
-                            title="Eliminar"
-                        >
-                            <Icon icon="mdi:delete" width="14" height="14" className="text-red-500" />
-                        </button>
+                        {isSuperAdmin && (
+                            <>
+                                <button
+                                    onClick={() => onEdit(item)}
+                                    className="p-1 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded transition-colors"
+                                    title="Editar"
+                                >
+                                    <Icon icon="mdi:pencil" width="14" height="14" className="text-amber-500" />
+                                </button>
+                                <button
+                                    onClick={() => onDelete(item.id)}
+                                    className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                                    title="Eliminar"
+                                >
+                                    <Icon icon="mdi:delete" width="14" height="14" className="text-red-500" />
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             ))}

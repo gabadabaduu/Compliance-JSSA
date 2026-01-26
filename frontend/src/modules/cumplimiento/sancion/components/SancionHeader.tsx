@@ -1,10 +1,11 @@
 ﻿import { Icon } from '@iconify/react';
-
+import { usePermissions } from '../../../../hooks/usePermissions';
 interface SancionHeaderProps {
     onCreateClick: () => void;
 }
 
 export default function SancionHeader({ onCreateClick }: SancionHeaderProps) {
+    const { isSuperAdmin } = usePermissions();
     return (
         <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -24,13 +25,15 @@ export default function SancionHeader({ onCreateClick }: SancionHeaderProps) {
                 </div>
 
                 {/* Botón crear */}
+                {isSuperAdmin && (
                 <button
                     onClick={onCreateClick}
                     className="flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-lg transition-colors shadow-lg shadow-rose-500/25"
                 >
                     <Icon icon="mdi:plus" width="20" height="20" />
                     Nueva Sanción
-                </button>
+                </button>  
+                )}
             </div>
         </div>
     );
