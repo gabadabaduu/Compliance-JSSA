@@ -1,6 +1,6 @@
 ﻿import { Icon } from '@iconify/react';
 import type { CatalogItem, CatalogType, Entity, Industry } from '../../types';
-
+import { usePermissions } from '../../../../../hooks/usePermissions';
 interface Props {
     items: CatalogItem[];
     onEdit: (item: CatalogItem) => void;
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function CatalogList({ items, onEdit, onDelete, singularName, catalogType }: Props) {
+    const { isSuperAdmin } = usePermissions();
     if (items.length === 0) {
         return (
             <div className="p-6 text-center">
@@ -53,6 +54,7 @@ export default function CatalogList({ items, onEdit, onDelete, singularName, cat
                             <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
                                 {item.companySize}
                             </span>
+                            {isSuperAdmin && (
                             <div className="flex items-center justify-center gap-1">
                                 <button
                                     onClick={() => onEdit(item)}
@@ -69,6 +71,7 @@ export default function CatalogList({ items, onEdit, onDelete, singularName, cat
                                     <Icon icon="mdi:delete" width="14" height="14" className="text-red-500" />
                                 </button>
                             </div>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -87,6 +90,7 @@ export default function CatalogList({ items, onEdit, onDelete, singularName, cat
                     <span className="text-sm text-gray-700 dark:text-gray-300 truncate flex-1">
                         {item.name}
                     </span>
+                    {isSuperAdmin && (
                     <div className="flex items-center gap-1 ml-2">
                         <button
                             onClick={() => onEdit(item)}
@@ -103,6 +107,7 @@ export default function CatalogList({ items, onEdit, onDelete, singularName, cat
                             <Icon icon="mdi:delete" width="14" height="14" className="text-red-500" />
                         </button>
                     </div>
+                    )}
                 </div>
             ))}
         </div>

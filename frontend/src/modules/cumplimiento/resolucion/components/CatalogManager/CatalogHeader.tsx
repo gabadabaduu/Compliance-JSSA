@@ -1,5 +1,5 @@
 import { Icon } from '@iconify/react';
-
+import { usePermissions } from '../../../../../hooks/usePermissions';
 interface Props {
     title: string;
     count: number;
@@ -7,6 +7,7 @@ interface Props {
 }
 
 export default function CatalogHeader({ title, count, onAdd }: Props) {
+    const { isSuperAdmin } = usePermissions();
     return (
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#151824]">
             <div className="flex items-center gap-2">
@@ -17,6 +18,7 @@ export default function CatalogHeader({ title, count, onAdd }: Props) {
                     {count}
                 </span>
             </div>
+            {isSuperAdmin && (
             <button
                 onClick={onAdd}
                 className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded transition-colors"
@@ -24,6 +26,7 @@ export default function CatalogHeader({ title, count, onAdd }: Props) {
                 <Icon icon="mdi:plus" width="14" height="14" />
                 Agregar
             </button>
+            )}
         </div>
     );
 }

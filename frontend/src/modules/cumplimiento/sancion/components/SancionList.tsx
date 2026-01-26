@@ -7,13 +7,14 @@ import type { Sanction, SanctionStage, SanctionStatus } from '../types';
 import TableFilter, { FilterConfig } from '../../TableFilter';
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
 import DetailModal from '../../DetailModal';
-
+import { usePermissions } from '../../../../hooks/usePermissions';
 interface Props {
     onEdit: (sanction: Sanction) => void;
     onCreate: () => void;
 }
 
 export default function SancionList({ onEdit, onCreate }: Props) {
+    const { isSuperAdmin } = usePermissions();
     const navigate = useNavigate(); // ✅ AGREGAR
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [selectedSanction, setSelectedSanction] = useState<Sanction | null>(null);
@@ -283,7 +284,7 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                                             <span className="text-sm text-gray-400">-</span>
                                         )}
                                     </td>
-
+                                     {isSuperAdmin && (
                                     <td className="py-4 px-4">
                                         <div className="flex items-center justify-center gap-1">
                                             <button
@@ -303,6 +304,7 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                                             </button>
                                         </div>
                                     </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

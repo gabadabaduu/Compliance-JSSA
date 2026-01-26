@@ -1,6 +1,6 @@
 ﻿import { apiClient } from '../../../../lib/api-client';
 import type { CatalogItem, CreateCatalogDto, UpdateCatalogDto } from '../types';
-
+import { useUserStore } from '../../../../stores/userStore';
 export const catalogService = {
     // Obtener todos los items de un catálogo
     getAll: async (endpoint: string): Promise<CatalogItem[]> => {
@@ -12,7 +12,13 @@ export const catalogService = {
         endpoint: string,
         data: CreateCatalogDto
     ): Promise<CatalogItem> => {
-        return apiClient.post<CatalogItem>(`/Sanctions/catalog/${endpoint}`, data);  // 🆕 Cambio
+        const { userData } = useUserStore.getState();
+        
+        if (userData?.role !== 'superadmin') {
+            throw new Error('No tienes permisos para crear items de catálogo');
+        }
+        
+        return apiClient.post<CatalogItem>(`/Sanctions/catalog/${endpoint}`, data);
     },
 
     // Actualizar un item existente
@@ -21,11 +27,23 @@ export const catalogService = {
         id: number,
         data: UpdateCatalogDto
     ): Promise<CatalogItem> => {
-        return apiClient.put<CatalogItem>(`/Sanctions/catalog/${endpoint}/${id}`, data);  // 🆕 Cambio
+        const { userData } = useUserStore.getState();
+        
+        if (userData?.role !== 'superadmin') {
+            throw new Error('No tienes permisos para actualizar items de catálogo');
+        }
+        
+        return apiClient.put<CatalogItem>(`/Sanctions/catalog/${endpoint}/${id}`, data);
     },
 
     // Eliminar un item
     delete: async (endpoint: string, id: number): Promise<void> => {
-        return apiClient.delete(`/Sanctions/catalog/${endpoint}/${id}`);  // 🆕 Cambio
+        const { userData } = useUserStore.getState();
+        
+        if (userData?.role !== 'superadmin') {
+            throw new Error('No tienes permisos para eliminar items de catálogo');
+        }
+        
+        return apiClient.delete(`/Sanctions/catalog/${endpoint}/${id}`);
     },
 };

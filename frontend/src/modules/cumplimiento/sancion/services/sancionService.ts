@@ -1,4 +1,5 @@
 import { apiClient } from '../../../../lib/api-client';
+import { useUserStore } from '../../../../stores/userStore';
 import type {
     Sanction,
     CreateSanctionDto,
@@ -21,14 +22,32 @@ export async function getAllSanctions(): Promise<Sanction[]> {
 }
 
 export async function createSanction(data: CreateSanctionDto): Promise<Sanction> {
+    const { userData } = useUserStore.getState();
+    
+    if (userData?.role !== 'superadmin') {
+        throw new Error('No tienes permisos para crear sanciones');
+    }
+    
     return apiClient.post<Sanction>('/Sancion', data);
 }
 
 export async function updateSanction(data: UpdateSanctionDto): Promise<Sanction> {
+    const { userData } = useUserStore.getState();
+    
+    if (userData?.role !== 'superadmin') {
+        throw new Error('No tienes permisos para actualizar sanciones');
+    }
+    
     return apiClient.put<Sanction>(`/Sancion/${data.id}`, data);
 }
 
 export async function deleteSanction(id: number): Promise<void> {
+    const { userData } = useUserStore.getState();
+    
+    if (userData?.role !== 'superadmin') {
+        throw new Error('No tienes permisos para eliminar sanciones');
+    }
+    
     return apiClient.delete(`/Sancion/${id}`);
 }
 
