@@ -1,4 +1,5 @@
 import { apiClient } from '../../../../lib/api-client';
+import { useUserStore } from '../../../../stores/userStore';
 import type {
     Resolution,
     CreateResolutionDto,
@@ -21,14 +22,32 @@ export async function getAllResolutions(): Promise<Resolution[]> {
 }
 
 export async function createResolution(data: CreateResolutionDto): Promise<Resolution> {
+    const { userData } = useUserStore.getState();
+    
+    if (userData?.role !== 'superadmin') {
+        throw new Error('No tienes permisos para crear resoluciones');
+    }
+    
     return apiClient.post<Resolution>('/Resolutions', data);
 }
 
 export async function updateResolution(data: UpdateResolutionDto): Promise<Resolution> {
+    const { userData } = useUserStore.getState();
+    
+    if (userData?.role !== 'superadmin') {
+        throw new Error('No tienes permisos para actualizar resoluciones');
+    }
+    
     return apiClient.put<Resolution>(`/Resolutions/${data.id}`, data);
 }
 
 export async function deleteResolution(id: number): Promise<void> {
+    const { userData } = useUserStore.getState();
+    
+    if (userData?.role !== 'superadmin') {
+        throw new Error('No tienes permisos para eliminar resoluciones');
+    }
+    
     return apiClient.delete(`/Resolutions/${id}`);
 }
 
