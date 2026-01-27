@@ -3,6 +3,14 @@ import { persist } from 'zustand/middleware'
 import { supabase } from '../lib/supabase'
 import { useUserStore } from './userStore'
 import type { User } from '@supabase/supabase-js'
+import type { QueryClient } from '@tanstack/react-query'
+
+let queryClientRef: QueryClient | null = null
+
+export const setQueryClientRef = (client: QueryClient) => {
+    queryClientRef = client
+    console.log('✅ QueryClient registrado en authStore')
+}
 
 interface AuthState {
     user: User | null
@@ -28,9 +36,6 @@ export const useAuthStore = create<AuthState>()(
 
             login: async (email: string, password: string) => {
                 try {
-                    // Limpiar datos del usuario anterior antes de login
-                    useUserStore.getState().clearUserData()
-
                     const { data, error } = await supabase.auth.signInWithPassword({
                         email,
                         password,
@@ -38,38 +43,55 @@ export const useAuthStore = create<AuthState>()(
 
                     if (error) throw error
 
-                    set({ user: data.user, session: data.session, loading: false })
+                    set({
+                        user: data.user,
+                        session: data.session,
+                        loading: false,
+                    })
+
+                    // ✅ Cargar datos del usuario después del login
+                    await useUserStore.getState().loadUserData()
+
                     return { success: true }
                 } catch (error: any) {
-                    console.error('Login error:', error)
-                    return { success: false, error: error.message }
+                    set({ loading: false })
+                    return {
+                        success: false,
+                        error: error.message || 'Error al iniciar sesión',
+                    }
                 }
             },
 
             signup: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string) => {
                 try {
-                    useUserStore.getState().clearUserData()
-
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
                         options: {
                             data: {
-                                full_name: fullName || '',
-                                nombre_empresa: nombreEmpresa || '',
-                                phone: phone || '',
-                                role: 'admin'
-                            }
-                        }
+                                full_name: fullName,
+                                nombre_empresa: nombreEmpresa,
+                                phone: phone,
+                                role: 'admin',
+                            },
+                        },
                     })
 
                     if (error) throw error
 
-                    set({ user: data.user, session: data.session, loading: false })
+                    set({
+                        user: data.user,
+                        session: data.session,
+                        loading: false,
+                    })
+
                     return { success: true }
                 } catch (error: any) {
-                    console.error('Signup error:', error)
-                    return { success: false, error: error.message }
+                    set({ loading: false })
+                    return {
+                        success: false,
+                        error: error.message || 'Error al registrarse',
+                    }
                 }
             },
 
@@ -80,23 +102,30 @@ export const useAuthStore = create<AuthState>()(
                         password,
                         options: {
                             data: {
-                                full_name: fullName || '',
-                                nombre_empresa: nombreEmpresa || '',
-                                phone: phone || '',
+                                full_name: fullName,
+                                nombre_empresa: nombreEmpresa,
+                                phone: phone,
                                 role: 'user',
-                                created_by: createdBy || ''
-                            }
-                        }
+                                created_by: createdBy,
+                            },
+                        },
                     })
 
                     if (error) throw error
 
-                    set({ user: data.user, session: data.session, loading: false })
-                    window.location.reload()
+                    set({
+                        user: data.user,
+                        session: data.session,
+                        loading: false,
+                    })
+
                     return { success: true }
                 } catch (error: any) {
-                    console.error('Signup error:', error)
-                    return { success: false, error: error.message }
+                    set({ loading: false })
+                    return {
+                        success: false,
+                        error: error.message || 'Error al registrarse',
+                    }
                 }
             },
 
@@ -110,16 +139,22 @@ export const useAuthStore = create<AuthState>()(
                     // ✅ 2. Limpiar auth store
                     set({ user: null, session: null })
 
-                    // ✅ 3. Limpiar user store
+                    if (queryClientRef) {
+                        queryClientRef.clear()
+                        console.log('🧹 Cache de React Query limpiada')
+                    } else {
+                        console.warn('⚠️ QueryClient no registrado')
+                    }
+
+                    localStorage.removeItem('REACT_QUERY_OFFLINE_CACHE')
+
                     useUserStore.getState().clearUserData()
 
-                    // ✅ 4. Limpiar localStorage y sessionStorage
                     localStorage.clear()
                     sessionStorage.clear()
 
                     console.log('✅ Logout completado')
                     
-                    // ✅ 5. Recargar la página para limpiar React Query
                     window.location.href = '/login'
                 } catch (error) {
                     console.error('❌ Logout error:', error)
@@ -129,40 +164,51 @@ export const useAuthStore = create<AuthState>()(
             checkAuth: async () => {
                 try {
                     const { data: { session } } = await supabase.auth.getSession()
-                    set({ user: session?.user || null, session, loading: false })
+
+                    set({
+                        user: session?.user ?? null,
+                        session: session,
+                        loading: false,
+                    })
+
+                    if (session?.user) {
+                        await useUserStore.getState().loadUserData()
+                    }
                 } catch (error) {
-                    console.error('Check auth error:', error)
-                    set({ user: null, session: null, loading: false })
+                    console.error('Error checking auth:', error)
+                    set({ loading: false })
                 }
             },
 
             changePassword: async (newPassword: string) => {
                 try {
                     const { error } = await supabase.auth.updateUser({
-                        password: newPassword
+                        password: newPassword,
                     })
 
                     if (error) throw error
 
                     return { success: true }
                 } catch (error: any) {
-                    console.error('Change password error:', error)
-                    return { success: false, error: error.message }
+                    return {
+                        success: false,
+                        error: error.message || 'Error al cambiar la contraseña',
+                    }
                 }
             },
 
             resetPassword: async (email: string) => {
                 try {
-                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: `${window.location.origin}/reset-password`
-                    })
+                    const { error } = await supabase.auth.resetPasswordForEmail(email)
 
                     if (error) throw error
 
                     return { success: true }
                 } catch (error: any) {
-                    console.error('Reset password error:', error)
-                    return { success: false, error: error.message }
+                    return {
+                        success: false,
+                        error: error.message || 'Error al enviar correo de recuperación',
+                    }
                 }
             },
         }),
