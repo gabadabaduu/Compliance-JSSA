@@ -1,3 +1,4 @@
+import { useUserStore } from '@/stores/userStore';
 import { apiClient } from '../../../../lib/api-client';
 import type {
     Regulation,
@@ -14,7 +15,12 @@ export async function getRegulationById(id: number): Promise<Regulation> {
     return apiClient.get<Regulation>(`/Normativa/${id}`);
 }
 
-export async function getAllRegulations(): Promise<Regulation[]> {
+export async function getAllRegulations(companyName?: string): Promise<Regulation[]> {
+
+    if (companyName) {
+        return apiClient.get<Regulation[]>(`/Normativa?companyName=${encodeURIComponent(companyName)}`);
+    }
+    
     return apiClient.get<Regulation[]>('/Normativa');
 }
 
@@ -46,11 +52,19 @@ export interface RegulationFilters {
 }
 
 export async function getRegulationsFiltered(filters?: RegulationFilters): Promise<Regulation[]> {
+
+    const { userData } = useUserStore.getState();
+    const companyName = userData?.role === 'superadmin' ? undefined : userData?.nombreEmpresa;
+    
     if (!filters || Object.keys(filters).length === 0) {
-        return getAllRegulations();
+        return getAllRegulations(companyName); // ✅ Pasar companyName
     }
 
     const params = new URLSearchParams();
+    
+    if (companyName) {
+        params.append('companyName', companyName);
+    }
     
     if (filters.type) params.append('type', filters.type.toString());
     if (filters.issueDate) params.append('issueDate', filters.issueDate);
@@ -64,7 +78,6 @@ export async function getRegulationsFiltered(filters?: RegulationFilters): Promi
     const queryString = params.toString();
     return apiClient.get<Regulation[]>(`/Normativa/filter?${queryString}`);
 }
-
 // ============================================
 // 📦 OPCIONES PARA DROPDOWNS DE FILTROS
 // ============================================
@@ -77,7 +90,12 @@ export async function getTypesForFilter(): Promise<Array<{ value: number; label:
     }));
 }
 export async function getYearsForFilter(): Promise<Array<{ value: number; label: string }>> {
-    const regulations = await apiClient.get<Regulation[]>('/Normativa');
+
+    const { userData } = useUserStore.getState();
+    const companyName = userData?.role === 'superadmin' ? undefined : userData?.nombreEmpresa;
+    
+
+    const regulations = await getAllRegulations(companyName);
     const years = [...new Set(regulations.map(r => r.year))].sort((a, b) => b - a);
     return years.map(y => ({ value: y, label: y.toString() }));
 }

@@ -21,12 +21,21 @@ namespace Compliance.Web.Controllers.Cumplimiento.Normativa
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<NormativaDto>>> GetAll(CancellationToken ct)
+        public async Task<ActionResult<IEnumerable<NormativaDto>>> GetAll(
+            [FromQuery] string? companyName, 
+            CancellationToken ct)
         {
-            var result = await _service.GetAllAsync(ct);
+            // Si no se envía companyName, devolver todas (para SuperAdmin o compatibilidad)
+            if (string.IsNullOrWhiteSpace(companyName))
+            {
+                var allResults = await _service.GetAllAsync(ct);
+                return Ok(allResults);
+            }
+
+            // Filtrar por empresa
+            var result = await _service.GetForCompanyAsync(companyName, ct);
             return Ok(result);
         }
-
         [HttpGet("{id}")]
         public async Task<ActionResult<NormativaDto>> GetById(long id, CancellationToken ct)
         {
@@ -107,11 +116,11 @@ namespace Compliance.Web.Controllers.Cumplimiento.Normativa
             [FromQuery] int? industry,
             [FromQuery] int? domain,
             [FromQuery] string? status,
+            [FromQuery] string? companyName, 
             CancellationToken ct)
         {
             var result = await _service.GetFilteredAsync(
-                type, issueDate, year, regulation, authority, industry, domain, status, ct);
-
+                type, issueDate, year, regulation, authority, industry, domain, status, companyName, ct);
             return Ok(result);
         }
     }

@@ -20,6 +20,8 @@ export interface Regulation {
     domain: number; 
     status: RegulationStatus;
     url: string;
+    createdBy?: string;
+    allowed : boolean;
 }
 
 
@@ -36,6 +38,8 @@ export interface CreateRegulationDto {
     domain: number;
     status: RegulationStatus;
     url: string;
+    createdBy?: string;
+    allowed? : boolean;
 }
 
 // DTO para actualización de regulation
