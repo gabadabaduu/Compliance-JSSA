@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #3b82f6;
   --color-success: #22c55e;
@@ -21,11 +23,10 @@ body {
   background-color: #EFF2FB;
 }
 
-/* Fondo oscuro en dark mode - usando media query */
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #1a1d29;
-  }
+/* Fondo oscuro en dark mode - usando clase .dark */
+.dark body,
+:root.dark body {
+  background-color: #1a1d29;
 }
 
 #root {
