@@ -131,10 +131,14 @@ export const useAuthStore = create<AuthState>()(
 
             logout: async () => {
                 try {
+                    console.log('🧹 Iniciando logout...')
+                    
+                    // ✅ 1. Cerrar sesión en Supabase
                     await supabase.auth.signOut()
+                    
+                    // ✅ 2. Limpiar auth store
                     set({ user: null, session: null })
 
-                    useUserStore.getState().clearUserData()
                     if (queryClientRef) {
                         queryClientRef.clear()
                         console.log('🧹 Cache de React Query limpiada')
@@ -144,7 +148,14 @@ export const useAuthStore = create<AuthState>()(
 
                     localStorage.removeItem('REACT_QUERY_OFFLINE_CACHE')
 
-                    console.log('✅ Logout completo - todos los datos limpiados')
+                    useUserStore.getState().clearUserData()
+
+                    localStorage.clear()
+                    sessionStorage.clear()
+
+                    console.log('✅ Logout completado')
+                    
+                    window.location.href = '/login'
                 } catch (error) {
                     console.error('❌ Logout error:', error)
                 }
