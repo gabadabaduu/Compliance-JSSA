@@ -16,7 +16,7 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Interfaces
         Task<IEnumerable<NormativaDto>> GetByIndustryAsync(int industryId, CancellationToken ct = default);
         Task<IEnumerable<NormativaDto>> GetByAuthorityAsync(int authorityId, CancellationToken ct = default);
         Task<IEnumerable<NormativaDto>> GetByYearAsync(int year, CancellationToken ct = default);
-
+        Task<IEnumerable<NormativaDto>> GetForCompanyAsync(string companyName, CancellationToken ct = default);
         Task<IEnumerable<NormativaDto>> GetFilteredAsync(
             int? type,
             string? issueDate,
@@ -26,6 +26,7 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Interfaces
             int? industry,
             int? domain,
             string? status,
+            string? companyName,
             CancellationToken ct = default);
     }
 }

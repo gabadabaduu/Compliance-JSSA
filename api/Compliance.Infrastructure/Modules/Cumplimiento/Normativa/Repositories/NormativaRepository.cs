@@ -136,7 +136,18 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
                 .Select(e => MapToDto(e))
                 .ToListAsync(ct);
         }
-
+        public async Task<IEnumerable<NormativaDto>> GetForCompanyAsync(string companyName, CancellationToken ct = default)
+        {
+            return await _db.Set<NormativaEntity>()
+                .AsNoTracking()
+                .Where(e => 
+                    e.Allowed == true ||                    // Normativas globales (SuperAdmin)
+                    e.CreatedBy == companyName              // Normativas de la empresa
+                )
+                .OrderByDescending(e => e.IssueDate)
+                .Select(e => MapToDto(e))
+                .ToListAsync(ct);
+        }
         public async Task<IEnumerable<NormativaDto>> GetFilteredAsync(
             int? type,
             string? issueDate,
@@ -146,9 +157,18 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
             int? industry,
             int? domain,
             string? status,
+            string? companyName,
             CancellationToken ct = default)
         {
             var query = _db.Set<NormativaEntity>().AsNoTracking().AsQueryable();
+            
+            if (!string.IsNullOrWhiteSpace(companyName))
+            {
+                query = query.Where(r => 
+                    r.Allowed == true ||           
+                    r.CreatedBy == companyName 
+                );
+            }
 
             if (type.HasValue)
                 query = query.Where(r => r.Type == type.Value);

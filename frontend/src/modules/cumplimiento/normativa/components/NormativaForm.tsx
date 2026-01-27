@@ -3,7 +3,8 @@ import { Icon } from '@iconify/react';
 import { useCreateRegulation, useUpdateRegulation } from '../hooks/useNormativa';
 import type { Regulation, CreateRegulationDto, RegulationStatus } from '../types';
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
-
+import { useUserStore } from '../../../../stores/userStore';
+import { usePermissions } from '../../../../hooks/usePermissions';
 interface NormativaFormProps {
     regulation: Regulation | null;
     onClose: () => void;
@@ -13,8 +14,26 @@ export default function NormativaForm({ regulation, onClose }: NormativaFormProp
     const createRegulation = useCreateRegulation();
     const updateRegulation = useUpdateRegulation();
     const isEditing = !!regulation;
+    const { userData } = useUserStore();
+    const { isSuperAdmin } = usePermissions();
+   // ...existing code...
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        type: number;
+        number: number;
+        issueDate: string;
+        year: number;
+        regulation: string;
+        commonName: string;
+        industry: number;
+        authority: number;
+        title: string;
+        domain: number;
+        status: RegulationStatus;
+        url: string;
+        createdBy: string | undefined;  // ✅ Tipo explícito
+        allowed: boolean;
+    }>({
         type: 1,
         number: 0,
         issueDate: new Date().toISOString().split('T')[0],
@@ -27,15 +46,31 @@ export default function NormativaForm({ regulation, onClose }: NormativaFormProp
         domain: 1,
         status: 'Vigente' as RegulationStatus,
         url: '',
+        createdBy: undefined,
+        allowed: false,
     });
+
+// ...existing code...
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    useEffect(() => {
+   useEffect(() => {
         if (regulation) {
             setFormData({
-                ...regulation,
+                type: regulation.type,
+                number: regulation.number,
                 issueDate: new Date(regulation.issueDate).toISOString().split('T')[0],
+                year: regulation.year,
+                regulation: regulation.regulation,
+                commonName: regulation.commonName,
+                industry: regulation.industry,
+                authority: regulation.authority,
+                title: regulation.title,
+                domain: regulation.domain,
+                status: regulation.status,
+                url: regulation.url,
+                createdBy: regulation.createdBy,
+                allowed: regulation.allowed,
             });
         }
     }, [regulation]);
@@ -70,7 +105,7 @@ export default function NormativaForm({ regulation, onClose }: NormativaFormProp
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
 
@@ -78,6 +113,8 @@ export default function NormativaForm({ regulation, onClose }: NormativaFormProp
             const payload: CreateRegulationDto = {
                 ...formData,
                 issueDate: new Date(formData.issueDate),
+                createdBy: isEditing ? formData.createdBy : (isSuperAdmin ? undefined : userData?.nombreEmpresa),
+                allowed: isEditing ? formData.allowed : isSuperAdmin,
             };
 
             if (isEditing && regulation) {

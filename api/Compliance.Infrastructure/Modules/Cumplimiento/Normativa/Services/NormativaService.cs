@@ -37,6 +37,8 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Services
 
         public Task<IEnumerable<NormativaDto>> GetByYearAsync(int year, CancellationToken ct = default)
             => _repository.GetByYearAsync(year, ct);
+        public Task<IEnumerable<NormativaDto>> GetForCompanyAsync(string companyName, CancellationToken ct = default)
+            => _repository.GetForCompanyAsync(companyName, ct);
         public Task<IEnumerable<NormativaDto>> GetFilteredAsync(
     int? type,
     string? issueDate,
@@ -46,9 +48,10 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Services
     int? industry,
     int? domain,
     string? status,
+    string? companyName,
     CancellationToken ct = default)
         {
-            return _repository.GetFilteredAsync(type, issueDate, year, regulation, authority, industry, domain, status, ct);
+            return _repository.GetFilteredAsync(type, issueDate, year, regulation, authority, industry, domain, status, companyName, ct);
         }
     }
 }

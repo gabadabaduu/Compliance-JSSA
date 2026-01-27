@@ -15,15 +15,21 @@ import {
     type RegulationFilters
 } from '../services/normativaService';
 import type { CreateRegulationDto, UpdateRegulationDto } from '../types';
+import { useUserStore } from '../../../../stores/userStore'; 
+import { usePermissions } from '../../../../hooks/usePermissions';
 
 // ============================================
 // 📋 HOOKS CRUD
 // ============================================
 
 export function useRegulations() {
+    const { isSuperAdmin } = usePermissions(); 
+    const { userData } = useUserStore();
+    const companyName = isSuperAdmin ? undefined : userData?.nombreEmpresa;
+    
     return useQuery({
-        queryKey: ['regulations'],
-        queryFn: () => getAllRegulations(),
+        queryKey: ['regulations', companyName],
+        queryFn: () => getAllRegulations(companyName),
         staleTime: 1000 * 60 * 5,
         gcTime: 1000 * 60 * 30,
         retry: 1,
