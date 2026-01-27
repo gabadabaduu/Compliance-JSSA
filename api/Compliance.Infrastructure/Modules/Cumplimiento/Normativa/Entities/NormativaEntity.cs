@@ -47,5 +47,12 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Entities
 
         [Column("url")]
         public string Url { get; set; } = string.Empty;
+
+        // ✅ NUEVAS COLUMNAS
+        [Column("created_by")]
+        public string? CreatedBy { get; set; }
+
+        [Column("allowed")]
+        public bool Allowed { get; set; } = false;
     }
 }

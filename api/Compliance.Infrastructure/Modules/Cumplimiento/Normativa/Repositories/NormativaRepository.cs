@@ -49,7 +49,9 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
                 Title = dto.Title,
                 Domain = dto.Domain,
                 Status = dto.Status,
-                Url = dto.Url
+                Url = dto.Url,
+                CreatedBy = dto.CreatedBy,  // ✅ NUEVO
+                Allowed = dto.Allowed       // ✅ NUEVO
             };
 
             _db.Set<NormativaEntity>().Add(entity);
@@ -78,6 +80,8 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
             if (dto.Domain.HasValue) entity.Domain = dto.Domain.Value;
             if (dto.Status != null) entity.Status = dto.Status;
             if (dto.Url != null) entity.Url = dto.Url;
+            if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy;   // ✅ NUEVO
+            if (dto.Allowed.HasValue) entity.Allowed = dto.Allowed.Value;  // ✅ NUEVO
 
             await _db.SaveChangesAsync(ct);
 
@@ -134,22 +138,21 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
         }
 
         public async Task<IEnumerable<NormativaDto>> GetFilteredAsync(
-    int? type,
-    string? issueDate,
-    int? year,
-    string? regulation,
-    int? authority,
-    int? industry,
-    int? domain,
-    string? status,
-    CancellationToken ct = default)
+            int? type,
+            string? issueDate,
+            int? year,
+            string? regulation,
+            int? authority,
+            int? industry,
+            int? domain,
+            string? status,
+            CancellationToken ct = default)
         {
             var query = _db.Set<NormativaEntity>().AsNoTracking().AsQueryable();
 
             if (type.HasValue)
                 query = query.Where(r => r.Type == type.Value);
 
-            // ✅ CORRECCIÓN: Comparar solo año, mes y día
             if (!string.IsNullOrWhiteSpace(issueDate))
             {
                 if (DateTime.TryParseExact(issueDate, "yyyy-MM-dd",
@@ -157,7 +160,6 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
                     System.Globalization.DateTimeStyles.None,
                     out var parsedDate))
                 {
-                    // Comparar año, mes y día por separado (más confiable)
                     query = query.Where(r =>
                         r.IssueDate.Year == parsedDate.Year &&
                         r.IssueDate.Month == parsedDate.Month &&
@@ -192,7 +194,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
             return results;
         }
 
-
+        // ✅ MapToDto ACTUALIZADO con nuevas propiedades
         private static NormativaDto MapToDto(NormativaEntity entity)
         {
             return new NormativaDto
@@ -209,7 +211,9 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
                 Title = entity.Title,
                 Domain = entity.Domain,
                 Status = entity.Status,
-                Url = entity.Url
+                Url = entity.Url,
+                CreatedBy = entity.CreatedBy,  // ✅ NUEVO
+                Allowed = entity.Allowed       // ✅ NUEVO
             };
         }
     }

@@ -1,7 +1,5 @@
 namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
 {
-   
-
     // DTO completo para Normativa
     public class NormativaDto
     {
@@ -18,9 +16,11 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
         public int Domain { get; set; }
         public string Status { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
+        public string? CreatedBy { get; set; } // ✅ NUEVO
+        public bool Allowed { get; set; }      // ✅ NUEVO
     }
 
-    // DTO para creaci�n
+    // DTO para creación
     public class CreateNormativaDto
     {
         public int Type { get; set; }
@@ -35,9 +35,11 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
         public int Domain { get; set; }
         public string Status { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
+        public string? CreatedBy { get; set; } // ✅ NUEVO (opcional en creación)
+        public bool Allowed { get; set; } = false; // ✅ NUEVO (default false)
     }
 
-    // DTO para actualizaci�n
+    // DTO para actualización
     public class UpdateNormativaDto
     {
         public long Id { get; set; }
@@ -53,5 +55,7 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
         public int? Domain { get; set; }
         public string? Status { get; set; }
         public string? Url { get; set; }
+        public string? CreatedBy { get; set; } // ✅ NUEVO
+        public bool? Allowed { get; set; }     // ✅ NUEVO
     }
 }
