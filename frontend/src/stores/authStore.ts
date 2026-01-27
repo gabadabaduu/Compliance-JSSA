@@ -72,10 +72,9 @@ export const useAuthStore = create<AuthState>()(
                     return { success: false, error: error.message }
                 }
             },
+
             signupu: async (email: string, password: string, fullName?: string, nombreEmpresa?: string, phone?: string, createdBy?: string) => {
                 try {
-                    
-
                     const { data, error } = await supabase.auth.signUp({
                         email,
                         password,
@@ -103,13 +102,27 @@ export const useAuthStore = create<AuthState>()(
 
             logout: async () => {
                 try {
+                    console.log('🧹 Iniciando logout...')
+                    
+                    // ✅ 1. Cerrar sesión en Supabase
                     await supabase.auth.signOut()
+                    
+                    // ✅ 2. Limpiar auth store
                     set({ user: null, session: null })
 
-                    // Limpiar datos del usuario al hacer logout
+                    // ✅ 3. Limpiar user store
                     useUserStore.getState().clearUserData()
+
+                    // ✅ 4. Limpiar localStorage y sessionStorage
+                    localStorage.clear()
+                    sessionStorage.clear()
+
+                    console.log('✅ Logout completado')
+                    
+                    // ✅ 5. Recargar la página para limpiar React Query
+                    window.location.href = '/login'
                 } catch (error) {
-                    console.error('Logout error:', error)
+                    console.error('❌ Logout error:', error)
                 }
             },
 

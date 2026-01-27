@@ -12,7 +12,7 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Services
         public NormativaService(INormativaRepository repository) => _repository = repository;
 
         public Task<IEnumerable<NormativaDto>> GetAllAsync(CancellationToken ct = default)
-            => _repository.GetAllAsync(ct);
+    => _repository.GetAllowedAsync(ct);
 
         public Task<NormativaDto?> GetByIdAsync(long id, CancellationToken ct = default)
             => _repository.GetByIdAsync(id, ct);
