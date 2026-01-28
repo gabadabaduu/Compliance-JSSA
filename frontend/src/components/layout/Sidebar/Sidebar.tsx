@@ -4,6 +4,9 @@ import { useUserStore } from '../../../stores/userStore';
 import { useState, useEffect } from 'react';
 import logo from '../../../assets/logo.png';
 import logoName from '../../../assets/korhex-logo-name.png';
+import logoi from '../../../assets/logo-i.png';
+import logonamei from '../../../assets/korhex-logo-name-i.png';
+
 export default function Sidebar() {
     const { hasAccess, userData } = useUserStore();
     const navigate = useNavigate();
@@ -95,23 +98,24 @@ export default function Sidebar() {
     return (
       <nav className="group w-[60px] hover:w-[200px] min-h-[95vh] p-2 m-3 bg-white dark:bg-[#02020248] rounded-xl transition-all duration-300 overflow-hidden flex flex-col">
             
+           
             {/* Logo Section */}
             <div className="flex items-center justify-center py-4 px-2">
                 {/* Logo pequeño (sidebar cerrado) */}
                 <img 
-                    src={logo}
+                    src={isDarkMode ? logoi : logo}
                     alt="Logo" 
                     className="w-10 h-10 object-contain group-hover:hidden transition-all duration-300"
                 />
                 {/* Logo + Nombre (sidebar abierto) */}
                 <div className="hidden group-hover:flex items-center gap-2 transition-all duration-300">
                     <img 
-                        src={logo}
+                        src={isDarkMode ? logoi : logo}
                         alt="Logo"
                         className="w-8 h-8 object-contain"
                     />
                     <img 
-                        src={logoName}
+                        src={isDarkMode ? logonamei : logoName}
                         alt="Korhex" 
                         className="h-6 object-contain"
                     />
