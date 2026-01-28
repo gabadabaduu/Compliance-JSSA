@@ -13,6 +13,7 @@ import {
 import type { Regulation } from '../types';
 import TableFilter, { FilterConfig } from '../../TableFilter';
 import DetailModal from '../../DetailModal';
+import { usePermissions } from '../../../../hooks/usePermissions'; // ✅ AGREGAR
 
 interface NormativaListProps {
     regulations: Regulation[];
@@ -20,6 +21,7 @@ interface NormativaListProps {
 }
 
 export default function NormativaList({ regulations: initialRegulations, onEdit }: NormativaListProps) {
+    const { isSuperAdmin } = usePermissions(); // ✅ AGREGAR
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
     
@@ -32,7 +34,15 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
     const { data: statusesOptions } = useStatusesForFilter();
     const deleteRegulation = useDeleteRegulation();
 
-    // Configuración de filtros
+    // ✅ NUEVO: Función para determinar si se pueden mostrar botones de acción
+    const canEditRegulation = (regulation: Regulation): boolean => {
+        // Si es SuperAdmin, puede editar todo
+        if (isSuperAdmin) return true;
+        
+        // Si NO es SuperAdmin, solo puede editar las que NO son globales (allowed === false)
+        return !regulation.allowed;
+    };
+
     const filterConfig: FilterConfig[] = [
         {
             key: 'type',
@@ -112,7 +122,6 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
         return new Date(date).toLocaleDateString('es-ES');
     };
 
-    // Campos para el modal de detalle
     const getDetailFields = (regulation: Regulation) => [
         { label: 'Tipo', value: typeof regulation.type === 'object' ? JSON.stringify(regulation.type) : regulation.type },
         { label: 'Número', value: regulation.number },
@@ -169,7 +178,6 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
     return (
         <>
             <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
-                {/* Header de la tabla */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <Icon icon="mdi:format-list-bulleted" width="24" height="24" className="text-indigo-400" />
@@ -182,10 +190,8 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                     </div>
                 </div>
 
-                {/* Filtros */}
                 <TableFilter filters={filterConfig} onFilterChange={handleFilterChange} className="mb-4" />
 
-                {/* Tabla */}
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
@@ -249,37 +255,48 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                                             </a>
                                         ) : (<span className="text-sm text-gray-400">-</span>)}
                                     </td>
-                                    <td className="py-4 px-4">
-                                        <div className="flex items-center justify-center gap-1">
-                                            {regulation.url && (
-                                                <a 
-                                                    href={regulation.url} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors md:hidden" 
-                                                    title="Ver documento"
-                                                    onClick={(e) => e.stopPropagation()}
+                                    
+                                    {/* ✅ MODIFICADO: Mostrar botones solo si canEditRegulation es true */}
+                                    {canEditRegulation(regulation) && (
+                                        <td className="py-4 px-4">
+                                            <div className="flex items-center justify-center gap-1">
+                                                {regulation.url && (
+                                                    <a 
+                                                        href={regulation.url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer" 
+                                                        className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors md:hidden" 
+                                                        title="Ver documento"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <Icon icon="mdi:open-in-new" width="18" height="18" className="text-blue-500" />
+                                                    </a>
+                                                )}
+                                                <button 
+                                                    onClick={(e) => handleEditClick(regulation, e)} 
+                                                    className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg transition-colors" 
+                                                    title="Editar"
                                                 >
-                                                    <Icon icon="mdi:open-in-new" width="18" height="18" className="text-blue-500" />
-                                                </a>
-                                            )}
-                                            <button 
-                                                onClick={(e) => handleEditClick(regulation, e)} 
-                                                className="p-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg transition-colors" 
-                                                title="Editar"
-                                            >
-                                                <Icon icon="mdi:pencil" width="18" height="18" className="text-indigo-500" />
-                                            </button>
-                                            <button 
-                                                onClick={(e) => handleDelete(regulation.id, e)} 
-                                                className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50" 
-                                                title="Eliminar" 
-                                                disabled={deleteRegulation.isPending}
-                                            >
-                                                <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
-                                            </button>
-                                        </div>
-                                    </td>
+                                                    <Icon icon="mdi:pencil" width="18" height="18" className="text-indigo-500" />
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => handleDelete(regulation.id, e)} 
+                                                    className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50" 
+                                                    title="Eliminar" 
+                                                    disabled={deleteRegulation.isPending}
+                                                >
+                                                    <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    )}
+                                    
+                                    {/* ✅ NUEVO: Celda vacía si NO puede editar */}
+                                    {!canEditRegulation(regulation) && (
+                                        <td className="py-4 px-4">
+
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -287,7 +304,6 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                 </div>
             </div>
 
-            {/* Modal de detalle */}
             {selectedRegulation && (
                 <DetailModal
                     isOpen={!!selectedRegulation}
