@@ -283,9 +283,9 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Type).HasColumnName("type").IsRequired();
             eb.Property(e => e.Category).HasColumnName("category");
-            eb.Property(e => e.InitialTerm).HasColumnName("initial_term");
+            eb.Property(e => e.InitialTerm).HasColumnName("initial_term"); // ✅ Ya no es string
             eb.Property(e => e.InitialTermDescription).HasColumnName("initial_term_description");
-            eb.Property(e => e.ExtensionTerm).HasColumnName("extension_term");
+            eb.Property(e => e.ExtensionTerm).HasColumnName("extension_term"); // ✅ Ya no es string
             eb.Property(e => e.ExtensionTermDescription).HasColumnName("extension_term_description");
         });
 
@@ -324,6 +324,7 @@ public class AppDbContext : DbContext
             eb.Property(e => e.ClosedAt).HasColumnName("closed_at");
             eb.Property(e => e.ResponseContent).HasColumnName("response_content");
             eb.Property(e => e.ResponseAttachment).HasColumnName("response_attachment").HasDefaultValue(false);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by"); // ✅ NUEVO
         });
 
         // =====================================================
@@ -356,4 +357,4 @@ public class AppDbContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
-}
+}   

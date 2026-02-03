@@ -57,7 +57,8 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 TotalTerm = dto.TotalTerm,
                 ClosedAt = dto.ClosedAt,
                 ResponseContent = dto.ResponseContent,
-                ResponseAttachment = dto.ResponseAttachment
+                ResponseAttachment = dto.ResponseAttachment,
+                CreatedBy = dto.CreatedBy // ✅ NUEVO
             };
 
             _db.Set<DsrEntity>().Add(entity);
@@ -94,6 +95,7 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
             if (dto.ClosedAt.HasValue) entity.ClosedAt = dto.ClosedAt;
             if (dto.ResponseContent.HasValue) entity.ResponseContent = dto.ResponseContent;
             if (dto.ResponseAttachment.HasValue) entity.ResponseAttachment = dto.ResponseAttachment.Value;
+            if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy; // ✅ NUEVO
 
             await _db.SaveChangesAsync(ct);
 
@@ -156,7 +158,8 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 TotalTerm = entity.TotalTerm,
                 ClosedAt = entity.ClosedAt,
                 ResponseContent = entity.ResponseContent,
-                ResponseAttachment = entity.ResponseAttachment
+                ResponseAttachment = entity.ResponseAttachment,
+                CreatedBy = entity.CreatedBy // ✅ NUEVO
             };
         }
     }

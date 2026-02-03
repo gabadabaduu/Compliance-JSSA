@@ -16,14 +16,16 @@ namespace Compliance.Infrastructure.Modules.DSR.Entities
         [Column("category")]
         public string? Category { get; set; }
 
+        // ✅ CAMBIO: De string a int?
         [Column("initial_term")]
-        public string? InitialTerm { get; set; }
+        public int? InitialTerm { get; set; }
 
         [Column("initial_term_description")]
         public string? InitialTermDescription { get; set; }
 
+        // ✅ CAMBIO: De string a int?
         [Column("extension_term")]
-        public string? ExtensionTerm { get; set; }
+        public int? ExtensionTerm { get; set; }
 
         [Column("extension_term_description")]
         public string? ExtensionTermDescription { get; set; }

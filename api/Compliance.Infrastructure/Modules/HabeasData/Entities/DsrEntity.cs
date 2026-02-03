@@ -73,5 +73,9 @@ namespace Compliance.Infrastructure.Modules.DSR.Entities
 
         [Column("response_attachment")]
         public bool ResponseAttachment { get; set; } = false;
+
+        // ✅ NUEVO
+        [Column("created_by")]
+        public string? CreatedBy { get; set; }
     }
 }

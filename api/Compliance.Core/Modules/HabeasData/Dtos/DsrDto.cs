@@ -26,6 +26,7 @@ namespace Compliance.Core.Modules.DSR.Dtos
         public DateTime? ClosedAt { get; set; }
         public DateTime? ResponseContent { get; set; }
         public bool ResponseAttachment { get; set; }
+        public string? CreatedBy { get; set; } // ✅ NUEVO
     }
 
     public class CreateDsrDto
@@ -50,6 +51,7 @@ namespace Compliance.Core.Modules.DSR.Dtos
         public DateTime? ClosedAt { get; set; }
         public DateTime? ResponseContent { get; set; }
         public bool ResponseAttachment { get; set; } = false;
+        public string? CreatedBy { get; set; } // ✅ NUEVO
     }
 
     public class UpdateDsrDto
@@ -75,5 +77,6 @@ namespace Compliance.Core.Modules.DSR.Dtos
         public DateTime? ClosedAt { get; set; }
         public DateTime? ResponseContent { get; set; }
         public bool? ResponseAttachment { get; set; }
+        public string? CreatedBy { get; set; } // ✅ NUEVO
     }
 }
