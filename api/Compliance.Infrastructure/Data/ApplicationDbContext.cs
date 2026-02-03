@@ -14,6 +14,7 @@ using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncEntities.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.GeneralIndustries.Entities;
 using Compliance.Core.Modules.Cumplimiento.Sancion.Dtos;
+using Compliance.Infrastructure.Modules.DSR.Entities; // ✅ NUEVO
 
 namespace Compliance.Infrastructure.Data;
 
@@ -47,15 +48,14 @@ public class AppDbContext : DbContext
     public DbSet<SncEntityEntity> SncEntities { get; set; } = null!;
     public DbSet<GeneralIndustryEntity> GeneralIndustries { get; set; } = null!;
 
+    // ✅ NUEVO: Módulo DSR
+    public DbSet<DsrEntity> Dsrs { get; set; } = null!;
+    public DbSet<DsrRequestTypeEntity> DsrRequestTypes { get; set; } = null!;
+    public DbSet<DsrStatusEntity> DsrStatuses { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // =====================================================
-        // ENUMS POSTGRESQL (solo para sanciones)
-        // =====================================================
-
-        // (Vacío por ahora - puedes agregar enums aquí si los necesitas)
 
         // =====================================================
         // USERS
@@ -270,6 +270,60 @@ public class AppDbContext : DbContext
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
             eb.Property(e => e.Name).HasColumnName("name").IsRequired();
+        });
+
+        // =====================================================
+        // ✅ NUEVO: MÓDULO DSR
+        // =====================================================
+
+        modelBuilder.Entity<DsrRequestTypeEntity>(eb =>
+        {
+            eb.ToTable("dsr_request_type");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Type).HasColumnName("type").IsRequired();
+            eb.Property(e => e.Category).HasColumnName("category");
+            eb.Property(e => e.InitialTerm).HasColumnName("initial_term");
+            eb.Property(e => e.InitialTermDescription).HasColumnName("initial_term_description");
+            eb.Property(e => e.ExtensionTerm).HasColumnName("extension_term");
+            eb.Property(e => e.ExtensionTermDescription).HasColumnName("extension_term_description");
+        });
+
+        modelBuilder.Entity<DsrStatusEntity>(eb =>
+        {
+            eb.ToTable("dsr_status");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.WorkflowStatus).HasColumnName("workflow_status").IsRequired();
+            eb.Property(e => e.CaseStatus).HasColumnName("case_status").IsRequired();
+        });
+
+        modelBuilder.Entity<DsrEntity>(eb =>
+        {
+            eb.ToTable("dsr");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.CaseId).HasColumnName("case_id").IsRequired();
+            eb.Property(e => e.RequestId).HasColumnName("request_id").IsRequired();
+            eb.Property(e => e.Type).HasColumnName("type").IsRequired();
+            eb.Property(e => e.Category).HasColumnName("category").IsRequired();
+            eb.Property(e => e.FullName).HasColumnName("full_name").IsRequired();
+            eb.Property(e => e.IdType).HasColumnName("id_type").IsRequired();
+            eb.Property(e => e.IdNumber).HasColumnName("id_number").IsRequired();
+            eb.Property(e => e.Email).HasColumnName("email").IsRequired();
+            eb.Property(e => e.RequestDetails).HasColumnName("request_details").IsRequired();
+            eb.Property(e => e.Attachment).HasColumnName("attachment").HasMaxLength(30);
+            eb.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            eb.Property(e => e.StartDate).HasColumnName("start_date").IsRequired();
+            eb.Property(e => e.DueDate).HasColumnName("due_date").IsRequired();
+            eb.Property(e => e.Stage).HasColumnName("stage");
+            eb.Property(e => e.Status).HasColumnName("status");
+            eb.Property(e => e.InitialTerm).HasColumnName("initial_term").IsRequired();
+            eb.Property(e => e.ExtensionTerm).HasColumnName("extension_term").HasDefaultValue(false);
+            eb.Property(e => e.TotalTerm).HasColumnName("total_term").IsRequired();
+            eb.Property(e => e.ClosedAt).HasColumnName("closed_at");
+            eb.Property(e => e.ResponseContent).HasColumnName("response_content");
+            eb.Property(e => e.ResponseAttachment).HasColumnName("response_attachment").HasDefaultValue(false);
         });
 
         // =====================================================

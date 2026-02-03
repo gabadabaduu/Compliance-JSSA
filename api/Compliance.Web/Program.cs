@@ -55,6 +55,9 @@ using Compliance.Infrastructure.Modules.Ajustes.Services;
 using Compliance.Core.Modules.Usuario.Interfaces;
 using Compliance.Infrastructure.Modules.Usuario.Repositories;
 using Compliance.Infrastructure.Modules.Usuario.Services;
+using Compliance.Core.Modules.DSR.Interfaces;
+using Compliance.Infrastructure.Modules.DSR.Repositories;
+using Compliance.Infrastructure.Modules.DSR.Services;
 using Compliance.Web.Hubs;
 
 // Limpiar mapeo de claim types
@@ -128,6 +131,14 @@ builder.Services.AddScoped<ISncEntityRepository, SncEntityRepository>();
 builder.Services.AddScoped<ISncEntityService, SncEntityService>();
 builder.Services.AddScoped<IGeneralIndustryRepository, GeneralIndustryRepository>();
 builder.Services.AddScoped<IGeneralIndustryService, GeneralIndustryService>();
+
+// ✅ NUEVO: Módulo DSR (agregar al final de los servicios, antes de JWT)
+builder.Services.AddScoped<IDsrRepository, DsrRepository>();
+builder.Services.AddScoped<IDsrService, DsrService>();
+builder.Services.AddScoped<IDsrRequestTypeRepository, DsrRequestTypeRepository>();
+builder.Services.AddScoped<IDsrRequestTypeService, DsrRequestTypeService>();
+builder.Services.AddScoped<IDsrStatusRepository, DsrStatusRepository>();
+builder.Services.AddScoped<IDsrStatusService, DsrStatusService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
