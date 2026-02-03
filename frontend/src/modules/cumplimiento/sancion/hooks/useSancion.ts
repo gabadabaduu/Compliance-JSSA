@@ -82,6 +82,15 @@ export function useSanctionsFiltered(filters: SanctionFilters) {
     });
 }
 
+export function useStatusForFilter() {
+    return useQuery({
+        queryKey: ['status', 'filter-options'],
+        queryFn: getEntitiesForFilter,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
 export function useEntitiesForFilter() {
     return useQuery({
         queryKey: ['entities', 'filter-options'],

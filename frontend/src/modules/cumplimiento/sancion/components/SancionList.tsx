@@ -27,8 +27,8 @@ export default function SancionList({ onEdit, onCreate }: Props) {
     // Configuración de filtros
     const filterConfig: FilterConfig[] = [
         {
-            key: 'entity',
-            label: 'Entidad',
+            key: 'status',
+            label: 'Estado',
             type: 'select',
             options: entitiesOptions || [],
         },
@@ -38,24 +38,7 @@ export default function SancionList({ onEdit, onCreate }: Props) {
             type: 'select',
             options: SANCTION_STAGES.map(s => ({ value: s, label: s })),
         },
-        {
-            key: 'initial',
-            label: 'Resolución Inicial',
-            type: 'select',
-            options: resolutionsOptions || [],
-        },
-        {
-            key: 'reconsideration',
-            label: 'Recurso Reposición',
-            type: 'select',
-            options: resolutionsOptions || [],
-        },
-        {
-            key: 'appeal',
-            label: 'Recurso Apelación',
-            type: 'select',
-            options: resolutionsOptions || [],
-        },
+       
     ];
 
     const handleFilterChange = (newFilters: Record<string, any>) => {
