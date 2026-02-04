@@ -27,11 +27,8 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
     
     const { data: regulations } = useRegulationsFiltered(filters);
     const { data: typesOptions } = useTypesForFilter();
-    const { data: yearsOptions } = useYearsForFilter();
-    const { data: authoritiesOptions } = useAuthoritiesForFilter();
     const { data: industriesOptions } = useIndustriesForFilter();
     const { data: domainsOptions } = useDomainsForFilter();
-    const { data: statusesOptions } = useStatusesForFilter();
     const deleteRegulation = useDeleteRegulation();
 
     // ✅ NUEVO: Función para determinar si se pueden mostrar botones de acción
@@ -50,32 +47,10 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
             type: 'select',
             options: typesOptions || [],
         },
-        {
-            key: 'issueDate',
-            label: 'Fecha Emisión',
-            type: 'date',
-        },
-        {
-            key: 'year',
-            label: 'Año',
-            type: 'select',
-            options: yearsOptions || [],
-        },
-        {
-            key: 'regulation',
-            label: 'Normativa',
-            type: 'text',
-            placeholder: 'Buscar normativa...',
-        },
-        {
-            key: 'authority',
-            label: 'Autoridad',
-            type: 'select',
-            options: authoritiesOptions || [],
-        },
+       
         {
             key: 'industry',
-            label: 'Industria',
+            label: 'Sector',
             type: 'select',
             options: industriesOptions || [],
         },
@@ -85,12 +60,7 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
             type: 'select',
             options: domainsOptions || [],
         },
-        {
-            key: 'status',
-            label: 'Estado',
-            type: 'select',
-            options: statusesOptions || [],
-        },
+       
     ];
 
     const handleFilterChange = (newFilters: Record<string, any>) => {

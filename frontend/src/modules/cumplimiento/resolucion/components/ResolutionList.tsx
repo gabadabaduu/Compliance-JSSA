@@ -32,12 +32,8 @@ export default function ResolutionList({
     const [selectedResolution, setSelectedResolution] = useState<Resolution | null>(null);
 
     const { data: resolutions } = useResolutionsFiltered(filters);
-    const { data: sanctionsOptions } = useSanctionsForFilter();
-    const { data: yearsOptions } = useYearsForFilter();
     const { data: resolutionTypesOptions } = useResolutionTypesForFilter();
-    const { data: infringementsOptions } = useInfringementsForFilter();
     const { data: sanctionTypesOptions } = useSanctionTypesForFilter();
-    const { data: outcomesOptions } = useOutcomesForFilter();
     const deleteResolution = useDeleteResolution();
 
     // ✅ Determinar qué resoluciones mostrar
@@ -46,45 +42,16 @@ export default function ResolutionList({
     // Configuración de filtros
     const filterConfig: FilterConfig[] = [
         {
-            key: 'sanctions',
-            label: 'Sanción',
-            type: 'select',
-            options: sanctionsOptions || [],
-        },
-        {
-            key: 'issueDate',
-            label: 'Fecha Emisión',
-            type: 'date',
-        },
-        {
-            key: 'year',
-            label: 'Año',
-            type: 'select',
-            options: yearsOptions || [],
-        },
-        {
             key: 'resolutionType',
             label: 'Tipo Resolución',
             type: 'select',
             options: resolutionTypesOptions || [],
         },
         {
-            key: 'infringements',
-            label: 'Infracción',
-            type: 'select',
-            options: infringementsOptions || [],
-        },
-        {
             key: 'sanctionType',
             label: 'Tipo Sanción',
             type: 'select',
             options: sanctionTypesOptions || [],
-        },
-        {
-            key: 'outcome',
-            label: 'Resultado',
-            type: 'select',
-            options: outcomesOptions || [],
         },
     ];
 
