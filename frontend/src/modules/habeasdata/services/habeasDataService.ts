@@ -1,4 +1,5 @@
 import { apiClient } from '../../../lib/api-client';
+import { useUserStore } from '../../../stores/userStore'
 import type {
     Dsr,
     CreateDsrDto,
@@ -16,7 +17,11 @@ export async function getDsrById(id: number): Promise<Dsr> {
     return apiClient.get<Dsr>(`/dsr/${id}`);
 }
 
-export async function getAllDsrs(): Promise<Dsr[]> {
+export async function getAllDsrs(companyName?: string): Promise<Dsr[]> {
+    if (companyName) {
+        return apiClient.get<Dsr[]>(`/dsr?companyName=${encodeURIComponent(companyName)}`);
+    }
+    
     return apiClient.get<Dsr[]>('/dsr');
 }
 
@@ -77,6 +82,13 @@ export interface DsrFilters {
 export async function getDsrsFiltered(filters?: DsrFilters): Promise<Dsr[]> {
     // Por ahora retornamos todos y filtramos en el cliente
     // Cuando existan los endpoints del backend, se cambiará
+    const { userData } = useUserStore.getState();
+    const companyName = userData?.role === 'superadmin' ? undefined : userData?.nombreEmpresa;
+    
+    if (!filters || Object.keys(filters).length === 0) {
+        return getAllDsrs(companyName);
+    }
+    
     const allDsrs = await getAllDsrs();
     
     if (!filters || Object.keys(filters).length === 0) {
