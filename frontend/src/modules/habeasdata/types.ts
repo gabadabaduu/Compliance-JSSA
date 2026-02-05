@@ -14,8 +14,8 @@ export interface Dsr {
     createdAt: Date;
     startDate: Date;
     dueDate: Date;
-    stage?: Date;
-    status?: Date;
+    stage?: string;
+    status?: string;
     initialTerm: Date;
     extensionTerm: boolean;
     totalTerm: Date;
@@ -23,6 +23,8 @@ export interface Dsr {
     responseContent?: Date;
     responseAttachment: boolean;
     createdBy?: string;
+    updatedBy?: string;
+    tenant?: string;
 }
 
 // DTO para creación de DSR
@@ -38,12 +40,14 @@ export interface CreateDsrDto {
     requestDetails: string;
     attachment?: string;
     startDate: Date;
-    stage?: Date;
-    status?: Date;
+    stage?: string;
+    status?: string;
     closedAt?: Date;
     responseContent?: Date;
     responseAttachment?: boolean;
     createdBy?: string;
+    updatedBy?: string;
+    tenant?: string;
 }
 
 // DTO para actualización de DSR
@@ -60,12 +64,14 @@ export interface UpdateDsrDto {
     requestDetails?: string;
     attachment?: string;
     startDate?: Date;
-    stage?: Date;
-    status?: Date;
+    stage?: string;
+    status?: string;
     closedAt?: Date;
     responseContent?: Date;
     responseAttachment?: boolean;
     createdBy?: string;
+    updatedBy?: string;
+    tenant?: string;
 }
 
 // Interface para DsrRequestType (tipos de solicitud)

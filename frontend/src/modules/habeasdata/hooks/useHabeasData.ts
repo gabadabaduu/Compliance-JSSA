@@ -14,15 +14,21 @@ import {
     type DsrFilters
 } from '../services/habeasDataService';
 import type { CreateDsrDto, UpdateDsrDto } from '../types';
+import { useUserStore } from '../../../stores/userStore';
+import { usePermissions } from '../../../hooks/usePermissions';
 
 // ============================================
 // 📋 HOOKS CRUD - DSR
 // ============================================
 
 export function useDsrs() {
+    const { isSuperAdmin } = usePermissions();
+    const { userData } = useUserStore();
+    const companyName = isSuperAdmin ? undefined : userData?.nombreEmpresa;
+
     return useQuery({
-        queryKey: ['dsrs'],
-        queryFn: getAllDsrs,
+        queryKey: ['dsrs', companyName],
+        queryFn: () => getAllDsrs(companyName),
         staleTime: 1000 * 60 * 5,
         gcTime: 1000 * 60 * 30,
         retry: 1,

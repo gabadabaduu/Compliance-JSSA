@@ -18,15 +18,22 @@ namespace Compliance.Core.Modules.DSR.Dtos
         public DateTime CreatedAt { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime DueDate { get; set; }
-        public DateTime? Stage { get; set; }
-        public DateTime? Status { get; set; }
+
+        // ✅ CAMBIO: De DateTime? a string?
+        public string? Stage { get; set; }
+        public string? Status { get; set; }
+
         public DateTime InitialTerm { get; set; }
         public bool ExtensionTerm { get; set; }
         public DateTime TotalTerm { get; set; }
         public DateTime? ClosedAt { get; set; }
         public DateTime? ResponseContent { get; set; }
         public bool ResponseAttachment { get; set; }
-        public string? CreatedBy { get; set; } // ✅ NUEVO
+        public string? CreatedBy { get; set; }
+
+        // ✅ NUEVOS
+        public string? Tenant { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 
     public class CreateDsrDto
@@ -43,15 +50,22 @@ namespace Compliance.Core.Modules.DSR.Dtos
         public string? Attachment { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime DueDate { get; set; }
-        public DateTime? Stage { get; set; }
-        public DateTime? Status { get; set; }
+
+        // ✅ CAMBIO: De DateTime? a string?
+        public string? Stage { get; set; }
+        public string? Status { get; set; }
+
         public DateTime InitialTerm { get; set; }
         public bool ExtensionTerm { get; set; } = false;
         public DateTime TotalTerm { get; set; }
         public DateTime? ClosedAt { get; set; }
         public DateTime? ResponseContent { get; set; }
         public bool ResponseAttachment { get; set; } = false;
-        public string? CreatedBy { get; set; } // ✅ NUEVO
+        public string? CreatedBy { get; set; }
+
+        // ✅ NUEVOS
+        public string? Tenant { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 
     public class UpdateDsrDto
@@ -69,14 +83,21 @@ namespace Compliance.Core.Modules.DSR.Dtos
         public string? Attachment { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? DueDate { get; set; }
-        public DateTime? Stage { get; set; }
-        public DateTime? Status { get; set; }
+
+        // ✅ CAMBIO: De DateTime? a string?
+        public string? Stage { get; set; }
+        public string? Status { get; set; }
+
         public DateTime? InitialTerm { get; set; }
         public bool? ExtensionTerm { get; set; }
         public DateTime? TotalTerm { get; set; }
         public DateTime? ClosedAt { get; set; }
         public DateTime? ResponseContent { get; set; }
         public bool? ResponseAttachment { get; set; }
-        public string? CreatedBy { get; set; } // ✅ NUEVO
+        public string? CreatedBy { get; set; }
+
+        // ✅ NUEVOS
+        public string? Tenant { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 }
