@@ -32,7 +32,11 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
         attachment: string;
         startDate: string;
         responseAttachment: boolean;
+        stage: string;
+        status: string;
         createdBy: string | undefined;
+        updatedBy: string | undefined;
+        tenant: string | undefined;
     }>({
         caseId: '',
         requestId: '',
@@ -46,11 +50,16 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
         attachment: '',
         startDate: new Date().toISOString().split('T')[0],
         responseAttachment: false,
+        stage: 'Radicado',
+        status: 'Abierto',
         createdBy: undefined,
+        updatedBy: undefined,
+        tenant: undefined,
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
+   // ...existing code...
     useEffect(() => {
         if (dsr) {
             setFormData({
@@ -66,7 +75,11 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                 attachment: dsr.attachment || '',
                 startDate: new Date(dsr.startDate).toISOString().split('T')[0],
                 responseAttachment: dsr.responseAttachment,
+                stage: dsr.stage?.toString() || 'Radicado',
+                status: dsr.status?.toString() || 'Abierto',
                 createdBy: dsr.createdBy,
+                updatedBy: dsr.updatedBy,
+                tenant: dsr.tenant,
             });
         }
     }, [dsr]);
@@ -140,7 +153,11 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                 attachment: formData.attachment || undefined,
                 startDate: new Date(formData.startDate),
                 responseAttachment: formData.responseAttachment,
-                createdBy: isEditing ? formData.createdBy : (isSuperAdmin ? undefined : userData?.nombreEmpresa),
+                stage: formData.stage,
+                status: formData.status,
+                createdBy: isEditing ? formData.createdBy : userData?.id,
+                updatedBy: isEditing ? userData?.id : undefined,
+                tenant: isEditing ? formData.tenant : (isSuperAdmin ? undefined : userData?.nombreEmpresa),
             };
 
             if (isEditing && dsr) {
@@ -341,6 +358,35 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                             </div>
                         </div>
 
+                        {/* Fila 5.5: Stage y Status */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Etapa *</label>
+                                <select 
+                                    name="stage" 
+                                    value={formData.stage} 
+                                    onChange={handleChange} 
+                                    className={inputClass('stage')}
+                                >
+                                    <option value="Radicado">Radicado</option>
+                                    <option value="Reclamo en trámite">Reclamo en trámite</option>
+                                    <option value="Reclamo en trámite con prórroga">Reclamo en trámite con prórroga</option>
+                                </select>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Estado *</label>
+                                <select 
+                                    name="status" 
+                                    value={formData.status} 
+                                    onChange={handleChange} 
+                                    className={inputClass('status')}
+                                >
+                                    <option value="Abierto">Abierto</option>
+                                    <option value="Cerrado">Cerrado</option>
+                                </select>
+                            </div>
+                        </div>
+                        
                         {/* Fila 6: Detalles de la solicitud */}
                         <div className="flex flex-col gap-1">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Detalles de la Solicitud *</label>
