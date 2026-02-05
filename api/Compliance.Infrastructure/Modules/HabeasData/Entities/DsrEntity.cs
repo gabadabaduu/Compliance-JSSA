@@ -50,11 +50,13 @@ namespace Compliance.Infrastructure.Modules.DSR.Entities
         [Column("due_date")]
         public DateTime DueDate { get; set; }
 
+        // ✅ CAMBIO: De DateTime? a string?
         [Column("stage")]
-        public DateTime? Stage { get; set; }
+        public string? Stage { get; set; }
 
+        // ✅ CAMBIO: De DateTime? a string?
         [Column("status")]
-        public DateTime? Status { get; set; }
+        public string? Status { get; set; }
 
         [Column("initial_term")]
         public DateTime InitialTerm { get; set; }
@@ -74,8 +76,14 @@ namespace Compliance.Infrastructure.Modules.DSR.Entities
         [Column("response_attachment")]
         public bool ResponseAttachment { get; set; } = false;
 
-        // ✅ NUEVO
         [Column("created_by")]
         public string? CreatedBy { get; set; }
+
+        // ✅ NUEVOS CAMPOS
+        [Column("tenant")]
+        public string? Tenant { get; set; }
+
+        [Column("updated_by")]
+        public string? UpdatedBy { get; set; }
     }
 }

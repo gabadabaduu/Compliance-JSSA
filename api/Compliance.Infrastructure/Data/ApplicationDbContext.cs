@@ -316,15 +316,22 @@ public class AppDbContext : DbContext
             eb.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
             eb.Property(e => e.StartDate).HasColumnName("start_date").IsRequired();
             eb.Property(e => e.DueDate).HasColumnName("due_date").IsRequired();
+
+            // ✅ CAMBIO: Ahora son TEXT
             eb.Property(e => e.Stage).HasColumnName("stage");
             eb.Property(e => e.Status).HasColumnName("status");
+
             eb.Property(e => e.InitialTerm).HasColumnName("initial_term").IsRequired();
             eb.Property(e => e.ExtensionTerm).HasColumnName("extension_term").HasDefaultValue(false);
             eb.Property(e => e.TotalTerm).HasColumnName("total_term").IsRequired();
             eb.Property(e => e.ClosedAt).HasColumnName("closed_at");
             eb.Property(e => e.ResponseContent).HasColumnName("response_content");
             eb.Property(e => e.ResponseAttachment).HasColumnName("response_attachment").HasDefaultValue(false);
-            eb.Property(e => e.CreatedBy).HasColumnName("created_by"); // ✅ NUEVO
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+
+            // ✅ NUEVOS
+            eb.Property(e => e.Tenant).HasColumnName("tenant");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
         });
 
         // =====================================================

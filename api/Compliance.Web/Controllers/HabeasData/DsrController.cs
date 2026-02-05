@@ -22,11 +22,22 @@ namespace Compliance.Web.Controllers.DSR
 
         /// <summary>
         /// GET: api/dsr
+        /// GET: api/dsr?companyName=EmpresaXYZ
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DsrDto>>> GetAll(CancellationToken ct)
+        public async Task<ActionResult<IEnumerable<DsrDto>>> GetAll(
+            [FromQuery] string? companyName, // ✅ NUEVO PARÁMETRO
+            CancellationToken ct)
         {
-            var result = await _service.GetAllAsync(ct);
+            // Si no se envía companyName, devolver todas
+            if (string.IsNullOrWhiteSpace(companyName))
+            {
+                var allResults = await _service.GetAllAsync(ct);
+                return Ok(allResults);
+            }
+
+            // Filtrar por empresa
+            var result = await _service.GetByCompanyAsync(companyName, ct);
             return Ok(result);
         }
 

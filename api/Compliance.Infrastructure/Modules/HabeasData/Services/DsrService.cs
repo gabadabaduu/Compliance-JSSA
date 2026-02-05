@@ -13,7 +13,8 @@ namespace Compliance.Infrastructure.Modules.DSR.Services
 
         public Task<IEnumerable<DsrDto>> GetAllAsync(CancellationToken ct = default)
             => _repository.GetAllAsync(ct);
-
+        public Task<IEnumerable<DsrDto>> GetByCompanyAsync(string companyName, CancellationToken ct = default)
+            => _repository.GetByCompanyAsync(companyName, ct);
         public Task<DsrDto?> GetByIdAsync(long id, CancellationToken ct = default)
             => _repository.GetByIdAsync(id, ct);
 

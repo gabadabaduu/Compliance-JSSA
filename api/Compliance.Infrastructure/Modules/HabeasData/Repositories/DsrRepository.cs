@@ -25,6 +25,15 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<DsrDto>> GetByCompanyAsync(string companyName, CancellationToken ct = default)
+        {
+            return await _db.Set<DsrEntity>()
+                .AsNoTracking()
+                .Where(e => e.CreatedBy == companyName)
+                .OrderByDescending(e => e.CreatedAt)
+                .Select(e => MapToDto(e))
+                .ToListAsync(ct);
+        }
         public async Task<DsrDto?> GetByIdAsync(long id, CancellationToken ct = default)
         {
             var entity = await _db.Set<DsrEntity>()
@@ -50,15 +59,17 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 Attachment = dto.Attachment,
                 StartDate = dto.StartDate,
                 DueDate = dto.DueDate,
-                Stage = dto.Stage,
-                Status = dto.Status,
+                Stage = dto.Stage,              // ✅ Ahora es string
+                Status = dto.Status,            // ✅ Ahora es string
                 InitialTerm = dto.InitialTerm,
                 ExtensionTerm = dto.ExtensionTerm,
                 TotalTerm = dto.TotalTerm,
                 ClosedAt = dto.ClosedAt,
                 ResponseContent = dto.ResponseContent,
                 ResponseAttachment = dto.ResponseAttachment,
-                CreatedBy = dto.CreatedBy // ✅ NUEVO
+                CreatedBy = dto.CreatedBy,
+                Tenant = dto.Tenant,            // ✅ NUEVO
+                UpdatedBy = dto.UpdatedBy       // ✅ NUEVO
             };
 
             _db.Set<DsrEntity>().Add(entity);
@@ -87,15 +98,22 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
             if (dto.Attachment != null) entity.Attachment = dto.Attachment;
             if (dto.StartDate.HasValue) entity.StartDate = dto.StartDate.Value;
             if (dto.DueDate.HasValue) entity.DueDate = dto.DueDate.Value;
-            if (dto.Stage.HasValue) entity.Stage = dto.Stage;
-            if (dto.Status.HasValue) entity.Status = dto.Status;
+
+            // ✅ CAMBIO: Ahora son string
+            if (dto.Stage != null) entity.Stage = dto.Stage;
+            if (dto.Status != null) entity.Status = dto.Status;
+
             if (dto.InitialTerm.HasValue) entity.InitialTerm = dto.InitialTerm.Value;
             if (dto.ExtensionTerm.HasValue) entity.ExtensionTerm = dto.ExtensionTerm.Value;
             if (dto.TotalTerm.HasValue) entity.TotalTerm = dto.TotalTerm.Value;
             if (dto.ClosedAt.HasValue) entity.ClosedAt = dto.ClosedAt;
             if (dto.ResponseContent.HasValue) entity.ResponseContent = dto.ResponseContent;
             if (dto.ResponseAttachment.HasValue) entity.ResponseAttachment = dto.ResponseAttachment.Value;
-            if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy; // ✅ NUEVO
+            if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy;
+
+            // ✅ NUEVOS
+            if (dto.Tenant != null) entity.Tenant = dto.Tenant;
+            if (dto.UpdatedBy != null) entity.UpdatedBy = dto.UpdatedBy;
 
             await _db.SaveChangesAsync(ct);
 
@@ -151,15 +169,17 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 CreatedAt = entity.CreatedAt,
                 StartDate = entity.StartDate,
                 DueDate = entity.DueDate,
-                Stage = entity.Stage,
-                Status = entity.Status,
+                Stage = entity.Stage,              // ✅ Ahora es string
+                Status = entity.Status,            // ✅ Ahora es string
                 InitialTerm = entity.InitialTerm,
                 ExtensionTerm = entity.ExtensionTerm,
                 TotalTerm = entity.TotalTerm,
                 ClosedAt = entity.ClosedAt,
                 ResponseContent = entity.ResponseContent,
                 ResponseAttachment = entity.ResponseAttachment,
-                CreatedBy = entity.CreatedBy // ✅ NUEVO
+                CreatedBy = entity.CreatedBy,
+                Tenant = entity.Tenant,            // ✅ NUEVO
+                UpdatedBy = entity.UpdatedBy       // ✅ NUEVO
             };
         }
     }
