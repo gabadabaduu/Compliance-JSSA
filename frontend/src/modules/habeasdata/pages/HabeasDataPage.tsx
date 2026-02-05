@@ -1,46 +1,65 @@
+import { useState } from 'react';
 import { Icon } from '@iconify/react';
-import HabeasDataNamesList from '../components/HabeasDataNamesList';
+import HabeasDataHeader from '../components/HabeasDataHeader';
+import HabeasDataList from '../components/HabeasDataList';
+import HabeasDataForm from '../components/HabeasDataForm';
+import { useDsrs } from '../hooks/useHabeasData';
+import type { Dsr } from '../types';
+import LoadingSpinner from '../../../components/LoadingSpinner/LoadingSpinner';
 
 export default function HabeasDataPage() {
-    return (
-       <div className="flex flex-col items-center justify-center min-h-full p-6">
-            <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-12">
-                Habeas Data
-            </h1>
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedDsr, setSelectedDsr] = useState<Dsr | null>(null);
+    const { data: dsrs, isLoading, error } = useDsrs();
 
-            <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-8 max-w-md w-full">
-                <div className="flex flex-col items-center text-center">
-                    <Icon 
-                        icon="mdi:hammer-wrench" 
-                        width="64" 
-                        height="64" 
-                        className="text-blue-400 mb-4"
-                    />
-                    
-                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
-                        Módulo en desarrollo
-                    </h2>
-                    
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">
-                        Estamos trabajando para traerte nuevas funcionalidades. 
-                        ¡Gracias por tu paciencia!
-                    </p>
+    const handleCreate = () => {
+        setSelectedDsr(null);
+        setIsFormOpen(true);
+    };
 
-                    {/* Separador */}
-                    <div className="w-full border-t border-gray-200 dark:border-gray-700 my-4"></div>
+    const handleEdit = (dsr: Dsr) => {
+        setSelectedDsr(dsr);
+        setIsFormOpen(true);
+    };
 
-                    {/* Conexión con Supabase */}
-                    <div className="w-full">
-                        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center justify-center gap-2">
-                            <Icon icon="mdi:database" width="24" height="24" className="text-blue-400" />
-                            Conexión con base de datos
-                        </h3>
-                        <div className="text-left">
-                            <HabeasDataNamesList />
-                        </div>
-                    </div>
+    const handleCloseForm = () => {
+        setIsFormOpen(false);
+        setSelectedDsr(null);
+    };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-full flex items-center justify-center">
+                <LoadingSpinner size="large" text="Cargando solicitudes DSR..." />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-full flex items-center justify-center">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 flex items-center gap-3">
+                    <Icon icon="mdi:alert-circle" width="24" height="24" className="text-red-500" />
+                    <span className="text-red-700 dark:text-red-400">
+                        Error al cargar solicitudes DSR: {error.message}
+                    </span>
                 </div>
             </div>
+        );
+    }
+
+    return (
+        <div className="min-h-full p-6 space-y-6">
+            {/* Sección principal */}
+            <div className="space-y-6">
+                <HabeasDataHeader onCreateClick={handleCreate} />
+                <HabeasDataList dsrs={dsrs || []} onEdit={handleEdit} />
+            </div>
+
+            {/* Modal del formulario */}
+            {isFormOpen && (
+                <HabeasDataForm dsr={selectedDsr} onClose={handleCloseForm} />
+            )}
         </div>
     );
 }
