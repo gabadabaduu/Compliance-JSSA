@@ -29,7 +29,7 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
         {
             return await _db.Set<DsrEntity>()
                 .AsNoTracking()
-                .Where(e => e.CreatedBy == companyName)
+                .Where(e => e.Tenant == companyName)
                 .OrderByDescending(e => e.CreatedAt)
                 .Select(e => MapToDto(e))
                 .ToListAsync(ct);
