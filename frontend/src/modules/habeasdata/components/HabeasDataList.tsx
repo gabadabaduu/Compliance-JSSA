@@ -111,8 +111,8 @@ export default function HabeasDataList({ dsrs: initialDsrs, onEdit }: HabeasData
         { label: 'Fecha de Creación', value: formatDateTime(dsr.createdAt) },
         { label: 'Fecha de Inicio', value: formatDate(dsr.startDate) },
         { label: 'Fecha de Vencimiento', value: formatDate(dsr.dueDate) },
-        { label: 'Etapa', value: dsr.stage ? formatDate(dsr.stage) : '-' },
-        { label: 'Estado', value: dsr.status ? formatDate(dsr.status) : '-' },
+        { label: 'Etapa', value: dsr.stage || '-' },
+        { label: 'Estado', value: dsr.status || '-' },
         { label: 'Plazo Inicial', value: formatDate(dsr.initialTerm) },
         { label: 'Extensión de Plazo', value: dsr.extensionTerm ? 'Sí' : 'No' },
         { label: 'Plazo Total', value: formatDate(dsr.totalTerm) },
@@ -215,12 +215,12 @@ export default function HabeasDataList({ dsrs: initialDsrs, onEdit }: HabeasData
                                     </td>
                                     <td className="py-4 px-4">
                                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {dsr.stage ? formatDate(dsr.stage) : '-'}
+                                            {dsr.stage || '-'}
                                         </span>
                                     </td>
                                     <td className="py-4 px-4">
                                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {dsr.status ? formatDate(dsr.status) : '-'}
+                                            {dsr.status || '-'}
                                         </span>
                                     </td>
 
