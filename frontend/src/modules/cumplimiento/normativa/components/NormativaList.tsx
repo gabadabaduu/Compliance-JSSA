@@ -23,7 +23,7 @@ interface NormativaListProps {
 export default function NormativaList({ regulations: initialRegulations, onEdit }: NormativaListProps) {
     const { isSuperAdmin } = usePermissions();
     const [filters, setFilters] = useState<Record<string, any>>({});
-    const [searchText, setSearchText] = useState(''); // ✅ NUEVO: Estado para búsqueda de texto
+    const [searchText, setSearchText] = useState('');
     const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
 
     const { data: regulations } = useRegulationsFiltered(filters);
@@ -32,19 +32,12 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
     const { data: domainsOptions } = useDomainsForFilter();
     const deleteRegulation = useDeleteRegulation();
 
-    const canEditRegulation = (regulation: Regulation): boolean => {
-        if (isSuperAdmin) return true;
-        return !regulation.allowed;
-    };
-
-    // ✅ CORREGIDO: Función para filtrar regulaciones por texto de búsqueda
     const filterBySearchText = (regulations: Regulation[]): Regulation[] => {
         if (!searchText.trim()) return regulations;
 
         const searchLower = searchText.toLowerCase().trim();
 
         return regulations.filter((regulation) => {
-            // Buscar en todos los campos relevantes, convirtiendo todo a string
             const searchableFields = [
                 String(regulation.type || ''),
                 String(regulation.number || ''),
@@ -128,8 +121,8 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
             label: 'Estado',
             value: (
                 <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${regulation.status === 'Vigente'
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                        : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                    : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
                     }`}>
                     {regulation.status}
                 </span>
@@ -148,7 +141,6 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
         },
     ];
 
-    // ✅ MODIFICADO: Aplicar tanto los filtros como la búsqueda de texto
     const baseRegulations = regulations || initialRegulations;
     const displayRegulations = filterBySearchText(baseRegulations);
 
@@ -184,7 +176,6 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                     </div>
                 </div>
 
-                {/* ✅ NUEVO: Campo de búsqueda de texto libre */}
                 <div className="mb-4">
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -210,7 +201,6 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
 
                 <TableFilter filters={filterConfig} onFilterChange={handleFilterChange} className="mb-4" />
 
-                {/* ✅ NUEVO: Mensaje cuando no hay resultados de búsqueda */}
                 {displayRegulations.length === 0 && searchText && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <Icon icon="mdi:file-search-outline" width="64" height="64" className="text-gray-300 dark:text-gray-600 mb-4" />
@@ -246,7 +236,10 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">Dominio</th>
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Enlace</th>
-                                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                                    {/* ✅ COLUMNA DE ACCIONES SOLO PARA SUPERADMIN */}
+                                    {isSuperAdmin && (
+                                        <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -272,8 +265,8 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                                         <td className="py-4 px-4 hidden lg:table-cell"><span className="text-sm text-gray-600 dark:text-gray-400">{regulation.domain}</span></td>
                                         <td className="py-4 px-4">
                                             <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${regulation.status === 'Vigente'
-                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                                                    : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                                                : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
                                                 }`}>
                                                 {regulation.status}
                                             </span>
@@ -293,7 +286,8 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                                             ) : (<span className="text-sm text-gray-400">-</span>)}
                                         </td>
 
-                                        {canEditRegulation(regulation) && (
+                                        {/* ✅ CELDA DE ACCIONES SOLO PARA SUPERADMIN */}
+                                        {isSuperAdmin && (
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center justify-center gap-1">
                                                     {regulation.url && (
@@ -324,11 +318,6 @@ export default function NormativaList({ regulations: initialRegulations, onEdit 
                                                         <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
                                                     </button>
                                                 </div>
-                                            </td>
-                                        )}
-
-                                        {!canEditRegulation(regulation) && (
-                                            <td className="py-4 px-4">
                                             </td>
                                         )}
                                     </tr>
