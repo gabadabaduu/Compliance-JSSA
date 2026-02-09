@@ -151,6 +151,40 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 .ToListAsync(ct);
         }
 
+        public async Task<IEnumerable<DsrDto>> GetFilteredAsync(DsrFilterDto filters, CancellationToken ct = default)
+        {
+            var query = _db.Set<DsrEntity>().AsNoTracking().AsQueryable();
+
+            // ✅ Filtro por empresa/tenant (siempre aplicar)
+            if (!string.IsNullOrWhiteSpace(filters.CompanyName))
+            {
+                query = query.Where(e => e.Tenant == filters.CompanyName);
+            }
+
+            // ✅ Filtro por tipo
+            if (filters.Type.HasValue)
+            {
+                query = query.Where(e => e.Type == filters.Type.Value);
+            }
+
+            // ✅ Filtro por etapa (stage)
+            if (!string.IsNullOrWhiteSpace(filters.Stage))
+            {
+                query = query.Where(e => e.Stage == filters.Stage);
+            }
+
+            // ✅ Filtro por estado (status)
+            if (!string.IsNullOrWhiteSpace(filters.Status))
+            {
+                query = query.Where(e => e.Status == filters.Status);
+            }
+
+            return await query
+                .OrderByDescending(e => e.CreatedAt)
+                .Select(e => MapToDto(e))
+                .ToListAsync(ct);
+        }
+
         private static DsrDto MapToDto(DsrEntity entity)
         {
             return new DsrDto

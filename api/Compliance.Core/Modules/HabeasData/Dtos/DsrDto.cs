@@ -100,4 +100,12 @@ namespace Compliance.Core.Modules.DSR.Dtos
         public string? Tenant { get; set; }
         public string? UpdatedBy { get; set; }
     }
+
+    public class DsrFilterDto
+    {
+        public int? Type { get; set; }
+        public string? Stage { get; set; }
+        public string? Status { get; set; }
+        public string? CompanyName { get; set; } // Para filtrar por tenant
+    }
 }
