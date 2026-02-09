@@ -10,6 +10,7 @@ namespace Compliance.Core.Modules.DSR.Interfaces
         Task<IEnumerable<DsrDto>> GetAllAsync(CancellationToken ct = default);
         Task<DsrDto?> GetByIdAsync(long id, CancellationToken ct = default);
         Task<IEnumerable<DsrDto>> GetByCompanyAsync(string companyName, CancellationToken ct = default);
+        Task<IEnumerable<DsrDto>> GetFilteredAsync(DsrFilterDto filters, CancellationToken ct = default);
         Task<DsrDto> CreateAsync(CreateDsrDto dto, CancellationToken ct = default);
         Task<DsrDto> UpdateAsync(UpdateDsrDto dto, CancellationToken ct = default);
         Task<bool> DeleteAsync(long id, CancellationToken ct = default);

@@ -21,23 +21,43 @@ namespace Compliance.Web.Controllers.DSR
         }
 
         /// <summary>
-        /// GET: api/dsr
-        /// GET: api/dsr?companyName=EmpresaXYZ
+        /// GET: api/dsr?companyName=empresaa
         /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DsrDto>>> GetAll(
-            [FromQuery] string? companyName, // ✅ NUEVO PARÁMETRO
+            [FromQuery] string? companyName,
             CancellationToken ct)
         {
-            // Si no se envía companyName, devolver todas
             if (string.IsNullOrWhiteSpace(companyName))
             {
                 var allResults = await _service.GetAllAsync(ct);
                 return Ok(allResults);
             }
 
-            // Filtrar por empresa
             var result = await _service.GetByCompanyAsync(companyName, ct);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// GET: api/dsr/filter?type=1&stage=Radicado&status=Abierto&companyName=empresaa
+        /// </summary>
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<DsrDto>>> GetFiltered(
+            [FromQuery] int? type,
+            [FromQuery] string? stage,
+            [FromQuery] string? status,
+            [FromQuery] string? companyName,
+            CancellationToken ct)
+        {
+            var filters = new DsrFilterDto
+            {
+                Type = type,
+                Stage = stage,
+                Status = status,
+                CompanyName = companyName
+            };
+
+            var result = await _service.GetFilteredAsync(filters, ct);
             return Ok(result);
         }
 
