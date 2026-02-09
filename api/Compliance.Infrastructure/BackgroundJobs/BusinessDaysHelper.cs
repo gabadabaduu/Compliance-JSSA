@@ -42,12 +42,12 @@ namespace Compliance.Infrastructure.Helpers
             new DateTime(2026, 1, 1),   // Año Nuevo
             new DateTime(2026, 1, 12),  // Reyes Magos
             new DateTime(2026, 3, 23),  // San José
-            new DateTime(2026, 4, 9),   // Jueves Santo
-            new DateTime(2026, 4, 10),  // Viernes Santo
+            new DateTime(2026, 4, 2),   // Jueves Santo
+            new DateTime(2026, 4, 3),  // Viernes Santo
             new DateTime(2026, 5, 1),   // Día del Trabajo
-            new DateTime(2026, 5, 25),  // Ascensión
-            new DateTime(2026, 6, 15),  // Corpus Christi
-            new DateTime(2026, 6, 22),  // Sagrado Corazón
+            new DateTime(2026, 5, 18),  // Ascensión
+            new DateTime(2026, 6, 8),  // Corpus Christi
+            new DateTime(2026, 6, 15),  // Sagrado Corazón
             new DateTime(2026, 6, 29),  // San Pedro y San Pablo
             new DateTime(2026, 7, 20),  // Independencia
             new DateTime(2026, 8, 7),   // Batalla de Boyacá
@@ -57,7 +57,7 @@ namespace Compliance.Infrastructure.Helpers
             new DateTime(2026, 11, 16), // Independencia de Cartagena
             new DateTime(2026, 12, 8),  // Inmaculada Concepción
             new DateTime(2026, 12, 25), // Navidad
-        };
+        };  
 
         /// <summary>
         /// Agrega días hábiles considerando festivos (opcional)
