@@ -7,7 +7,9 @@ using Compliance.Core.Modules.DSR.Dtos;
 using Compliance.Core.Modules.DSR.Interfaces;
 using Compliance.Infrastructure.Data;
 using Compliance.Infrastructure.Modules.DSR.Entities;
+using Compliance.Infrastructure.Helpers;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace Compliance.Infrastructure.Modules.DSR.Repositories
 {
@@ -45,12 +47,45 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
 
         public async Task<DsrDto> CreateAsync(CreateDsrDto dto, CancellationToken ct = default)
         {
+            // ✅ 1. Obtener información del tipo de solicitud
+            var requestType = await _db.Set<DsrRequestTypeEntity>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(rt => rt.Id == dto.Type, ct);
+
+            if (requestType == null)
+                throw new Exception($"DsrRequestType con ID {dto.Type} no encontrado");
+
+            // ✅ 2. Calcular InitialTerm (StartDate + initial_term días hábiles)
+            var initialTermDate = BusinessDaysHelper.AddBusinessDays(
+                dto.StartDate,
+                requestType.InitialTerm ?? 0
+            );
+
+            // ✅ 3. Calcular TotalTerm y DueDate
+            DateTime totalTermDate;
+            DateTime dueDate;
+
+            if (dto.ExtensionTerm)
+            {
+                // Con prórroga: StartDate + (initial_term + extension_term) días hábiles
+                var totalDays = (requestType.InitialTerm ?? 0) + (requestType.ExtensionTerm ?? 0);
+                totalTermDate = BusinessDaysHelper.AddBusinessDays(dto.StartDate, totalDays);
+                dueDate = totalTermDate;
+            }
+            else
+            {
+                // Sin prórroga: DueDate = InitialTerm
+                totalTermDate = initialTermDate;
+                dueDate = initialTermDate;
+            }
+
+            // ✅ 4. Crear la entidad con todos los datos calculados
             var entity = new DsrEntity
             {
                 CaseId = dto.CaseId,
                 RequestId = dto.RequestId,
                 Type = dto.Type,
-                Category = dto.Category,
+                Category = requestType.Category ?? string.Empty, // ✅ Obtenido de dsr_request_type
                 FullName = dto.FullName,
                 IdType = dto.IdType,
                 IdNumber = dto.IdNumber,
@@ -58,18 +93,18 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 RequestDetails = dto.RequestDetails,
                 Attachment = dto.Attachment,
                 StartDate = dto.StartDate,
-                DueDate = dto.DueDate,
-                Stage = dto.Stage,              // ✅ Ahora es string
-                Status = dto.Status,            // ✅ Ahora es string
-                InitialTerm = dto.InitialTerm,
+                DueDate = dueDate,                    // ✅ Calculado
+                Stage = dto.Stage,
+                Status = dto.Status,
+                InitialTerm = initialTermDate,        // ✅ Calculado
                 ExtensionTerm = dto.ExtensionTerm,
-                TotalTerm = dto.TotalTerm,
+                TotalTerm = totalTermDate,             // ✅ Calculado
                 ClosedAt = dto.ClosedAt,
                 ResponseContent = dto.ResponseContent,
                 ResponseAttachment = dto.ResponseAttachment,
                 CreatedBy = dto.CreatedBy,
-                Tenant = dto.Tenant,            // ✅ NUEVO
-                UpdatedBy = dto.UpdatedBy       // ✅ NUEVO
+                Tenant = dto.Tenant,
+                UpdatedBy = dto.UpdatedBy
             };
 
             _db.Set<DsrEntity>().Add(entity);
@@ -86,9 +121,23 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
             if (entity == null)
                 throw new Exception($"DSR with ID {dto.Id} not found");
 
+            // ✅ Variables para detectar si necesitamos recalcular fechas
+            bool needsRecalculation = false;
+            DateTime? newStartDate = null;
+            int? newType = null;
+            bool? newExtensionTerm = null;
+
+            // Actualizar campos básicos
             if (dto.CaseId != null) entity.CaseId = dto.CaseId;
             if (dto.RequestId != null) entity.RequestId = dto.RequestId;
-            if (dto.Type.HasValue) entity.Type = dto.Type.Value;
+
+            if (dto.Type.HasValue && dto.Type.Value != entity.Type)
+            {
+                entity.Type = dto.Type.Value;
+                newType = dto.Type.Value;
+                needsRecalculation = true;
+            }
+
             if (dto.Category != null) entity.Category = dto.Category;
             if (dto.FullName != null) entity.FullName = dto.FullName;
             if (dto.IdType != null) entity.IdType = dto.IdType;
@@ -96,24 +145,70 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
             if (dto.Email != null) entity.Email = dto.Email;
             if (dto.RequestDetails != null) entity.RequestDetails = dto.RequestDetails;
             if (dto.Attachment != null) entity.Attachment = dto.Attachment;
-            if (dto.StartDate.HasValue) entity.StartDate = dto.StartDate.Value;
-            if (dto.DueDate.HasValue) entity.DueDate = dto.DueDate.Value;
 
-            // ✅ CAMBIO: Ahora son string
+            if (dto.StartDate.HasValue && dto.StartDate.Value != entity.StartDate)
+            {
+                entity.StartDate = dto.StartDate.Value;
+                newStartDate = dto.StartDate.Value;
+                needsRecalculation = true;
+            }
+
             if (dto.Stage != null) entity.Stage = dto.Stage;
             if (dto.Status != null) entity.Status = dto.Status;
 
-            if (dto.InitialTerm.HasValue) entity.InitialTerm = dto.InitialTerm.Value;
-            if (dto.ExtensionTerm.HasValue) entity.ExtensionTerm = dto.ExtensionTerm.Value;
-            if (dto.TotalTerm.HasValue) entity.TotalTerm = dto.TotalTerm.Value;
+            if (dto.ExtensionTerm.HasValue && dto.ExtensionTerm.Value != entity.ExtensionTerm)
+            {
+                entity.ExtensionTerm = dto.ExtensionTerm.Value;
+                newExtensionTerm = dto.ExtensionTerm.Value;
+                needsRecalculation = true;
+            }
+
             if (dto.ClosedAt.HasValue) entity.ClosedAt = dto.ClosedAt;
             if (dto.ResponseContent.HasValue) entity.ResponseContent = dto.ResponseContent;
             if (dto.ResponseAttachment.HasValue) entity.ResponseAttachment = dto.ResponseAttachment.Value;
             if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy;
-
-            // ✅ NUEVOS
             if (dto.Tenant != null) entity.Tenant = dto.Tenant;
             if (dto.UpdatedBy != null) entity.UpdatedBy = dto.UpdatedBy;
+
+            // ✅ Recalcular fechas si cambió StartDate, Type o ExtensionTerm
+            if (needsRecalculation)
+            {
+                var typeId = newType ?? entity.Type;
+                var startDate = newStartDate ?? entity.StartDate;
+                var extensionTerm = newExtensionTerm ?? entity.ExtensionTerm;
+
+                var requestType = await _db.Set<DsrRequestTypeEntity>()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(rt => rt.Id == typeId, ct);
+
+                if (requestType != null)
+                {
+                    // Recalcular InitialTerm
+                    entity.InitialTerm = BusinessDaysHelper.AddBusinessDays(
+                        startDate,
+                        requestType.InitialTerm ?? 0
+                    );
+
+                    // Recalcular TotalTerm y DueDate
+                    if (extensionTerm)
+                    {
+                        var totalDays = (requestType.InitialTerm ?? 0) + (requestType.ExtensionTerm ?? 0);
+                        entity.TotalTerm = BusinessDaysHelper.AddBusinessDays(startDate, totalDays);
+                        entity.DueDate = entity.TotalTerm;
+                    }
+                    else
+                    {
+                        entity.TotalTerm = entity.InitialTerm;
+                        entity.DueDate = entity.InitialTerm;
+                    }
+
+                    // Actualizar categoría si cambió el tipo
+                    if (newType.HasValue)
+                    {
+                        entity.Category = requestType.Category ?? string.Empty;
+                    }
+                }
+            }
 
             await _db.SaveChangesAsync(ct);
 
