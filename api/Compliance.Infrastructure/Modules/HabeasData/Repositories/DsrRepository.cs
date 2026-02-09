@@ -55,13 +55,16 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
             if (requestType == null)
                 throw new Exception($"DsrRequestType con ID {dto.Type} no encontrado");
 
-            // ✅ 2. Calcular InitialTerm (StartDate + initial_term días hábiles)
+            // ✅ 2. Asegurar que StartDate sea UTC
+            var startDateUtc = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
+
+            // ✅ 3. Calcular InitialTerm (StartDate + initial_term días hábiles)
             var initialTermDate = BusinessDaysHelper.AddBusinessDays(
-                dto.StartDate,
+                startDateUtc,
                 requestType.InitialTerm ?? 0
             );
 
-            // ✅ 3. Calcular TotalTerm y DueDate
+            // ✅ 4. Calcular TotalTerm y DueDate
             DateTime totalTermDate;
             DateTime dueDate;
 
@@ -69,7 +72,7 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
             {
                 // Con prórroga: StartDate + (initial_term + extension_term) días hábiles
                 var totalDays = (requestType.InitialTerm ?? 0) + (requestType.ExtensionTerm ?? 0);
-                totalTermDate = BusinessDaysHelper.AddBusinessDays(dto.StartDate, totalDays);
+                totalTermDate = BusinessDaysHelper.AddBusinessDays(startDateUtc, totalDays);
                 dueDate = totalTermDate;
             }
             else
@@ -79,28 +82,32 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 dueDate = initialTermDate;
             }
 
-            // ✅ 4. Crear la entidad con todos los datos calculados
+            // ✅ 5. Crear la entidad con todos los datos calculados
             var entity = new DsrEntity
             {
                 CaseId = dto.CaseId,
                 RequestId = dto.RequestId,
                 Type = dto.Type,
-                Category = requestType.Category ?? string.Empty, // ✅ Obtenido de dsr_request_type
+                Category = requestType.Category ?? string.Empty,
                 FullName = dto.FullName,
                 IdType = dto.IdType,
                 IdNumber = dto.IdNumber,
                 Email = dto.Email,
                 RequestDetails = dto.RequestDetails,
                 Attachment = dto.Attachment,
-                StartDate = dto.StartDate,
-                DueDate = dueDate,                    // ✅ Calculado
+                StartDate = startDateUtc,              // ✅ UTC
+                DueDate = dueDate,                      // ✅ UTC
                 Stage = dto.Stage,
                 Status = dto.Status,
-                InitialTerm = initialTermDate,        // ✅ Calculado
+                InitialTerm = initialTermDate,          // ✅ UTC
                 ExtensionTerm = dto.ExtensionTerm,
-                TotalTerm = totalTermDate,             // ✅ Calculado
-                ClosedAt = dto.ClosedAt,
-                ResponseContent = dto.ResponseContent,
+                TotalTerm = totalTermDate,              // ✅ UTC
+                ClosedAt = dto.ClosedAt.HasValue
+                    ? DateTime.SpecifyKind(dto.ClosedAt.Value, DateTimeKind.Utc)
+                    : null,
+                ResponseContent = dto.ResponseContent.HasValue
+                    ? DateTime.SpecifyKind(dto.ResponseContent.Value, DateTimeKind.Utc)
+                    : null,
                 ResponseAttachment = dto.ResponseAttachment,
                 CreatedBy = dto.CreatedBy,
                 Tenant = dto.Tenant,
@@ -148,8 +155,9 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
 
             if (dto.StartDate.HasValue && dto.StartDate.Value != entity.StartDate)
             {
-                entity.StartDate = dto.StartDate.Value;
-                newStartDate = dto.StartDate.Value;
+                // ✅ Asegurar UTC
+                entity.StartDate = DateTime.SpecifyKind(dto.StartDate.Value, DateTimeKind.Utc);
+                newStartDate = entity.StartDate;
                 needsRecalculation = true;
             }
 
@@ -163,9 +171,15 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 needsRecalculation = true;
             }
 
-            if (dto.ClosedAt.HasValue) entity.ClosedAt = dto.ClosedAt;
-            if (dto.ResponseContent.HasValue) entity.ResponseContent = dto.ResponseContent;
-            if (dto.ResponseAttachment.HasValue) entity.ResponseAttachment = dto.ResponseAttachment.Value;
+            if (dto.ClosedAt.HasValue)
+                entity.ClosedAt = DateTime.SpecifyKind(dto.ClosedAt.Value, DateTimeKind.Utc);
+
+            if (dto.ResponseContent.HasValue)
+                entity.ResponseContent = DateTime.SpecifyKind(dto.ResponseContent.Value, DateTimeKind.Utc);
+
+            if (dto.ResponseAttachment.HasValue)
+                entity.ResponseAttachment = dto.ResponseAttachment.Value;
+
             if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy;
             if (dto.Tenant != null) entity.Tenant = dto.Tenant;
             if (dto.UpdatedBy != null) entity.UpdatedBy = dto.UpdatedBy;
@@ -183,9 +197,12 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
 
                 if (requestType != null)
                 {
+                    // ✅ Asegurar que startDate sea UTC antes de calcular
+                    var startDateUtc = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+
                     // Recalcular InitialTerm
                     entity.InitialTerm = BusinessDaysHelper.AddBusinessDays(
-                        startDate,
+                        startDateUtc,
                         requestType.InitialTerm ?? 0
                     );
 
@@ -193,7 +210,7 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                     if (extensionTerm)
                     {
                         var totalDays = (requestType.InitialTerm ?? 0) + (requestType.ExtensionTerm ?? 0);
-                        entity.TotalTerm = BusinessDaysHelper.AddBusinessDays(startDate, totalDays);
+                        entity.TotalTerm = BusinessDaysHelper.AddBusinessDays(startDateUtc, totalDays);
                         entity.DueDate = entity.TotalTerm;
                     }
                     else

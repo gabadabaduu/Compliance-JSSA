@@ -7,12 +7,15 @@ namespace Compliance.Infrastructure.Helpers
     {
         /// <summary>
         /// Agrega días hábiles a una fecha (excluye sábados y domingos)
+        /// ✅ Retorna DateTime en UTC para compatibilidad con PostgreSQL
         /// </summary>
         public static DateTime AddBusinessDays(DateTime startDate, int businessDays)
         {
-            if (businessDays == 0) return startDate;
+            if (businessDays == 0)
+                return DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
 
-            var currentDate = startDate;
+            // ✅ Asegurar que la fecha inicial sea UTC
+            var currentDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
             var daysAdded = 0;
 
             while (daysAdded < businessDays)
@@ -58,12 +61,15 @@ namespace Compliance.Infrastructure.Helpers
 
         /// <summary>
         /// Agrega días hábiles considerando festivos (opcional)
+        /// ✅ Retorna DateTime en UTC para compatibilidad con PostgreSQL
         /// </summary>
         public static DateTime AddBusinessDaysWithHolidays(DateTime startDate, int businessDays)
         {
-            if (businessDays == 0) return startDate;
+            if (businessDays == 0)
+                return DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
 
-            var currentDate = startDate;
+            // ✅ Asegurar que la fecha inicial sea UTC
+            var currentDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
             var daysAdded = 0;
 
             while (daysAdded < businessDays)
