@@ -14,7 +14,8 @@ using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncEntities.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.GeneralIndustries.Entities;
 using Compliance.Core.Modules.Cumplimiento.Sancion.Dtos;
-using Compliance.Infrastructure.Modules.DSR.Entities; // ✅ NUEVO
+using Compliance.Infrastructure.Modules.DSR.Entities;
+using Compliance.Infrastructure.Modules.HabeasData.Notificacion.Entities;
 
 namespace Compliance.Infrastructure.Data;
 
@@ -52,6 +53,7 @@ public class AppDbContext : DbContext
     public DbSet<DsrEntity> Dsrs { get; set; } = null!;
     public DbSet<DsrRequestTypeEntity> DsrRequestTypes { get; set; } = null!;
     public DbSet<DsrStatusEntity> DsrStatuses { get; set; } = null!;
+    public DbSet<DsrNotificationEntity> DsrNotifications { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -333,7 +335,28 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Tenant).HasColumnName("tenant");
             eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
         });
+        
+        modelBuilder.Entity<DsrNotificationEntity>(eb =>
+        {
+            eb.ToTable("dsr_notification");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.DsrId).HasColumnName("dsr_id").IsRequired();
+            eb.Property(e => e.RecipientEmail).HasColumnName("recipient_email").HasMaxLength(255).IsRequired();
+            eb.Property(e => e.RecipientRole).HasColumnName("recipient_role").HasMaxLength(50).IsRequired();
+            eb.Property(e => e.DaysBeforeDue).HasColumnName("days_before_due").IsRequired();
+            eb.Property(e => e.EmailSent).HasColumnName("email_sent").HasDefaultValue(false);
+            eb.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
 
+            // Índice único para evitar duplicados
+            eb.HasIndex(e => new { e.DsrId, e.DaysBeforeDue, e.RecipientEmail })
+                .HasDatabaseName("uq_dsr_notification_unique")
+                .IsUnique();
+
+            // Índice para búsquedas por dsr_id
+            eb.HasIndex(e => e.DsrId)
+                .HasDatabaseName("ix_dsr_notification_dsr_id");
+        });
         // =====================================================
         // OTRAS
         // =====================================================

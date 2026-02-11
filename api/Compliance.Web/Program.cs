@@ -59,7 +59,11 @@ using Compliance.Core.Modules.DSR.Interfaces;
 using Compliance.Infrastructure.Modules.DSR.Repositories;
 using Compliance.Infrastructure.Modules.DSR.Services;
 using Compliance.Web.Hubs;
-
+using Compliance.Core.Modules.HabeasData.Notificacion.Interfaces;
+using Compliance.Infrastructure.Modules.HabeasData.Notificacion.Repositories;
+using Compliance.Infrastructure.Modules.HabeasData.Notificacion.Services;
+using Compliance.Infrastructure.ExternalServices.Email;
+using Compliance.Infrastructure.BackgroundJobs;
 // Limpiar mapeo de claim types
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -139,6 +143,11 @@ builder.Services.AddScoped<IDsrRequestTypeRepository, DsrRequestTypeRepository>(
 builder.Services.AddScoped<IDsrRequestTypeService, DsrRequestTypeService>();
 builder.Services.AddScoped<IDsrStatusRepository, DsrStatusRepository>();
 builder.Services.AddScoped<IDsrStatusService, DsrStatusService>();
+builder.Services.AddScoped<IDsrNotificationRepository, DsrNotificationRepository>();
+builder.Services.AddScoped<IDsrNotificationService, DsrNotificationService>();
+builder.Services.AddScoped<IEmailService, MailjetEmailService>();
+builder.Services.AddScoped<IDsrNotificationHubService, DsrNotificationHubService>();
+builder.Services.AddHostedService<DsrNotificationJob>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];

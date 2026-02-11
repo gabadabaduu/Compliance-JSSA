@@ -6,8 +6,13 @@ import logo from '../../../assets/logo.png';
 import logoName from '../../../assets/korhex-logo-name.png';
 import logoi from '../../../assets/logo-i.png';
 import logonamei from '../../../assets/korhex-logo-name-i.png';
+import NotificationBell from '../NotificationBell/NotificationBell';
 
-export default function Sidebar() {
+interface SidebarProps {
+    onNotificationClick: () => void;
+}
+
+export default function Sidebar({ onNotificationClick }: SidebarProps) {
     const { hasAccess, userData } = useUserStore();
     const navigate = useNavigate();
     const location = useLocation();
@@ -64,10 +69,8 @@ export default function Sidebar() {
 
     const menuItems = [
         { path: '/app/dashboard', label: 'Dashboard', access: 'accessDashboard', icon: 'mdi:view-dashboard' },
-        { path: '/app/epid', label: 'EPID', access: 'accessEpid', icon: 'mdi:clipboard-text' },
         { path: '/app/rat', label: 'RAT', access: 'accessRat', icon: 'mdi:link-variant' },
         { path: '/app/habeasdata', label: 'Habeas Data', access: 'accessHabeasdata', icon: 'mdi:file-document' },
-        { path: '/app/matrizriesgo', label: 'Matriz Riesgo', access: 'accessMatrizriesgo', icon: 'mdi:alert-circle' },
         { path: '/app/ajustes', label: 'Ajustes', access: 'accessAjustes', icon: 'mdi:cog' },
     ];
 
@@ -124,7 +127,7 @@ export default function Sidebar() {
 
            {/* Mi Cuenta - Debajo del logo */}
             {hasAccess('accessUsuario' as any) && (
-                <div className="py-2 mb-25">
+                <div className="py-2 mb-10">
                     <NavLink
                         to="/app/usuario"
                         className={({ isActive }) =>
@@ -146,9 +149,14 @@ export default function Sidebar() {
                         </div>
                         
                     </NavLink>
+                                <div className="py-1">
+                <NotificationBell onClick={onNotificationClick} />
+            </div>
                 </div>
+                
             )}
 
+            {/* Botón de Notificaciones - Debajo del usuario */}
 
                 <ul className="list-none m-0 space-y-1 flex-1 py-4">
                 {menuItems.map((item) => (

@@ -20,20 +20,28 @@ public class NotificationHub : Hub
     public override async Task OnConnectedAsync()
     {
         var userId = Context.User?.FindFirst("sub")?.Value;
+        var email = Context.User?.FindFirst("email")?.Value;
 
         if (!string.IsNullOrEmpty(userId))
         {
-            // Obtener la empresa del usuario
             var user = await _context.Users
                 .Where(u => u.Id == Guid.Parse(userId))
-                .Select(u => new { u.NombreEmpresa })
+                .Select(u => new { u.NombreEmpresa, u.Email })
                 .FirstOrDefaultAsync();
 
-            // Agregar al grupo del usuario individual (para notificaciones directas)
+            // Grupo individual por userId
             await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
             _logger.LogInformation("Usuario {UserId} agregado a grupo individual", userId);
 
-            // Agregar al grupo de la empresa (para notificaciones de empresa)
+            // Grupo individual por email (para notificaciones DSR)
+            var userEmail = email ?? user?.Email;
+            if (!string.IsNullOrEmpty(userEmail))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"email_{userEmail}");
+                _logger.LogInformation("Usuario {UserId} agregado a grupo email: {Email}", userId, userEmail);
+            }
+
+            // Grupo de empresa
             if (!string.IsNullOrEmpty(user?.NombreEmpresa))
             {
                 var empresaGroup = $"empresa_{user.NombreEmpresa}";
@@ -48,19 +56,23 @@ public class NotificationHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = Context.User?.FindFirst("sub")?.Value;
+        var email = Context.User?.FindFirst("email")?.Value;
 
         if (!string.IsNullOrEmpty(userId))
         {
-            // Obtener la empresa del usuario
             var user = await _context.Users
                 .Where(u => u.Id == Guid.Parse(userId))
-                .Select(u => new { u.NombreEmpresa })
+                .Select(u => new { u.NombreEmpresa, u.Email })
                 .FirstOrDefaultAsync();
 
-            // Remover del grupo individual
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user_{userId}");
 
-            // Remover del grupo de empresa
+            var userEmail = email ?? user?.Email;
+            if (!string.IsNullOrEmpty(userEmail))
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"email_{userEmail}");
+            }
+
             if (!string.IsNullOrEmpty(user?.NombreEmpresa))
             {
                 var empresaGroup = $"empresa_{user.NombreEmpresa}";
