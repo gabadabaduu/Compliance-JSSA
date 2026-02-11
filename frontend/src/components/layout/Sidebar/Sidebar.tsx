@@ -69,10 +69,8 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
 
     const menuItems = [
         { path: '/app/dashboard', label: 'Dashboard', access: 'accessDashboard', icon: 'mdi:view-dashboard' },
-        { path: '/app/epid', label: 'EPID', access: 'accessEpid', icon: 'mdi:clipboard-text' },
         { path: '/app/rat', label: 'RAT', access: 'accessRat', icon: 'mdi:link-variant' },
         { path: '/app/habeasdata', label: 'Habeas Data', access: 'accessHabeasdata', icon: 'mdi:file-document' },
-        { path: '/app/matrizriesgo', label: 'Matriz Riesgo', access: 'accessMatrizriesgo', icon: 'mdi:alert-circle' },
         { path: '/app/ajustes', label: 'Ajustes', access: 'accessAjustes', icon: 'mdi:cog' },
     ];
 
