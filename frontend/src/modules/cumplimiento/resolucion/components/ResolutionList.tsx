@@ -22,7 +22,6 @@ interface ResolutionListProps {
     onModalOpened?: () => void;
 }
 
-// ✅ MOVIDO FUERA DEL COMPONENTE
 const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('es-ES');
 };
@@ -50,14 +49,12 @@ export default function ResolutionList({
     const { data: sanctionTypesOptions } = useSanctionTypesForFilter();
     const deleteResolution = useDeleteResolution();
 
-    // ✅ CORREGIDO: Función de filtrado optimizada
     const filterBySearchText = (resolutions: Resolution[]): Resolution[] => {
         if (!searchText.trim()) return resolutions;
 
         const searchLower = searchText.toLowerCase().trim();
 
         return resolutions.filter((resolution) => {
-            // Buscar en todos los campos relevantes, convirtiendo todo a string
             const searchableFields = [
                 String(resolution.sanctions || ''),
                 String(resolution.number || ''),
@@ -79,7 +76,6 @@ export default function ResolutionList({
         });
     };
 
-    // Configuración de filtros
     const filterConfig: FilterConfig[] = [
         {
             key: 'resolutionType',
@@ -281,7 +277,10 @@ export default function ResolutionList({
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[250px]">Decisión</th>
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Adjunto</th>
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[100px]">Enlace</th>
-                                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[150px] sticky right-0 bg-white dark:bg-[#151824]">Acciones</th>
+                                    {/* ✅ COLUMNA DE ACCIONES SOLO PARA SUPERADMIN */}
+                                    {isSuperAdmin && (
+                                        <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[150px] sticky right-0 bg-white dark:bg-[#151824]">Acciones</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -330,41 +329,41 @@ export default function ResolutionList({
                                                 </a>
                                             ) : (<span className="text-sm text-gray-400">-</span>)}
                                         </td>
-                                        <td className="py-4 px-4 sticky right-0 bg-white dark:bg-[#151824]">
-                                            <div className="flex items-center justify-center gap-1">
-                                                {resolution.url && (
-                                                    <a
-                                                        href={resolution.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                                                        title="Ver documento"
-                                                        onClick={(e) => e.stopPropagation()}
+
+                                        {/* ✅ CELDA DE ACCIONES SOLO PARA SUPERADMIN */}
+                                        {isSuperAdmin && (
+                                            <td className="py-4 px-4 sticky right-0 bg-white dark:bg-[#151824]">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    {resolution.url && (
+                                                        <a
+                                                            href={resolution.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-2 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                                            title="Ver documento"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <Icon icon="mdi:open-in-new" width="18" height="18" className="text-blue-500" />
+                                                        </a>
+                                                    )}
+                                                    <button
+                                                        onClick={(e) => handleEditClick(resolution, e)}
+                                                        className="p-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
+                                                        title="Editar"
                                                     >
-                                                        <Icon icon="mdi:open-in-new" width="18" height="18" className="text-blue-500" />
-                                                    </a>
-                                                )}
-                                                {isSuperAdmin && (
-                                                    <>
-                                                        <button
-                                                            onClick={(e) => handleEditClick(resolution, e)}
-                                                            className="p-2 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
-                                                            title="Editar"
-                                                        >
-                                                            <Icon icon="mdi:pencil" width="18" height="18" className="text-amber-500" />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => handleDelete(resolution.id, e)}
-                                                            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
-                                                            title="Eliminar"
-                                                            disabled={deleteResolution.isPending}
-                                                        >
-                                                            <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </td>
+                                                        <Icon icon="mdi:pencil" width="18" height="18" className="text-amber-500" />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => handleDelete(resolution.id, e)}
+                                                        className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
+                                                        title="Eliminar"
+                                                        disabled={deleteResolution.isPending}
+                                                    >
+                                                        <Icon icon="mdi:delete" width="18" height="18" className="text-red-500" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>

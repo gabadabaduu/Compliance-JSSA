@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { Icon } from '@iconify/react';
-import { useCreateSanction, useUpdateSanction } from "../hooks/useSancion";
+import { useCreateSanction, useUpdateSanction, useSanctions } from "../hooks/useSancion";
 import { SANCTION_STAGES, SANCTION_STATUSES } from "../types";
 import type { Sanction, CreateSanctionDto } from "../types";
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
@@ -13,6 +13,7 @@ interface Props {
 export default function SancionForm({ sanction, onClose }: Props) {
     const createSanction = useCreateSanction();
     const updateSanction = useUpdateSanction();
+    const { data: allSanctions } = useSanctions(); // ✅ NUEVO: Obtener todas las sanciones
     const isEditing = !!sanction;
 
     const [formData, setFormData] = useState<CreateSanctionDto>({
@@ -61,6 +62,44 @@ export default function SancionForm({ sanction, onClose }: Props) {
         }
     };
 
+    // ✅ NUEVO: Validar que las resoluciones no estén duplicadas
+    const validateResolutions = (): boolean => {
+        const newErrors: Record<string, string> = {};
+
+        // 1. Validar que no haya duplicados dentro de la misma sanción
+        const resolutions = [formData.initial, formData.reconsideration, formData.appeal].filter(r => r !== null);
+        const uniqueResolutions = new Set(resolutions);
+
+        if (resolutions.length !== uniqueResolutions.size) {
+            newErrors.initial = 'No puedes usar la misma resolución en diferentes campos';
+            newErrors.reconsideration = 'No puedes usar la misma resolución en diferentes campos';
+            newErrors.appeal = 'No puedes usar la misma resolución en diferentes campos';
+        }
+
+        // 2. Validar que las resoluciones no estén siendo usadas en otras sanciones
+        if (allSanctions) {
+            allSanctions.forEach(s => {
+                // Ignorar la sanción actual si estamos editando
+                if (isEditing && s.id === sanction?.id) return;
+
+                const usedResolutions = [s.initial, s.reconsideration, s.appeal].filter(r => r !== null);
+
+                if (formData.initial && usedResolutions.includes(formData.initial)) {
+                    newErrors.initial = `Esta resolución ya está siendo usada en la sanción #${s.number}`;
+                }
+                if (formData.reconsideration && usedResolutions.includes(formData.reconsideration)) {
+                    newErrors.reconsideration = `Esta resolución ya está siendo usada en la sanción #${s.number}`;
+                }
+                if (formData.appeal && usedResolutions.includes(formData.appeal)) {
+                    newErrors.appeal = `Esta resolución ya está siendo usada en la sanción #${s.number}`;
+                }
+            });
+        }
+
+        setErrors(prev => ({ ...prev, ...newErrors }));
+        return Object.keys(newErrors).length === 0;
+    };
+
     const validate = () => {
         const newErrors: Record<string, string> = {};
 
@@ -71,7 +110,13 @@ export default function SancionForm({ sanction, onClose }: Props) {
         if (!formData.status) newErrors.status = 'Requerido';
 
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+
+        // ✅ NUEVO: Validar resoluciones después de validaciones básicas
+        if (Object.keys(newErrors).length === 0) {
+            return validateResolutions();
+        }
+
+        return false;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -169,51 +214,54 @@ export default function SancionForm({ sanction, onClose }: Props) {
                         {/* Hechos */}
                         <div className="flex flex-col gap-1">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Hechos *</label>
-                            <textarea 
-                                name="facts" 
-                                rows={4} 
-                                value={formData.facts} 
-                                onChange={handleChange} 
-                                className={`${inputClass('facts')} !h-auto py-2`} 
-                                placeholder="Describe los hechos que originan la sanción..." 
+                            <textarea
+                                name="facts"
+                                rows={4}
+                                value={formData.facts}
+                                onChange={handleChange}
+                                className={`${inputClass('facts')} !h-auto py-2`}
+                                placeholder="Describe los hechos que originan la sanción..."
                             />
                             {errors.facts && <span className="text-xs text-red-500">{errors.facts}</span>}
                         </div>
 
-                        {/* Resoluciones relacionadas */}
+                        {/* ✅ MODIFICADO: Resoluciones relacionadas con validación */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Decisión Inicial</label>
-                                <input 
-                                    type="number" 
-                                    name="initial" 
-                                    value={formData.initial ?? ''} 
-                                    onChange={handleChange} 
-                                    className={inputClass('initial')} 
-                                    placeholder="ID resolución" 
+                                <input
+                                    type="number"
+                                    name="initial"
+                                    value={formData.initial ?? ''}
+                                    onChange={handleChange}
+                                    className={inputClass('initial')}
+                                    placeholder="ID resolución"
                                 />
+                                {errors.initial && <span className="text-xs text-red-500">{errors.initial}</span>}
                             </div>
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Recurso Reposición</label>
-                                <input 
-                                    type="number" 
-                                    name="reconsideration" 
-                                    value={formData.reconsideration ?? ''} 
-                                    onChange={handleChange} 
-                                    className={inputClass('reconsideration')} 
-                                    placeholder="ID resolución" 
+                                <input
+                                    type="number"
+                                    name="reconsideration"
+                                    value={formData.reconsideration ?? ''}
+                                    onChange={handleChange}
+                                    className={inputClass('reconsideration')}
+                                    placeholder="ID resolución"
                                 />
+                                {errors.reconsideration && <span className="text-xs text-red-500">{errors.reconsideration}</span>}
                             </div>
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Recurso Apelación</label>
-                                <input 
-                                    type="number" 
-                                    name="appeal" 
-                                    value={formData.appeal ?? ''} 
-                                    onChange={handleChange} 
-                                    className={inputClass('appeal')} 
-                                    placeholder="ID resolución" 
+                                <input
+                                    type="number"
+                                    name="appeal"
+                                    value={formData.appeal ?? ''}
+                                    onChange={handleChange}
+                                    className={inputClass('appeal')}
+                                    placeholder="ID resolución"
                                 />
+                                {errors.appeal && <span className="text-xs text-red-500">{errors.appeal}</span>}
                             </div>
                         </div>
                     </form>
