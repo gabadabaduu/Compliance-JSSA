@@ -12,6 +12,10 @@ services:
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=aws-1-us-east-1.pooler.supabase.com;Port=6543;Username=postgres.zyzmaaeoutsfstapbgmc;Password=CompliaceSpace12;Database=postgres;SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;Connection Lifetime=0;Keepalive=10;No Reset On Close=true;Server Compatibility Mode=NoTypeLoading
       - Jwt__Secret=TbcNmp/2Q3w31OjdZJKxjquNTy+joXitwws6FVu/8r0=
+      - Mailjet__ApiKey=8aa3cc2ca21fe27c5393e56936d8c761
+      - Mailjet__SecretKey=dd89e5fc486faaba3a471ec6cb6701f1
+      - Mailjet__FromEmail=jaramillojoseandres26@gmail.com
+      - Mailjet__FromName=Korhex
       - JWT_SECRET=xVTha/RnXLSlcvHWhmHzi+HfKSdjOtHOSCsjn9xk0dvtyLHQbYmsyCTX9ICUeHzFJHZtj5xNrKQusTeb2QA6ZA==
       - Jwt__Issuer=CompliancePlatform
       - Jwt__Audience=CompliancePlatformUsers
