@@ -32,7 +32,6 @@ export interface CreateDsrDto {
     caseId: string;
     requestId: string;
     type: number;
-    category: string;
     fullName: string;
     idType: string;
     idNumber: string;
@@ -40,6 +39,7 @@ export interface CreateDsrDto {
     requestDetails: string;
     attachment?: string;
     startDate: Date;
+    extensionTerm: boolean;
     stage?: string;
     status?: string;
     closedAt?: Date;
@@ -64,6 +64,7 @@ export interface UpdateDsrDto {
     requestDetails?: string;
     attachment?: string;
     startDate?: Date;
+    extensionTerm?: boolean;
     stage?: string;
     status?: string;
     closedAt?: Date;

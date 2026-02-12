@@ -79,32 +79,38 @@ export interface DsrFilters {
     status?: string;
 }
 
+// ✅ ACTUALIZAR la función getDsrsFiltered
+
 export async function getDsrsFiltered(filters?: DsrFilters): Promise<Dsr[]> {
-    // Por ahora retornamos todos y filtramos en el cliente
-    // Cuando existan los endpoints del backend, se cambiará
     const { userData } = useUserStore.getState();
     const companyName = userData?.role === 'superadmin' ? undefined : userData?.nombreEmpresa;
-    
-    if (!filters || Object.keys(filters).length === 0) {
-        return getAllDsrs(companyName);
-    }
-    
-    const allDsrs = await getAllDsrs();
-    
-    if (!filters || Object.keys(filters).length === 0) {
-        return allDsrs;
+
+    // Construir query params
+    const params = new URLSearchParams();
+
+    if (companyName) {
+        params.append('companyName', companyName);
     }
 
-    return allDsrs.filter(dsr => {
-        let matches = true;
-        
-        if (filters.type && dsr.type !== filters.type) {
-            matches = false;
-        }
-        // Los filtros de stage y status se implementarán cuando existan los endpoints
-        
-        return matches;
-    });
+    if (filters?.type) {
+        params.append('type', filters.type.toString());
+    }
+
+    if (filters?.stage) {
+        params.append('stage', filters.stage);
+    }
+
+    if (filters?.status) {
+        params.append('status', filters.status);
+    }
+
+    // Si no hay filtros, usar el endpoint normal
+    if (params.toString() === '' || (companyName && params.toString() === `companyName=${encodeURIComponent(companyName)}`)) {
+        return getAllDsrs(companyName);
+    }
+
+    // Usar el endpoint de filtros
+    return apiClient.get<Dsr[]>(`/dsr/filter?${params.toString()}`);
 }
 
 // ============================================
@@ -120,20 +126,17 @@ export async function getTypesForFilter(): Promise<FilterOption[]> {
 }
 
 export async function getStagesForFilter(): Promise<FilterOption[]> {
-    // Por ahora retornamos opciones estáticas
-    // Se actualizará cuando exista el endpoint
+    // ✅ CORRECCIÓN: Usar los valores exactos de la DB
     return [
-        { value: 'recibida', label: 'Recibida' },
-        { value: 'en_proceso', label: 'En Proceso' },
-        { value: 'respondida', label: 'Respondida' },
-        { value: 'cerrada', label: 'Cerrada' }
+        { value: 'Radicado', label: 'Radicado' },
+        { value: 'Reclamo en trámite', label: 'Reclamo en trámite' },
+        { value: 'Reclamo en trámite con prórroga', label: 'Reclamo en trámite con prórroga' },
+        { value: 'Cerrado', label: 'Cerrado' }
     ];
 }
-
 export async function getStatusesForFilter(): Promise<FilterOption[]> {
-    const statuses = await getAllStatuses();
-    return statuses.map(s => ({
-        value: s.id,
-        label: s.caseStatus
-    }));
+    return [
+        { value: 'Abierto', label: 'Abierto' },
+        { value: 'Cerrado', label: 'Cerrado' }
+    ];
 }

@@ -69,3 +69,30 @@ export const stopConnection = async (): Promise<void> => {
 }
 
 export const getConnection = (): signalR.HubConnection | null => connection
+
+/**
+ * Registrar un listener en la conexión SignalR
+ * Si la conexión no existe aún, la crea primero
+ */
+export const onSignalREvent = async (
+    eventName: string,
+    callback: (...args: unknown[]) => void
+): Promise<void> => {
+    if (!connection) {
+        await createSignalRConnection()
+    }
+    if (connection) {
+        // Evitar listeners duplicados
+        connection.off(eventName)
+        connection.on(eventName, callback)
+    }
+}
+
+/**
+ * Remover un listener de la conexión SignalR
+ */
+export const offSignalREvent = (eventName: string): void => {
+    if (connection) {
+        connection.off(eventName)
+    }
+}

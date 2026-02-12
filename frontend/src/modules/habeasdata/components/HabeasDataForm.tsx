@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
 import { useCreateDsr, useUpdateDsr, useRequestTypes } from '../hooks/useHabeasData';
-import type { Dsr, CreateDsrDto } from '../types';
+import type { Dsr, CreateDsrDto, DsrRequestType } from '../types';
 import LoadingSpinner from '../../../components/LoadingSpinner/LoadingSpinner';
 import { useUserStore } from '../../../stores/userStore';
 import { usePermissions } from '../../../hooks/usePermissions';
@@ -19,6 +19,9 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
     const { userData } = useUserStore();
     const { isSuperAdmin } = usePermissions();
 
+    // ✅ Estado para el tipo de solicitud seleccionado
+    const [selectedRequestType, setSelectedRequestType] = useState<DsrRequestType | null>(null);
+
     const [formData, setFormData] = useState<{
         caseId: string;
         requestId: string;
@@ -31,6 +34,7 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
         requestDetails: string;
         attachment: string;
         startDate: string;
+        extensionTerm: boolean; // ✅ NUEVO
         responseAttachment: boolean;
         stage: string;
         status: string;
@@ -49,6 +53,7 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
         requestDetails: '',
         attachment: '',
         startDate: new Date().toISOString().split('T')[0],
+        extensionTerm: false, // ✅ NUEVO
         responseAttachment: false,
         stage: 'Radicado',
         status: 'Abierto',
@@ -59,7 +64,6 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-   // ...existing code...
     useEffect(() => {
         if (dsr) {
             setFormData({
@@ -74,6 +78,7 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                 requestDetails: dsr.requestDetails,
                 attachment: dsr.attachment || '',
                 startDate: new Date(dsr.startDate).toISOString().split('T')[0],
+                extensionTerm: dsr.extensionTerm, // ✅ NUEVO
                 responseAttachment: dsr.responseAttachment,
                 stage: dsr.stage?.toString() || 'Radicado',
                 status: dsr.status?.toString() || 'Abierto',
@@ -84,10 +89,12 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
         }
     }, [dsr]);
 
-    // Actualizar categoría cuando cambia el tipo
+    // ✅ Actualizar categoría y obtener info del tipo cuando cambia
     useEffect(() => {
         if (formData.type && requestTypes) {
             const selectedType = requestTypes.find(t => t.id === formData.type);
+            setSelectedRequestType(selectedType || null);
+
             if (selectedType?.category) {
                 setFormData(prev => ({
                     ...prev,
@@ -99,7 +106,7 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
-        
+
         if (type === 'checkbox') {
             const checked = (e.target as HTMLInputElement).checked;
             setFormData(prev => ({ ...prev, [name]: checked }));
@@ -109,7 +116,7 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                 [name]: name === 'type' ? parseInt(value) || 0 : value
             }));
         }
-        
+
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -117,7 +124,7 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
 
     const validate = () => {
         const newErrors: Record<string, string> = {};
-        
+
         if (!formData.caseId.trim()) newErrors.caseId = 'Requerido';
         if (!formData.requestId.trim()) newErrors.requestId = 'Requerido';
         if (!formData.type || formData.type < 1) newErrors.type = 'Requerido';
@@ -130,7 +137,7 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
         }
         if (!formData.requestDetails.trim()) newErrors.requestDetails = 'Requerido';
         if (!formData.startDate) newErrors.startDate = 'Requerido';
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -144,7 +151,6 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                 caseId: formData.caseId,
                 requestId: formData.requestId,
                 type: formData.type,
-                category: formData.category,
                 fullName: formData.fullName,
                 idType: formData.idType,
                 idNumber: formData.idNumber,
@@ -152,6 +158,7 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                 requestDetails: formData.requestDetails,
                 attachment: formData.attachment || undefined,
                 startDate: new Date(formData.startDate),
+                extensionTerm: formData.extensionTerm, // ✅ NUEVO
                 responseAttachment: formData.responseAttachment,
                 stage: formData.stage,
                 status: formData.status,
@@ -215,24 +222,24 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">ID Caso *</label>
-                                <input 
-                                    type="text" 
-                                    name="caseId" 
-                                    value={formData.caseId} 
-                                    onChange={handleChange} 
-                                    className={inputClass('caseId')} 
+                                <input
+                                    type="text"
+                                    name="caseId"
+                                    value={formData.caseId}
+                                    onChange={handleChange}
+                                    className={inputClass('caseId')}
                                     placeholder="Ej: CASE-2026-001"
                                 />
                                 {errors.caseId && <span className="text-xs text-red-500">{errors.caseId}</span>}
                             </div>
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">ID Solicitud *</label>
-                                <input 
-                                    type="text" 
-                                    name="requestId" 
-                                    value={formData.requestId} 
-                                    onChange={handleChange} 
-                                    className={inputClass('requestId')} 
+                                <input
+                                    type="text"
+                                    name="requestId"
+                                    value={formData.requestId}
+                                    onChange={handleChange}
+                                    className={inputClass('requestId')}
                                     placeholder="Ej: REQ-2026-001"
                                 />
                                 {errors.requestId && <span className="text-xs text-red-500">{errors.requestId}</span>}
@@ -243,10 +250,10 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Solicitud *</label>
-                                <select 
-                                    name="type" 
-                                    value={formData.type} 
-                                    onChange={handleChange} 
+                                <select
+                                    name="type"
+                                    value={formData.type}
+                                    onChange={handleChange}
                                     className={inputClass('type')}
                                     disabled={isLoadingTypes}
                                 >
@@ -261,13 +268,12 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                             </div>
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Categoría</label>
-                                <input 
-                                    type="text" 
-                                    name="category" 
-                                    value={formData.category} 
-                                    onChange={handleChange} 
-                                    className={inputClass('category')} 
-                                    placeholder="Se llena automáticamente según el tipo"
+                                <input
+                                    type="text"
+                                    name="category"
+                                    value={formData.category}
+                                    className={`${inputClass('category')} bg-gray-50 dark:bg-gray-900`}
+                                    placeholder="Se llena automáticamente"
                                     readOnly
                                 />
                             </div>
@@ -276,12 +282,12 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                         {/* Fila 3: Nombre completo */}
                         <div className="flex flex-col gap-1">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nombre Completo *</label>
-                            <input 
-                                type="text" 
-                                name="fullName" 
-                                value={formData.fullName} 
-                                onChange={handleChange} 
-                                className={inputClass('fullName')} 
+                            <input
+                                type="text"
+                                name="fullName"
+                                value={formData.fullName}
+                                onChange={handleChange}
+                                className={inputClass('fullName')}
                                 placeholder="Nombre completo del solicitante"
                             />
                             {errors.fullName && <span className="text-xs text-red-500">{errors.fullName}</span>}
@@ -291,10 +297,10 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de ID *</label>
-                                <select 
-                                    name="idType" 
-                                    value={formData.idType} 
-                                    onChange={handleChange} 
+                                <select
+                                    name="idType"
+                                    value={formData.idType}
+                                    onChange={handleChange}
                                     className={inputClass('idType')}
                                 >
                                     <option value="">Seleccionar...</option>
@@ -308,77 +314,135 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                             </div>
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Número de ID *</label>
-                                <input 
-                                    type="text" 
-                                    name="idNumber" 
-                                    value={formData.idNumber} 
-                                    onChange={handleChange} 
-                                    className={inputClass('idNumber')} 
+                                <input
+                                    type="text"
+                                    name="idNumber"
+                                    value={formData.idNumber}
+                                    onChange={handleChange}
+                                    className={inputClass('idNumber')}
                                     placeholder="Número de identificación"
                                 />
                                 {errors.idNumber && <span className="text-xs text-red-500">{errors.idNumber}</span>}
                             </div>
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email *</label>
-                                <input 
-                                    type="email" 
-                                    name="email" 
-                                    value={formData.email} 
-                                    onChange={handleChange} 
-                                    className={inputClass('email')} 
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className={inputClass('email')}
                                     placeholder="correo@ejemplo.com"
                                 />
                                 {errors.email && <span className="text-xs text-red-500">{errors.email}</span>}
                             </div>
                         </div>
 
-                        {/* Fila 5: Fecha de inicio */}
+                        {/* Fila 5: Fecha de inicio y Adjunto */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de Inicio *</label>
-                                <input 
-                                    type="date" 
-                                    name="startDate" 
-                                    value={formData.startDate} 
-                                    onChange={handleChange} 
-                                    className={inputClass('startDate')} 
+                                <input
+                                    type="date"
+                                    name="startDate"
+                                    value={formData.startDate}
+                                    onChange={handleChange}
+                                    className={inputClass('startDate')}
                                 />
                                 {errors.startDate && <span className="text-xs text-red-500">{errors.startDate}</span>}
                             </div>
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Adjunto (URL)</label>
-                                <input 
-                                    type="url" 
-                                    name="attachment" 
-                                    value={formData.attachment} 
-                                    onChange={handleChange} 
-                                    className={inputClass('attachment')} 
+                                <input
+                                    type="url"
+                                    name="attachment"
+                                    value={formData.attachment}
+                                    onChange={handleChange}
+                                    className={inputClass('attachment')}
                                     placeholder="https://ejemplo.com/documento.pdf"
                                 />
                             </div>
                         </div>
 
-                        {/* Fila 5.5: Stage y Status */}
+                        {/* ✅ NUEVO: Checkbox Extensión de Plazo */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="extensionTerm"
+                                    name="extensionTerm"
+                                    checked={formData.extensionTerm}
+                                    onChange={handleChange}
+                                    className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 dark:focus:ring-purple-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                />
+                                <label htmlFor="extensionTerm" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    ¿Solicitar extensión de plazo (prórroga)?
+                                </label>
+                            </div>
+
+                            {/* ✅ Mostrar información de plazos si hay tipo seleccionado */}
+                            {selectedRequestType && (
+                                <div className={`p-3 rounded-lg border transition-colors ${formData.extensionTerm
+                                        ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                                        : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                                    }`}>
+                                    <div className="flex items-start gap-2">
+                                        <Icon
+                                            icon={formData.extensionTerm ? "mdi:alert-circle" : "mdi:information"}
+                                            width="20"
+                                            height="20"
+                                            className={formData.extensionTerm ? "text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" : "text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"}
+                                        />
+                                        <div className="text-sm space-y-1">
+                                            <p className={formData.extensionTerm ? "text-orange-800 dark:text-orange-300" : "text-blue-800 dark:text-blue-300"}>
+                                                <strong>Plazo inicial:</strong> {selectedRequestType.initialTerm} días hábiles
+                                                <br />
+                                                {formData.extensionTerm && (
+                                                    <>
+                                                        <strong>Extensión:</strong> +{selectedRequestType.extensionTerm} días hábiles adicionales
+                                                        <br />
+                                                    </>
+                                                )}
+                                                <strong>Total:</strong> {
+                                                    formData.extensionTerm
+                                                        ? (selectedRequestType.initialTerm || 0) + (selectedRequestType.extensionTerm || 0)
+                                                        : selectedRequestType.initialTerm
+                                                } días hábiles
+                                            </p>
+                                            <p className={`text-xs ${formData.extensionTerm ? "text-orange-600 dark:text-orange-400" : "text-blue-600 dark:text-blue-400"}`}>
+                                                {selectedRequestType.initialTermDescription}
+                                                {formData.extensionTerm && selectedRequestType.extensionTermDescription && (
+                                                    <> + {selectedRequestType.extensionTermDescription}</>
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Fila 6: Stage y Status */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Etapa *</label>
-                                <select 
-                                    name="stage" 
-                                    value={formData.stage} 
-                                    onChange={handleChange} 
+                                <select
+                                    name="stage"
+                                    value={formData.stage}
+                                    onChange={handleChange}
                                     className={inputClass('stage')}
                                 >
                                     <option value="Radicado">Radicado</option>
                                     <option value="Reclamo en trámite">Reclamo en trámite</option>
                                     <option value="Reclamo en trámite con prórroga">Reclamo en trámite con prórroga</option>
+                                    <option value="Cerrado">Cerrado</option>
                                 </select>
                             </div>
                             <div className="flex flex-col gap-1">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Estado *</label>
-                                <select 
-                                    name="status" 
-                                    value={formData.status} 
-                                    onChange={handleChange} 
+                                <select
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleChange}
                                     className={inputClass('status')}
                                 >
                                     <option value="Abierto">Abierto</option>
@@ -386,31 +450,32 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                                 </select>
                             </div>
                         </div>
-                        
-                        {/* Fila 6: Detalles de la solicitud */}
+
+                        {/* Fila 7: Detalles de la solicitud */}
                         <div className="flex flex-col gap-1">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Detalles de la Solicitud *</label>
-                            <textarea 
-                                name="requestDetails" 
-                                rows={4} 
-                                value={formData.requestDetails} 
-                                onChange={handleChange} 
-                                className={`${inputClass('requestDetails')} !h-auto py-2`} 
+                            <textarea
+                                name="requestDetails"
+                                rows={4}
+                                value={formData.requestDetails}
+                                onChange={handleChange}
+                                className={`${inputClass('requestDetails')} !h-auto py-2`}
                                 placeholder="Describa los detalles de la solicitud..."
                             />
                             {errors.requestDetails && <span className="text-xs text-red-500">{errors.requestDetails}</span>}
                         </div>
 
-                        {/* Checkbox */}
+                        {/* Checkbox Response Attachment */}
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"
+                                id="responseAttachment"
                                 name="responseAttachment"
                                 checked={formData.responseAttachment}
                                 onChange={handleChange}
                                 className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 dark:focus:ring-purple-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                             />
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label htmlFor="responseAttachment" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Requiere adjunto en respuesta
                             </label>
                         </div>
@@ -418,14 +483,15 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
                         {/* Info de campos automáticos */}
                         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
                             <div className="flex items-center gap-2 mb-2">
-                                <Icon icon="mdi:information" width="20" height="20" className="text-blue-500" />
+                                <Icon icon="mdi:calendar-clock" width="20" height="20" className="text-green-500" />
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Campos calculados automáticamente
+                                    Fechas calculadas automáticamente
                                 </span>
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Los siguientes campos serán calculados por el sistema: Fecha de creación, Fecha de vencimiento, 
-                                Plazo inicial, Extensión del plazo, Plazo total.
+                                El sistema calculará automáticamente: <strong>Fecha de vencimiento (Due Date)</strong>,
+                                <strong> Plazo inicial (Initial Term)</strong>, y <strong>Plazo total (Total Term)</strong>
+                                basándose en la fecha de inicio y el tipo de solicitud seleccionado.
                             </p>
                         </div>
                     </form>
@@ -433,21 +499,28 @@ export default function HabeasDataForm({ dsr, onClose }: HabeasDataFormProps) {
 
                 {/* Footer */}
                 <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-                    <button 
-                        type="button" 
-                        onClick={onClose} 
-                        disabled={isPending} 
-                        className="flex-1 h-[40px] bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors"
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        disabled={isPending}
+                        className="flex-1 h-[40px] bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors disabled:opacity-50"
                     >
                         Cancelar
                     </button>
-                    <button 
-                        type="submit" 
-                        form="habeasdata-form" 
-                        disabled={isPending} 
-                        className="flex-1 h-[40px] bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors disabled:bg-gray-400 flex items-center justify-center"
+                    <button
+                        type="submit"
+                        form="habeasdata-form"
+                        disabled={isPending}
+                        className="flex-1 h-[40px] bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
                     >
-                        {isPending ? <LoadingSpinner size="small" /> : isEditing ? 'Actualizar' : 'Crear'}
+                        {isPending ? (
+                            <LoadingSpinner size="small" />
+                        ) : (
+                            <>
+                                <Icon icon={isEditing ? "mdi:content-save" : "mdi:plus"} width="20" height="20" />
+                                {isEditing ? 'Actualizar' : 'Crear Solicitud'}
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
