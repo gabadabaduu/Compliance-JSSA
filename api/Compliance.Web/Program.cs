@@ -159,6 +159,10 @@ builder.Services.AddScoped<IRopaEntityRepository, RopaEntityRepository>();
 builder.Services.AddScoped<IRopaEntityService, RopaEntityService>();
 builder.Services.AddScoped<IRopaContractRepository, RopaContractRepository>();
 builder.Services.AddScoped<IRopaContractService, RopaContractService>();
+builder.Services.AddScoped<IRopaDepartmentRepository, RopaDepartmentRepository>();
+builder.Services.AddScoped<IRopaDepartmentService, RopaDepartmentService>();
+builder.Services.AddScoped<IContactChannelRepository, ContactChannelRepository>();
+builder.Services.AddScoped<IContactChannelService, ContactChannelService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];

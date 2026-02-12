@@ -60,6 +60,8 @@ public class AppDbContext : DbContext
     public DbSet<RopaDataStorageEntity> RopaDataStorages { get; set; } = null!;
     public DbSet<RopaEntityEntity> RopaEntities { get; set; } = null!;
     public DbSet<RopaContractEntity> RopaContracts { get; set; } = null!;
+    public DbSet<RopaDepartmentEntity> RopaDepartments { get; set; } = null!;
+    public DbSet<ContactChannelEntity> ContactChannels { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -430,6 +432,33 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.EntityId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RopaDepartmentEntity>(eb =>
+        {
+            eb.ToTable("ropa_departments");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.DepartmentName).HasColumnName("department_name").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        modelBuilder.Entity<ContactChannelEntity>(eb =>
+        {
+            eb.ToTable("contact_channels");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.ChannelType).HasColumnName("channel_type").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.MobileApp).HasColumnName("mobile_app").HasMaxLength(30);
+            eb.Property(e => e.Email).HasColumnName("email").HasMaxLength(50);
+            eb.Property(e => e.Fax).HasColumnName("fax").HasMaxLength(50);
+            eb.Property(e => e.Address).HasColumnName("address").HasMaxLength(255);
+            eb.Property(e => e.Website).HasColumnName("website").HasMaxLength(50);
+            eb.Property(e => e.LandlinePhone).HasColumnName("landline_phone").HasMaxLength(50);
+            eb.Property(e => e.MobilePhone).HasColumnName("mobile_phone").HasMaxLength(50);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
         });
         // =====================================================
         // OTRAS
