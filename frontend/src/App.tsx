@@ -14,7 +14,6 @@ import MainLayout from './components/layout/MainLayout/MainLayout'
 
 // Module pages
 import DashboardPage from './modules/dashboard/pages/DashboardPage'
-import RATPage from './modules/rat/pages/RATPage'
 import HabeasDataPage from './modules/habeasdata/pages/HabeasDataPage'
 import EPIDPage from './modules/epid/pages/EPIDPage'
 import NormativaPage from './modules/cumplimiento/normativa/pages/NormativaPage'
@@ -23,6 +22,10 @@ import AjustesPage from './modules/ajustes/pages/AjustesPage'
 import UsuarioPage from './modules/usuario/pages/UsuarioPage'
 import MatrizRiesgoPage from './modules/matrizriesgo/pages/MatrizRiesgoPage'
 import ResolutionPage from './modules/cumplimiento/resolucion/pages/ResolutionPage'
+import ContractsPage from  './modules/rat/contracts/pages/ContractsPage'
+import DataPage from './modules/rat/data/pages/DataPage'
+import EntitiesPage from './modules/rat/entities/pages/EntitiesPage'
+
 // Route components
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
@@ -114,13 +117,30 @@ function App() {
 
                         {/* RAT */}
                         <Route
-                            path="rat"
+                            path="rat/contracts"
                             element={
                                 <ModuleRoute requiredAccess="accessRat">
-                                    <RATPage />
+                                    <ContractsPage />
                                 </ModuleRoute>
                             }
                         />
+                        <Route
+                            path="rat/data"
+                            element={
+                                <ModuleRoute requiredAccess="accessRat">
+                                    <DataPage />
+                                </ModuleRoute>
+                            }
+                        />
+                        <Route
+                            path="rat/entities"
+                            element={
+                                <ModuleRoute requiredAccess="accessRat">
+                                    <EntitiesPage />
+                                </ModuleRoute>
+                            }
+                        />
+
                         {/* Normativa */}
                         <Route
                             path="normativa"
