@@ -58,6 +58,9 @@ using Compliance.Infrastructure.Modules.Usuario.Services;
 using Compliance.Core.Modules.DSR.Interfaces;
 using Compliance.Infrastructure.Modules.DSR.Repositories;
 using Compliance.Infrastructure.Modules.DSR.Services;
+using Compliance.Core.Modules.ROPA.Interfaces;
+using Compliance.Infrastructure.Modules.ROPA.Repositories;
+using Compliance.Infrastructure.Modules.ROPA.Services;
 using Compliance.Web.Hubs;
 using Compliance.Core.Modules.HabeasData.Notificacion.Interfaces;
 using Compliance.Infrastructure.Modules.HabeasData.Notificacion.Repositories;
@@ -136,7 +139,7 @@ builder.Services.AddScoped<ISncEntityService, SncEntityService>();
 builder.Services.AddScoped<IGeneralIndustryRepository, GeneralIndustryRepository>();
 builder.Services.AddScoped<IGeneralIndustryService, GeneralIndustryService>();
 
-// ✅ NUEVO: Módulo DSR (agregar al final de los servicios, antes de JWT)
+// Módulo DSR 
 builder.Services.AddScoped<IDsrRepository, DsrRepository>();
 builder.Services.AddScoped<IDsrService, DsrService>();
 builder.Services.AddScoped<IDsrRequestTypeRepository, DsrRequestTypeRepository>();
@@ -148,6 +151,14 @@ builder.Services.AddScoped<IDsrNotificationService, DsrNotificationService>();
 builder.Services.AddScoped<IEmailService, MailjetEmailService>();
 builder.Services.AddScoped<IDsrNotificationHubService, DsrNotificationHubService>();
 builder.Services.AddHostedService<DsrNotificationJob>();
+
+// ✅ NUEVO: Módulo ROPA
+builder.Services.AddScoped<IRopaDataStorageRepository, RopaDataStorageRepository>();
+builder.Services.AddScoped<IRopaDataStorageService, RopaDataStorageService>();
+builder.Services.AddScoped<IRopaEntityRepository, RopaEntityRepository>();
+builder.Services.AddScoped<IRopaEntityService, RopaEntityService>();
+builder.Services.AddScoped<IRopaContractRepository, RopaContractRepository>();
+builder.Services.AddScoped<IRopaContractService, RopaContractService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
