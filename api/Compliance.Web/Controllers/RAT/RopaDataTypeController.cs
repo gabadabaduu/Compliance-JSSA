@@ -11,7 +11,7 @@ namespace Compliance.Web.Controllers.ROPA
 {
     [Authorize]
     [ApiController]
-    [Route("api/rat/[controller]")]
+    [Route("api/rat/datatypes")]
     public class DataTypesController : ControllerBase
     {
         private readonly IRopaDataTypeService _service;
