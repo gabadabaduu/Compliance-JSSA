@@ -1,6 +1,5 @@
 import { Icon } from '@iconify/react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useMyNotificationCount } from '../../../modules/notifications/hooks/useNotifications';
+import { useMyNotificationCount, useRefreshNotifications } from '../../../modules/notifications/hooks/useNotifications';
 import { useUserStore } from '../../../stores/userStore';
 
 interface NotificationBellProps {
@@ -11,13 +10,11 @@ export default function NotificationBell({ onClick }: NotificationBellProps) {
     const { userData } = useUserStore();
     const email = userData?.email ?? '';
     const { data: count } = useMyNotificationCount(email);
-    const queryClient = useQueryClient();
+    const refresh = useRefreshNotifications(email);
     const hasNotifications = count !== undefined && count > 0;
 
-    const handleClick = () => {
-        // Forzar refetch fresco (ignorar staleTime)
-        queryClient.refetchQueries({ queryKey: ['my-notifications'] });
-        queryClient.refetchQueries({ queryKey: ['my-notification-count'] });
+    const handleClick = async () => {
+        await refresh();
         onClick();
     };
 

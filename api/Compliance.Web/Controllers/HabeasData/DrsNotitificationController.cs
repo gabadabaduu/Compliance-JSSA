@@ -44,6 +44,19 @@ public class DsrNotificationController : ControllerBase
         var count = await _service.GetUnreadCountAsync(email, ct);
         return Ok(count);
     }
+    /// <summary>
+    /// Re-evalúa y refresca las notificaciones de un usuario
+    /// </summary>
+    [HttpPost("refresh")]
+    public async Task<IActionResult> RefreshNotifications([FromQuery] string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return BadRequest("Email es requerido");
+
+        await _service.RefreshNotificationsForUserAsync(email);
+        return Ok(new { message = "Notificaciones actualizadas" });
+    }
+
 
     [HttpGet("dsr/{dsrId}")]
     public async Task<ActionResult<List<DsrNotificationDto>>> GetByDsrId(int dsrId, CancellationToken ct)

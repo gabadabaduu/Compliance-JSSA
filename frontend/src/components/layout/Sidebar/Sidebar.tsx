@@ -7,6 +7,7 @@ import logoName from '../../../assets/korhex-logo-name.png';
 import logoi from '../../../assets/logo-i.png';
 import logonamei from '../../../assets/korhex-logo-name-i.png';
 import NotificationBell from '../NotificationBell/NotificationBell';
+import { useRefreshNotifications } from '../../../modules/notifications/hooks/useNotifications';
 
 interface SidebarProps {
     onNotificationClick: () => void;
@@ -20,8 +21,16 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
     const [isSancionDropdownOpen, setIsSancionDropdownOpen] = useState(false);
     const [isRatDropdownOpen, setIsRatDropdownOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const refresh = useRefreshNotifications(userData?.email ?? '');
 
     useEffect(() => {
+        if (userData?.email) {
+            refresh();
+        }
+    }, [userData?.email]); 
+
+    useEffect(() => {
+        
         const savedTheme = localStorage.getItem('theme');
         
         if (savedTheme === 'dark') {
