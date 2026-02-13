@@ -103,12 +103,11 @@ export default function AdminUsuario() {
         { key: 'accessUsuario', label: 'Usuario' }
     ]
 
-     const hasAnyAccess = (user: UserDto) => {
-        return user.accessDashboard || user.accessRat ||
-            user.accessHabeasdata ||
+    const hasAnyAccess = (user: UserDto) => {
+        return user.accessDashboard  || user.accessRat ||
+             user.accessHabeasdata || 
             user.accessAjustes || user.accessUsuario
     }
-
 
     return (
         <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
@@ -175,13 +174,12 @@ export default function AdminUsuario() {
                                             {user.role}
                                         </span>
                                     </td>
-                                     <td className="py-3 px-4">
+                                    <td className="py-3 px-4">
                                         <div className="flex flex-wrap gap-1">
                                             {user.accessDashboard && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Dashboard</span>}
                                             {user.accessRat && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">RAT</span>}
                                             {user.accessHabeasdata && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Habeas</span>}
                                             {user.accessAjustes && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Ajustes</span>}
-                                            {user.accessUsuario && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Usuario</span>}
                                             {!hasAnyAccess(user) && <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 rounded">Sin acceso</span>}
                                         </div>
                                     </td>

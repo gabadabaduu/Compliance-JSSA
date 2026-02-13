@@ -124,4 +124,4 @@ export async function getDataSharedFilterOptions(): Promise<FilterOption[]> {
         { value: 'No', label: 'No' },
         { value: 'Parcialmente', label: 'Parcialmente' },
     ];
-}
+}   
