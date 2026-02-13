@@ -391,7 +391,7 @@ export default function EntitiesForm({ entity, onClose }: EntitiesFormProps) {
                                     <option value={0}>Seleccionar canal...</option>
                                     {contactChannels?.map(channel => (
                                         <option key={channel.id} value={channel.id}>
-                                            {channel.channelName}
+                                            {channel.channelType}
                                         </option>
                                     ))}
                                 </select>
@@ -451,7 +451,7 @@ export default function EntitiesForm({ entity, onClose }: EntitiesFormProps) {
                                     </span>
                                 </div>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    <strong>{selectedChannel.channelName}</strong>
+                                    <strong>{selectedChannel.channelType}</strong>
                                 </p>
                             </div>
                         )}

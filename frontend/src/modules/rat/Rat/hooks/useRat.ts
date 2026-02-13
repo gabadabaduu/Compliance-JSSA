@@ -1,0 +1,191 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    getAllRopaTable,
+    getRopaTableById,
+    createRopaTable,
+    updateRopaTable,
+    deleteRopaTable,
+    getRopaTableFiltered,
+    getRopaSystems,
+    getRopaDataTypes,
+    getRopaSubjectCategories,
+    getRopaPurposes,
+    getRopaStorage,
+    getRopaDataFlow,
+    getRopaDepartments,
+    getProcessOwnerFilterOptions,
+    getDataCategoriesFilterOptions,
+    getDataSharedFilterOptions,
+    type RopaTableFilters
+} from '../services/ratService';
+import type { CreateRopaTableDto, UpdateRopaTableDto } from '../types';
+import { useUserStore } from '../../../../stores/userStore';
+import { usePermissions } from '../../../../hooks/usePermissions';
+
+// ============================================
+// 📋 HOOKS CRUD
+// ============================================
+
+export function useRopaTable() {
+    const { isSuperAdmin } = usePermissions();
+    const { userData } = useUserStore();
+    const companyName = isSuperAdmin ? undefined : userData?.nombreEmpresa;
+
+    return useQuery({
+        queryKey: ['ropa-table', companyName],
+        queryFn: () => getAllRopaTable(companyName),
+        staleTime: 1000 * 60 * 5,
+        gcTime: 1000 * 60 * 30,
+        retry: 1,
+    });
+}
+
+export function useRopaTableItem(id: number) {
+    return useQuery({
+        queryKey: ['ropa-table', id],
+        queryFn: () => getRopaTableById(id),
+        enabled: !!id,
+        staleTime: 1000 * 60 * 5,
+        gcTime: 1000 * 60 * 30,
+        retry: 1,
+    });
+}
+
+export function useCreateRopaTable() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: CreateRopaTableDto) => createRopaTable(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+        },
+    });
+}
+
+export function useUpdateRopaTable() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: UpdateRopaTableDto) => updateRopaTable(data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+            queryClient.invalidateQueries({ queryKey: ['ropa-table', variables.id] });
+        },
+    });
+}
+
+export function useDeleteRopaTable() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: number) => deleteRopaTable(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+        },
+    });
+}
+
+// ============================================
+// 📋 LOOKUPS (dropdowns)
+// ============================================
+
+export function useRopaSystems() {
+    return useQuery({
+        queryKey: ['ropa-lookups', 'systems'],
+        queryFn: getRopaSystems,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useRopaDataTypes() {
+    return useQuery({
+        queryKey: ['ropa-lookups', 'datatypes'],
+        queryFn: getRopaDataTypes,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useRopaSubjectCategories() {
+    return useQuery({
+        queryKey: ['ropa-lookups', 'subjectcategories'],
+        queryFn: getRopaSubjectCategories,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useRopaPurposes() {
+    return useQuery({
+        queryKey: ['ropa-lookups', 'purposes'],
+        queryFn: getRopaPurposes,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useRopaStorageLookup() {
+    return useQuery({
+        queryKey: ['ropa-lookups', 'storage'],
+        queryFn: getRopaStorage,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useRopaDataFlow() {
+    return useQuery({
+        queryKey: ['ropa-lookups', 'dataflow'],
+        queryFn: getRopaDataFlow,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useRopaDepartments() {
+    return useQuery({
+        queryKey: ['ropa-lookups', 'departments'],
+        queryFn: getRopaDepartments,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+// ============================================
+// 🔍 HOOKS FILTROS
+// ============================================
+
+export function useRopaTableFiltered(filters: RopaTableFilters) {
+    return useQuery({
+        queryKey: ['ropa-table', 'filtered', filters],
+        queryFn: () => getRopaTableFiltered(filters),
+        staleTime: 1000 * 60 * 5,
+        gcTime: 1000 * 60 * 30,
+        retry: 1,
+    });
+}
+
+export function useProcessOwnerFilter() {
+    return useQuery({
+        queryKey: ['ropa-table', 'filter-options', 'processOwner'],
+        queryFn: getProcessOwnerFilterOptions,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useDataCategoriesFilter() {
+    return useQuery({
+        queryKey: ['ropa-table', 'filter-options', 'dataCategories'],
+        queryFn: getDataCategoriesFilterOptions,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useDataSharedFilter() {
+    return useQuery({
+        queryKey: ['ropa-table', 'filter-options', 'dataShared'],
+        queryFn: getDataSharedFilterOptions,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
