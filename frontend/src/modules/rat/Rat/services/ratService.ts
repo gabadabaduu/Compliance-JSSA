@@ -37,34 +37,42 @@ export async function deleteRopaTable(id: number): Promise<void> {
 
 // ============================================
 // 📋 LOOKUPS (dropdowns de FK)
+// Cada función trae el DTO real y lo mapea a { id, name }
 // ============================================
 
 export async function getRopaSystems(): Promise<RopaLookup[]> {
-    return apiClient.get<RopaLookup[]>('/rat/table/lookups/systems');
+    const data = await apiClient.get<any[]>('/rat/systems');
+    return data.map(s => ({ id: s.id, name: s.systemName || s.name || `Sistema ${s.id}` }));
 }
 
 export async function getRopaDataTypes(): Promise<RopaLookup[]> {
-    return apiClient.get<RopaLookup[]>('/rat/table/lookups/datatypes');
+    const data = await apiClient.get<any[]>('/rat/datatypes');
+    return data.map(d => ({ id: d.id, name: d.typeName || d.name || `Tipo ${d.id}` }));
 }
 
 export async function getRopaSubjectCategories(): Promise<RopaLookup[]> {
-    return apiClient.get<RopaLookup[]>('/rat/table/lookups/subjectcategories');
+    const data = await apiClient.get<any[]>('/rat/subjectcategories');
+    return data.map(s => ({ id: s.id, name: s.categoryName || s.name || `Categoría ${s.id}` }));
 }
 
 export async function getRopaPurposes(): Promise<RopaLookup[]> {
-    return apiClient.get<RopaLookup[]>('/rat/table/lookups/purposes');
+    const data = await apiClient.get<any[]>('/rat/purposes');
+    return data.map(p => ({ id: p.id, name: p.purposeName || p.name || `Finalidad ${p.id}` }));
 }
 
 export async function getRopaStorage(): Promise<RopaLookup[]> {
-    return apiClient.get<RopaLookup[]>('/rat/table/lookups/storage');
+    const data = await apiClient.get<any[]>('/rat/data');
+    return data.map(s => ({ id: s.id, name: s.dbName || s.name || `Almacenamiento ${s.id}` }));
 }
 
 export async function getRopaDataFlow(): Promise<RopaLookup[]> {
-    return apiClient.get<RopaLookup[]>('/rat/table/lookups/dataflow');
+    const data = await apiClient.get<any[]>('/rat/dataflow');
+    return data.map(d => ({ id: d.id, name: d.flowName || d.name || d.destinationEntity || `Flujo ${d.id}` }));
 }
 
 export async function getRopaDepartments(): Promise<RopaLookup[]> {
-    return apiClient.get<RopaLookup[]>('/rat/table/lookups/departments');
+    const data = await apiClient.get<any[]>('/rat/departments');
+    return data.map(d => ({ id: d.id, name: d.departmentName || d.name || `Departamento ${d.id}` }));
 }
 
 // ============================================
@@ -81,16 +89,17 @@ export async function getRopaTableFiltered(filters?: RopaTableFilters): Promise<
     const { userData } = useUserStore.getState();
     const companyName = userData?.role === 'superadmin' ? undefined : userData?.nombreEmpresa;
 
-    const params = new URLSearchParams();
+    // Si no hay filtros activos, traer todo
+    const hasActiveFilters = filters && (filters.processOwner || filters.dataCategories || filters.dataShared);
+    if (!hasActiveFilters) {
+        return getAllRopaTable(companyName);
+    }
 
+    const params = new URLSearchParams();
     if (companyName) params.append('companyName', companyName);
     if (filters?.processOwner) params.append('processOwner', filters.processOwner.toString());
     if (filters?.dataCategories) params.append('dataCategories', filters.dataCategories);
     if (filters?.dataShared) params.append('dataShared', filters.dataShared);
-
-    if (params.toString() === '' || (companyName && params.toString() === `companyName=${encodeURIComponent(companyName)}`)) {
-        return getAllRopaTable(companyName);
-    }
 
     return apiClient.get<RopaTable[]>(`/rat/table/filter?${params.toString()}`);
 }
