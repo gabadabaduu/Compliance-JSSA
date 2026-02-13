@@ -30,7 +30,6 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
     }, [userData?.email]); 
 
     useEffect(() => {
-        
         const savedTheme = localStorage.getItem('theme');
         
         if (savedTheme === 'dark') {
@@ -74,14 +73,12 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
         }
     };
 
-    // RAT ya NO está aquí - se maneja como dropdown aparte
     const menuItems = [
         { path: '/app/dashboard', label: 'Dashboard', access: 'accessDashboard', icon: 'mdi:view-dashboard' },
         { path: '/app/habeasdata', label: 'Habeas Data', access: 'accessHabeasdata', icon: 'mdi:file-document' },
         { path: '/app/ajustes', label: 'Ajustes', access: 'accessAjustes', icon: 'mdi:cog' },
     ];
 
-    // Abrir dropdowns automáticamente si estamos en una ruta relacionada
     useEffect(() => {
         if (location.pathname.includes('/app/normativa') || 
             location.pathname.includes('/app/sancion') || 
@@ -101,7 +98,8 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
-    const toggleRatDropdown = () => {
+    const handleRatClick = () => {
+        navigate('/app/rat');
         setIsRatDropdownOpen(!isRatDropdownOpen);
     };
 
@@ -110,6 +108,7 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
         setIsSancionDropdownOpen(!isSancionDropdownOpen);
     };
 
+    const isRatActive = location.pathname === '/app/rat';
     const isSancionActive = location.pathname === '/app/sancion';
 
     return (
@@ -191,11 +190,13 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
                     <li>
                         <button
                             className={`flex items-center justify-between w-full gap-2 px-4 py-2 rounded-[13px] transition-colors text-sm ${
-                                location.pathname.includes('/app/rat')
+                                isRatActive
                                     ? 'bg-[#68363625] text-black dark:bg-[#3b82f6] dark:text-white'
-                                    : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    : location.pathname.includes('/app/rat')
+                                        ? 'text-gray-800 dark:text-gray-200'
+                                        : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                             }`}
-                            onClick={toggleRatDropdown}
+                            onClick={handleRatClick}
                         >
                             <div className="flex items-center gap-2">
                                 <Icon icon="mdi:database-search" width="17" height="17" className="shrink-0" />
@@ -211,6 +212,21 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
 
                         {isRatDropdownOpen && (
                             <ul className="mt-2 ml-4 space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <li>
+                                    <NavLink
+                                        to="/app/rat/table"
+                                        className={({ isActive }) =>
+                                            `flex items-center gap-2 px-4 py-2 rounded-[13px] transition-colors text-sm ${
+                                                isActive
+                                                    ? 'bg-[#68363625] text-black dark:bg-[#3b82f6] dark:text-white'
+                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            }`
+                                        }
+                                    >
+                                        <Icon icon="mdi:table-large" width="17" height="17" className="shrink-0" />
+                                        <span className="whitespace-nowrap">ROPA</span>
+                                    </NavLink>
+                                </li>
                                 <li>
                                     <NavLink
                                         to="/app/rat/data"
