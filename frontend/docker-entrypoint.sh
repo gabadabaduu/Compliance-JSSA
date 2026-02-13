@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-
+#Jose&Daniel
 printenv | grep -E "VITE_|BACKEND_" || echo "No vars found"
 
 if [ -z "${BACKEND_URL}" ]; then
