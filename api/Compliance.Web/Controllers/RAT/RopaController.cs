@@ -50,14 +50,14 @@ namespace Compliance.Web.Controllers.ROPA
         }
 
         /// <summary>
-        /// GET: api/rat/ropa/filter?captureMethod=Manual&dataSource=Formulario
-        /// ✅ Endpoint para filtros avanzados
+        /// ✅ IMPORTANTE: Este método debe ir ANTES de GetById
+        /// GET: api/rat/ropa/filter?processOwner=1&dataCategories=Sensible&dataShared=Sí
         /// </summary>
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<RopaDto>>> GetFiltered(
-            [FromQuery] string? captureMethod,
-            [FromQuery] string? dataSource,
-            [FromQuery] int? systemId,
+            [FromQuery] int? processOwner,
+            [FromQuery] string? dataCategories,
+            [FromQuery] string? dataShared,
             CancellationToken ct)
         {
             var userRole = User.FindFirst("user_metadata")?.Value;
@@ -79,19 +79,19 @@ namespace Compliance.Web.Controllers.ROPA
             var allData = await _service.GetAllAsync(tenant, ct);
             var filtered = allData.AsEnumerable();
 
-            if (!string.IsNullOrEmpty(captureMethod))
+            if (processOwner.HasValue)
             {
-                filtered = filtered.Where(r => r.CaptureMethod == captureMethod);
+                filtered = filtered.Where(r => r.ProcessOwner == processOwner.Value);
             }
 
-            if (!string.IsNullOrEmpty(dataSource))
+            if (!string.IsNullOrEmpty(dataCategories))
             {
-                filtered = filtered.Where(r => r.DataSource == dataSource);
+                filtered = filtered.Where(r => r.DataCategories == dataCategories);
             }
 
-            if (systemId.HasValue)
+            if (!string.IsNullOrEmpty(dataShared))
             {
-                filtered = filtered.Where(r => r.SystemId == systemId.Value);
+                filtered = filtered.Where(r => r.DataShared == dataShared);
             }
 
             return Ok(filtered.ToList());
@@ -99,8 +99,9 @@ namespace Compliance.Web.Controllers.ROPA
 
         /// <summary>
         /// GET: api/rat/ropa/{id}
+        /// ✅ Este método debe ir DESPUÉS de filter
         /// </summary>
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")] // ✅ Añadido :int para evitar ambigüedad
         public async Task<ActionResult<RopaDto>> GetById(int id, CancellationToken ct)
         {
             var result = await _service.GetByIdAsync(id, ct);
@@ -110,7 +111,6 @@ namespace Compliance.Web.Controllers.ROPA
 
         /// <summary>
         /// POST: api/rat/ropa
-        /// ✅ Asigna tenant automáticamente al crear
         /// </summary>
         [HttpPost]
         public async Task<ActionResult<RopaDto>> Create([FromBody] CreateRopaDto dto, CancellationToken ct)
@@ -139,7 +139,7 @@ namespace Compliance.Web.Controllers.ROPA
         /// <summary>
         /// PUT: api/rat/ropa/{id}
         /// </summary>
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public async Task<ActionResult<RopaDto>> Update(int id, [FromBody] UpdateRopaDto dto, CancellationToken ct)
         {
             if (id != dto.Id) return BadRequest("ID mismatch");
@@ -154,7 +154,7 @@ namespace Compliance.Web.Controllers.ROPA
         /// <summary>
         /// DELETE: api/rat/ropa/{id}
         /// </summary>
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<ActionResult> Delete(int id, CancellationToken ct)
         {
             var result = await _service.DeleteAsync(id, ct);
