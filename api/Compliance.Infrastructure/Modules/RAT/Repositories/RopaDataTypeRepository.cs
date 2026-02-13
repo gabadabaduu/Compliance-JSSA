@@ -38,8 +38,6 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             var entity = new RopaDataTypeEntity
             {
                 DataType = dto.DataType,
-                DataCategory = dto.DataCategory,
-                DataGroup = dto.DataGroup,
                 CreatedBy = dto.CreatedBy,
                 UpdatedBy = dto.UpdatedBy
             };
@@ -59,8 +57,6 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
                 throw new Exception($"RopaDataType with ID {dto.Id} not found");
 
             if (dto.DataType != null) entity.DataType = dto.DataType;
-            if (dto.DataCategory != null) entity.DataCategory = dto.DataCategory;
-            if (dto.DataGroup != null) entity.DataGroup = dto.DataGroup;
             if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy;
             if (dto.UpdatedBy != null) entity.UpdatedBy = dto.UpdatedBy;
 
@@ -88,8 +84,6 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             {
                 Id = entity.Id,
                 DataType = entity.DataType,
-                DataCategory = entity.DataCategory,
-                DataGroup = entity.DataGroup,
                 CreatedBy = entity.CreatedBy,
                 UpdatedBy = entity.UpdatedBy
             };

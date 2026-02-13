@@ -526,9 +526,7 @@ public class AppDbContext : DbContext
             eb.ToTable("ropa_data_types");
             eb.HasKey(e => e.Id);
             eb.Property(e => e.Id).HasColumnName("id");
-            eb.Property(e => e.DataType).HasColumnName("data_type").IsRequired().HasMaxLength(255);
-            eb.Property(e => e.DataCategory).HasColumnName("data_category").IsRequired().HasMaxLength(30);
-            eb.Property(e => e.DataGroup).HasColumnName("data_group").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.DataType).HasColumnName("data_type");
             eb.Property(e => e.CreatedBy).HasColumnName("created_by");
             eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
         });
