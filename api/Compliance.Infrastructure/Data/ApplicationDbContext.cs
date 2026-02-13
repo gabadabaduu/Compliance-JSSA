@@ -13,8 +13,10 @@ using Compliance.Infrastructure.Modules.Cumplimiento.SncInfringements.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncResolutions.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.SncEntities.Entities;
 using Compliance.Infrastructure.Modules.Cumplimiento.GeneralIndustries.Entities;
+using Compliance.Infrastructure.Modules.ROPA.Entities;
 using Compliance.Core.Modules.Cumplimiento.Sancion.Dtos;
-using Compliance.Infrastructure.Modules.DSR.Entities; // ✅ NUEVO
+using Compliance.Infrastructure.Modules.DSR.Entities;
+using Compliance.Infrastructure.Modules.HabeasData.Notificacion.Entities;
 
 namespace Compliance.Infrastructure.Data;
 
@@ -48,10 +50,24 @@ public class AppDbContext : DbContext
     public DbSet<SncEntityEntity> SncEntities { get; set; } = null!;
     public DbSet<GeneralIndustryEntity> GeneralIndustries { get; set; } = null!;
 
-    // ✅ NUEVO: Módulo DSR
+    // ✅ Módulo DSR
     public DbSet<DsrEntity> Dsrs { get; set; } = null!;
     public DbSet<DsrRequestTypeEntity> DsrRequestTypes { get; set; } = null!;
     public DbSet<DsrStatusEntity> DsrStatuses { get; set; } = null!;
+    public DbSet<DsrNotificationEntity> DsrNotifications { get; set; } = null!;
+
+    // ✅ NUEVO: Módulo ROPA
+    public DbSet<RopaDataStorageEntity> RopaDataStorages { get; set; } = null!;
+    public DbSet<RopaEntityEntity> RopaEntities { get; set; } = null!;
+    public DbSet<RopaContractEntity> RopaContracts { get; set; } = null!;
+    public DbSet<RopaDepartmentEntity> RopaDepartments { get; set; } = null!;
+    public DbSet<ContactChannelEntity> ContactChannels { get; set; } = null!;
+    public DbSet<RopaEntity> Ropas { get; set; } = null!;
+    public DbSet<RopaSystemEntity> RopaSystems { get; set; } = null!;
+    public DbSet<RopaSubjectCategoryEntity> RopaSubjectCategories { get; set; } = null!;
+    public DbSet<RopaPurposeEntity> RopaPurposes { get; set; } = null!;
+    public DbSet<RopaDataTypeEntity> RopaDataTypes { get; set; } = null!;
+    public DbSet<RopaDataFlowEntity> RopaDataFlows { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -333,7 +349,208 @@ public class AppDbContext : DbContext
             eb.Property(e => e.Tenant).HasColumnName("tenant");
             eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
         });
+        
+        modelBuilder.Entity<DsrNotificationEntity>(eb =>
+        {
+            eb.ToTable("dsr_notification");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.DsrId).HasColumnName("dsr_id").IsRequired();
+            eb.Property(e => e.RecipientEmail).HasColumnName("recipient_email").HasMaxLength(255).IsRequired();
+            eb.Property(e => e.RecipientRole).HasColumnName("recipient_role").HasMaxLength(50).IsRequired();
+            eb.Property(e => e.DaysBeforeDue).HasColumnName("days_before_due").IsRequired();
+            eb.Property(e => e.EmailSent).HasColumnName("email_sent").HasDefaultValue(false);
+            eb.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
 
+            // Índice único para evitar duplicados
+            eb.HasIndex(e => new { e.DsrId, e.DaysBeforeDue, e.RecipientEmail })
+                .HasDatabaseName("uq_dsr_notification_unique")
+                .IsUnique();
+
+            // Índice para búsquedas por dsr_id
+            eb.HasIndex(e => e.DsrId)
+                .HasDatabaseName("ix_dsr_notification_dsr_id");
+        });
+
+        modelBuilder.Entity<RopaDataStorageEntity>(eb =>
+        {
+            eb.ToTable("ropa_data_storage");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.DbName).HasColumnName("db_name").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.RecordCount).HasColumnName("record_count").IsRequired();
+            eb.Property(e => e.CreationDate).HasColumnName("creation_date").IsRequired();
+            eb.Property(e => e.ProcessingMode).HasColumnName("processing_mode").HasMaxLength(30);
+            eb.Property(e => e.DbLocation).HasColumnName("db_location").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.Country).HasColumnName("country").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.SecurityMeasures).HasColumnName("security_measures").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.DbCustodian).HasColumnName("db_custodian");
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        modelBuilder.Entity<RopaEntityEntity>(eb =>
+        {
+            eb.ToTable("ropa_entities");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired().HasMaxLength(200);
+            eb.Property(e => e.TaxId).HasColumnName("tax_id").IsRequired().HasMaxLength(200);
+            eb.Property(e => e.Type).HasColumnName("type").IsRequired().HasMaxLength(200);
+            eb.Property(e => e.Nature).HasColumnName("nature").IsRequired().HasMaxLength(200);
+            eb.Property(e => e.Address).HasColumnName("address").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.State).HasColumnName("state");
+            eb.Property(e => e.City).HasColumnName("city");
+            eb.Property(e => e.Country).HasColumnName("country");
+            eb.Property(e => e.LandlineNumber).HasColumnName("landline_number").HasMaxLength(30);
+            eb.Property(e => e.MobileNumber).HasColumnName("mobile_number").HasMaxLength(30);
+            eb.Property(e => e.Email).HasColumnName("email").HasMaxLength(30);
+            eb.Property(e => e.Website).HasColumnName("website").HasMaxLength(255);
+            eb.Property(e => e.ServiceDescription).HasColumnName("service_description").HasMaxLength(255);
+            eb.Property(e => e.ContactChannelsId).HasColumnName("contact_channels_id");
+            eb.Property(e => e.PrivacyPolicyAttachment).HasColumnName("privacy_policy_attachment").HasMaxLength(255);
+            eb.Property(e => e.PrivacyPolicyUrl).HasColumnName("privacy_policy_url").HasMaxLength(255);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        // =====================================================
+        // ✅ NUEVO: MÓDULO ROPA
+        // =====================================================
+
+        modelBuilder.Entity<RopaContractEntity>(eb =>
+        {
+            eb.ToTable("ropa_contracts");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.ContractId).HasColumnName("contract_id").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.EntityId).HasColumnName("entity_id").IsRequired();
+            eb.Property(e => e.ContractType).HasColumnName("contract_type").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.StartDate).HasColumnName("start_date").IsRequired();
+            eb.Property(e => e.EndDate).HasColumnName("end_date").IsRequired();
+            eb.Property(e => e.Status).HasColumnName("status").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.Notes).HasColumnName("notes").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.Attachment).HasColumnName("attachment");
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+            eb.HasOne<RopaEntityEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.EntityId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RopaDepartmentEntity>(eb =>
+        {
+            eb.ToTable("ropa_departments");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.DepartmentName).HasColumnName("department_name").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        modelBuilder.Entity<ContactChannelEntity>(eb =>
+        {
+            eb.ToTable("contact_channels");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.ChannelType).HasColumnName("channel_type").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.MobileApp).HasColumnName("mobile_app").HasMaxLength(30);
+            eb.Property(e => e.Email).HasColumnName("email").HasMaxLength(50);
+            eb.Property(e => e.Fax).HasColumnName("fax").HasMaxLength(50);
+            eb.Property(e => e.Address).HasColumnName("address").HasMaxLength(255);
+            eb.Property(e => e.Website).HasColumnName("website").HasMaxLength(50);
+            eb.Property(e => e.LandlinePhone).HasColumnName("landline_phone").HasMaxLength(50);
+            eb.Property(e => e.MobilePhone).HasColumnName("mobile_phone").HasMaxLength(50);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+        modelBuilder.Entity<RopaEntity>(eb =>
+        {
+            eb.ToTable("ropa");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.ProcessingActivity).HasColumnName("processing_activity").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.CaptureMethod).HasColumnName("capture_method").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.SystemId).HasColumnName("system_id");
+            eb.Property(e => e.DataSource).HasColumnName("data_source").HasMaxLength(30);
+            eb.Property(e => e.DataTypesId).HasColumnName("data_types_id");
+            eb.Property(e => e.DataCategories).HasColumnName("data_categories").HasMaxLength(30);
+            eb.Property(e => e.SubjectCategoriesId).HasColumnName("subject_categories_id");
+            eb.Property(e => e.PurposesId).HasColumnName("purposes_id");
+            eb.Property(e => e.PurposeDescription).HasColumnName("purpose_description").HasMaxLength(255);
+            eb.Property(e => e.StorageId).HasColumnName("storage_id");
+            eb.Property(e => e.DataShared).HasColumnName("data_shared").HasMaxLength(50);
+            eb.Property(e => e.RecipientsId).HasColumnName("recipients_id");
+            eb.Property(e => e.RetentionPeriod).HasColumnName("retention_period").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.ProcessOwner).HasColumnName("process_owner");
+            eb.Property(e => e.Tenant).HasColumnName("tenant").HasMaxLength(255);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by").HasMaxLength(255);
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by").HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<RopaSystemEntity>(eb =>
+        {
+            eb.ToTable("ropa_system");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        modelBuilder.Entity<RopaSubjectCategoryEntity>(eb =>
+        {
+            eb.ToTable("ropa_subject_categories");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.Description).HasColumnName("description").HasMaxLength(100);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        modelBuilder.Entity<RopaPurposeEntity>(eb =>
+        {
+            eb.ToTable("ropa_purposes");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.Name).HasColumnName("name").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        modelBuilder.Entity<RopaDataTypeEntity>(eb =>
+        {
+            eb.ToTable("ropa_data_types");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.DataType).HasColumnName("data_type");
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        modelBuilder.Entity<RopaDataFlowEntity>(eb =>
+        {
+            eb.ToTable("ropa_data_flow");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.ProcessingActivityId).HasColumnName("processing_activity_id");
+            eb.Property(e => e.EntityId).HasColumnName("entity_id");
+            eb.Property(e => e.EntityRole).HasColumnName("entity_role").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.Country).HasColumnName("country");
+            eb.Property(e => e.ParentEntity).HasColumnName("parent_entity").HasMaxLength(30);
+            eb.Property(e => e.DataAgreement).HasColumnName("data_agreement");
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+            // ✅ Relación con ropa_entities (CASCADE DELETE)
+            eb.HasOne<RopaEntityEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.EntityId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
         // =====================================================
         // OTRAS
         // =====================================================

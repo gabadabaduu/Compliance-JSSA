@@ -97,18 +97,15 @@ export default function AdminUsuario() {
 
     const permissionsList: { key: keyof UserDto; label: string }[] = [
         { key: 'accessDashboard', label: 'Dashboard' },
-        { key: 'accessEpid', label: 'EPID' },
         { key: 'accessRat', label: 'RAT' },
-        { key: 'accessNormograma', label: 'Normograma' },
         { key: 'accessHabeasdata', label: 'Habeas Data' },
-        { key: 'accessMatrizriesgo', label: 'Matriz Riesgo' },
         { key: 'accessAjustes', label: 'Ajustes' },
         { key: 'accessUsuario', label: 'Usuario' }
     ]
 
     const hasAnyAccess = (user: UserDto) => {
-        return user.accessDashboard || user.accessEpid || user.accessRat ||
-            user.accessNormograma || user.accessHabeasdata || user.accessMatrizriesgo ||
+        return user.accessDashboard  || user.accessRat ||
+             user.accessHabeasdata || 
             user.accessAjustes || user.accessUsuario
     }
 
@@ -180,10 +177,8 @@ export default function AdminUsuario() {
                                     <td className="py-3 px-4">
                                         <div className="flex flex-wrap gap-1">
                                             {user.accessDashboard && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Dashboard</span>}
-                                            {user.accessEpid && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">EPID</span>}
                                             {user.accessRat && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">RAT</span>}
                                             {user.accessHabeasdata && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Habeas</span>}
-                                            {user.accessMatrizriesgo && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Matriz</span>}
                                             {user.accessAjustes && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Ajustes</span>}
                                             {!hasAnyAccess(user) && <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 rounded">Sin acceso</span>}
                                         </div>

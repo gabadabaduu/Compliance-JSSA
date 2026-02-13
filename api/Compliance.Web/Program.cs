@@ -58,8 +58,15 @@ using Compliance.Infrastructure.Modules.Usuario.Services;
 using Compliance.Core.Modules.DSR.Interfaces;
 using Compliance.Infrastructure.Modules.DSR.Repositories;
 using Compliance.Infrastructure.Modules.DSR.Services;
+using Compliance.Core.Modules.ROPA.Interfaces;
+using Compliance.Infrastructure.Modules.ROPA.Repositories;
+using Compliance.Infrastructure.Modules.ROPA.Services;
 using Compliance.Web.Hubs;
-
+using Compliance.Core.Modules.HabeasData.Notificacion.Interfaces;
+using Compliance.Infrastructure.Modules.HabeasData.Notificacion.Repositories;
+using Compliance.Infrastructure.Modules.HabeasData.Notificacion.Services;
+using Compliance.Infrastructure.ExternalServices.Email;
+using Compliance.Infrastructure.BackgroundJobs;
 // Limpiar mapeo de claim types
 Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -132,14 +139,45 @@ builder.Services.AddScoped<ISncEntityService, SncEntityService>();
 builder.Services.AddScoped<IGeneralIndustryRepository, GeneralIndustryRepository>();
 builder.Services.AddScoped<IGeneralIndustryService, GeneralIndustryService>();
 
-// ✅ NUEVO: Módulo DSR (agregar al final de los servicios, antes de JWT)
+// Módulo DSR 
 builder.Services.AddScoped<IDsrRepository, DsrRepository>();
 builder.Services.AddScoped<IDsrService, DsrService>();
 builder.Services.AddScoped<IDsrRequestTypeRepository, DsrRequestTypeRepository>();
 builder.Services.AddScoped<IDsrRequestTypeService, DsrRequestTypeService>();
 builder.Services.AddScoped<IDsrStatusRepository, DsrStatusRepository>();
 builder.Services.AddScoped<IDsrStatusService, DsrStatusService>();
+builder.Services.AddScoped<IDsrNotificationRepository, DsrNotificationRepository>();
+builder.Services.AddScoped<IDsrNotificationService, DsrNotificationService>();
+builder.Services.AddScoped<IEmailService, MailjetEmailService>();
+builder.Services.AddScoped<IDsrNotificationHubService, DsrNotificationHubService>();
+builder.Services.AddHostedService<DsrNotificationJob>();
 
+// ✅ NUEVO: Módulo ROPA
+builder.Services.AddScoped<IRopaDataStorageRepository, RopaDataStorageRepository>();
+builder.Services.AddScoped<IRopaDataStorageService, RopaDataStorageService>();
+builder.Services.AddScoped<IRopaEntityRepository, RopaEntityRepository>();
+builder.Services.AddScoped<IRopaEntityService, RopaEntityService>();
+builder.Services.AddScoped<IRopaContractRepository, RopaContractRepository>();
+builder.Services.AddScoped<IRopaContractService, RopaContractService>();
+builder.Services.AddScoped<IRopaDepartmentRepository, RopaDepartmentRepository>();
+builder.Services.AddScoped<IRopaDepartmentService, RopaDepartmentService>();
+builder.Services.AddScoped<IContactChannelRepository, ContactChannelRepository>();
+builder.Services.AddScoped<IContactChannelService, ContactChannelService>();
+builder.Services.AddScoped<IRopaRepository, RopaRepository>();
+builder.Services.AddScoped<IRopaService, RopaService>();
+builder.Services.AddScoped<IRopaSystemRepository, RopaSystemRepository>();
+builder.Services.AddScoped<IRopaSystemService, RopaSystemService>();
+
+builder.Services.AddScoped<IRopaSubjectCategoryRepository, RopaSubjectCategoryRepository>();
+builder.Services.AddScoped<IRopaSubjectCategoryService, RopaSubjectCategoryService>();
+
+builder.Services.AddScoped<IRopaPurposeRepository, RopaPurposeRepository>();
+builder.Services.AddScoped<IRopaPurposeService, RopaPurposeService>();
+
+builder.Services.AddScoped<IRopaDataTypeRepository, RopaDataTypeRepository>();
+builder.Services.AddScoped<IRopaDataTypeService, RopaDataTypeService>();
+builder.Services.AddScoped<IRopaDataFlowRepository, RopaDataFlowRepository>();
+builder.Services.AddScoped<IRopaDataFlowService, RopaDataFlowService>();
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
