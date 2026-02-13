@@ -8,3 +8,7 @@ export async function getMyNotifications(email: string): Promise<DsrNotification
 export async function getMyNotificationCount(email: string): Promise<number> {
     return apiClient.get<number>(`/dsrnotification/my/count?email=${encodeURIComponent(email)}`);
 }
+
+export async function refreshNotifications(email: string): Promise<void> {
+    await apiClient.post(`/dsrnotification/refresh?email=${encodeURIComponent(email)}`);
+}

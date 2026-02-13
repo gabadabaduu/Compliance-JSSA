@@ -15,6 +15,7 @@ namespace Compliance.Core.Modules.ROPA.Dtos
         public byte[]? Attachment { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+        public string? Tenant { get; set; }
     }
 
     public class CreateRopaContractDto
@@ -29,6 +30,7 @@ namespace Compliance.Core.Modules.ROPA.Dtos
         public byte[]? Attachment { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+        public string? Tenant { get; set; }
     }
 
     public class UpdateRopaContractDto
@@ -44,5 +46,6 @@ namespace Compliance.Core.Modules.ROPA.Dtos
         public byte[]? Attachment { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+        public string? Tenant { get; set; }
     }
 }

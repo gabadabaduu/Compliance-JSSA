@@ -30,7 +30,7 @@ export default function EntitiesList({ entities: initialEntities, onEdit }: Enti
     const getChannelName = (channelId: number | null | undefined): string => {
         if (!channelId) return '-';
         const channel = contactChannels?.find(c => c.id === channelId);
-        return channel?.channelName || channelId.toString();
+        return channel?.channelType || channelId.toString();
     };
 
     // Función para determinar si se pueden mostrar botones de acción

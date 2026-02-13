@@ -69,7 +69,7 @@ export interface UpdateRopaEntityDto {
 // Interface para ContactChannel (referencia para el dropdown)
 export interface ContactChannel {
     id: number;
-    channelName: string;
+    channelType: string;
 }
 
 // Opciones para filtros

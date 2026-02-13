@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { getMyNotifications, getMyNotificationCount } from '../services/notificationService';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
+import { getMyNotifications, getMyNotificationCount, refreshNotifications } from '../services/notificationService';
 
 export function useMyNotifications(email: string) {
     return useQuery({
@@ -23,4 +24,21 @@ export function useMyNotificationCount(email: string) {
         refetchOnMount: 'always',
         refetchOnWindowFocus: true,
     });
+}
+
+export function useRefreshNotifications(email: string) {
+    const queryClient = useQueryClient();
+
+    const refresh = useCallback(async () => {
+        if (!email) return;
+        try {
+            await refreshNotifications(email);
+            queryClient.invalidateQueries({ queryKey: ['my-notifications'] });
+            queryClient.invalidateQueries({ queryKey: ['my-notification-count'] });
+        } catch (error) {
+            console.error('Error refrescando notificaciones:', error);
+        }
+    }, [email, queryClient]);
+
+    return refresh;
 }

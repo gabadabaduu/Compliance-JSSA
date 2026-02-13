@@ -163,7 +163,21 @@ builder.Services.AddScoped<IRopaDepartmentRepository, RopaDepartmentRepository>(
 builder.Services.AddScoped<IRopaDepartmentService, RopaDepartmentService>();
 builder.Services.AddScoped<IContactChannelRepository, ContactChannelRepository>();
 builder.Services.AddScoped<IContactChannelService, ContactChannelService>();
+builder.Services.AddScoped<IRopaRepository, RopaRepository>();
+builder.Services.AddScoped<IRopaService, RopaService>();
+builder.Services.AddScoped<IRopaSystemRepository, RopaSystemRepository>();
+builder.Services.AddScoped<IRopaSystemService, RopaSystemService>();
 
+builder.Services.AddScoped<IRopaSubjectCategoryRepository, RopaSubjectCategoryRepository>();
+builder.Services.AddScoped<IRopaSubjectCategoryService, RopaSubjectCategoryService>();
+
+builder.Services.AddScoped<IRopaPurposeRepository, RopaPurposeRepository>();
+builder.Services.AddScoped<IRopaPurposeService, RopaPurposeService>();
+
+builder.Services.AddScoped<IRopaDataTypeRepository, RopaDataTypeRepository>();
+builder.Services.AddScoped<IRopaDataTypeService, RopaDataTypeService>();
+builder.Services.AddScoped<IRopaDataFlowRepository, RopaDataFlowRepository>();
+builder.Services.AddScoped<IRopaDataFlowService, RopaDataFlowService>();
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 

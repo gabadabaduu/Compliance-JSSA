@@ -49,5 +49,9 @@ namespace Compliance.Infrastructure.Modules.ROPA.Entities
 
         [Column("updated_by")]
         public string? UpdatedBy { get; set; }
+
+        [Column("tenant")]
+        [MaxLength(255)]
+        public string? Tenant { get; set; }
     }
 }

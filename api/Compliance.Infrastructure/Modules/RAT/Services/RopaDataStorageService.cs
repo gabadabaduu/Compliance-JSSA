@@ -11,8 +11,8 @@ namespace Compliance.Infrastructure.Modules.ROPA.Services
         private readonly IRopaDataStorageRepository _repository;
         public RopaDataStorageService(IRopaDataStorageRepository repository) => _repository = repository;
 
-        public Task<IEnumerable<RopaDataStorageDto>> GetAllAsync(CancellationToken ct = default)
-            => _repository.GetAllAsync(ct);
+        public Task<IEnumerable<RopaDataStorageDto>> GetAllAsync(string? tenant = null, CancellationToken ct = default) // ✅ ACTUALIZADO
+            => _repository.GetAllAsync(tenant, ct);
 
         public Task<RopaDataStorageDto?> GetByIdAsync(int id, CancellationToken ct = default)
             => _repository.GetByIdAsync(id, ct);

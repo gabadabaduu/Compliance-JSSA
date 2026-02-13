@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Compliance.Core.Modules.ROPA.Dtos;
@@ -20,19 +21,29 @@ namespace Compliance.Web.Controllers.ROPA
             _service = service;
         }
 
-        /// <summary>
-        /// GET: api/ropa/entities
-        /// </summary>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RopaEntityDto>>> GetAll(CancellationToken ct)
         {
-            var result = await _service.GetAllAsync(ct);
+            var userRole = User.FindFirst("user_metadata")?.Value;
+            var isSuperAdmin = userRole?.Contains("\"role\":\"superadmin\"") ?? false;
+
+            string? tenant = null;
+
+            if (!isSuperAdmin)
+            {
+                var userMetadata = User.FindFirst("user_metadata")?.Value;
+                if (userMetadata != null && userMetadata.Contains("\"nombre_empresa\""))
+                {
+                    var startIndex = userMetadata.IndexOf("\"nombre_empresa\":\"") + 18;
+                    var endIndex = userMetadata.IndexOf("\"", startIndex);
+                    tenant = userMetadata.Substring(startIndex, endIndex - startIndex);
+                }
+            }
+
+            var result = await _service.GetAllAsync(tenant, ct);
             return Ok(result);
         }
 
-        /// <summary>
-        /// GET: api/ropa/entities/{id}
-        /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult<RopaEntityDto>> GetById(int id, CancellationToken ct)
         {
@@ -41,36 +52,87 @@ namespace Compliance.Web.Controllers.ROPA
             return Ok(result);
         }
 
-        /// <summary>
-        /// POST: api/ropa/entities
-        /// </summary>
         [HttpPost]
         public async Task<ActionResult<RopaEntityDto>> Create([FromBody] CreateRopaEntityDto dto, CancellationToken ct)
         {
+            var userRole = User.FindFirst("user_metadata")?.Value;
+            var isSuperAdmin = userRole?.Contains("\"role\":\"superadmin\"") ?? false;
+
+            if (!isSuperAdmin)
+            {
+                var userMetadata = User.FindFirst("user_metadata")?.Value;
+                if (userMetadata != null && userMetadata.Contains("\"nombre_empresa\""))
+                {
+                    var startIndex = userMetadata.IndexOf("\"nombre_empresa\":\"") + 18;
+                    var endIndex = userMetadata.IndexOf("\"", startIndex);
+                    dto.Tenant = userMetadata.Substring(startIndex, endIndex - startIndex);
+                }
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            dto.CreatedBy = userId;
+
             var result = await _service.CreateAsync(dto, ct);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
 
-        /// <summary>
-        /// PUT: api/ropa/entities/{id}
-        /// </summary>
         [HttpPut("{id}")]
         public async Task<ActionResult<RopaEntityDto>> Update(int id, [FromBody] UpdateRopaEntityDto dto, CancellationToken ct)
         {
             if (id != dto.Id) return BadRequest("ID mismatch");
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            dto.UpdatedBy = userId;
+
             var result = await _service.UpdateAsync(dto, ct);
             return Ok(result);
         }
 
-        /// <summary>
-        /// DELETE: api/ropa/entities/{id}
-        /// </summary>
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(int id, CancellationToken ct)
         {
             var result = await _service.DeleteAsync(id, ct);
             if (!result) return NotFound();
             return NoContent();
+        }
+        /// <summary>
+        /// GET: api/rat/entities/filter?country=Colombia
+        /// ✅ Endpoint para filtros avanzados
+        /// </summary>
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<RopaEntityDto>>> GetFiltered(
+            [FromQuery] string? country,
+            CancellationToken ct)
+        {
+            // ✅ Obtener tenant del usuario autenticado
+            var userRole = User.FindFirst("user_metadata")?.Value;
+            var isSuperAdmin = userRole?.Contains("\"role\":\"superadmin\"") ?? false;
+
+            string? tenant = null;
+
+            if (!isSuperAdmin)
+            {
+                var userMetadata = User.FindFirst("user_metadata")?.Value;
+                if (userMetadata != null && userMetadata.Contains("\"nombre_empresa\""))
+                {
+                    var startIndex = userMetadata.IndexOf("\"nombre_empresa\":\"") + 18;
+                    var endIndex = userMetadata.IndexOf("\"", startIndex);
+                    tenant = userMetadata.Substring(startIndex, endIndex - startIndex);
+                }
+            }
+
+            // ✅ Obtener todos los registros (ya filtrados por tenant)
+            var allData = await _service.GetAllAsync(tenant, ct);
+
+            // ✅ Aplicar filtros adicionales
+            var filtered = allData.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(country))
+            {
+                filtered = filtered.Where(e => e.Country == country);
+            }
+
+            return Ok(filtered.ToList());
         }
     }
 }
