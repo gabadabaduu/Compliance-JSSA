@@ -67,6 +67,7 @@ public class AppDbContext : DbContext
     public DbSet<RopaSubjectCategoryEntity> RopaSubjectCategories { get; set; } = null!;
     public DbSet<RopaPurposeEntity> RopaPurposes { get; set; } = null!;
     public DbSet<RopaDataTypeEntity> RopaDataTypes { get; set; } = null!;
+    public DbSet<RopaDataFlowEntity> RopaDataFlows { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -530,6 +531,27 @@ public class AppDbContext : DbContext
             eb.Property(e => e.DataGroup).HasColumnName("data_group").IsRequired().HasMaxLength(255);
             eb.Property(e => e.CreatedBy).HasColumnName("created_by");
             eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        modelBuilder.Entity<RopaDataFlowEntity>(eb =>
+        {
+            eb.ToTable("ropa_data_flow");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.ProcessingActivityId).HasColumnName("processing_activity_id");
+            eb.Property(e => e.EntityId).HasColumnName("entity_id");
+            eb.Property(e => e.EntityRole).HasColumnName("entity_role").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.Country).HasColumnName("country");
+            eb.Property(e => e.ParentEntity).HasColumnName("parent_entity").HasMaxLength(30);
+            eb.Property(e => e.DataAgreement).HasColumnName("data_agreement");
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by");
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+
+            // ✅ Relación con ropa_entities (CASCADE DELETE)
+            eb.HasOne<RopaEntityEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.EntityId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
         // =====================================================
         // OTRAS

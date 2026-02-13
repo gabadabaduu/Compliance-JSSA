@@ -176,6 +176,8 @@ builder.Services.AddScoped<IRopaPurposeService, RopaPurposeService>();
 
 builder.Services.AddScoped<IRopaDataTypeRepository, RopaDataTypeRepository>();
 builder.Services.AddScoped<IRopaDataTypeService, RopaDataTypeService>();
+builder.Services.AddScoped<IRopaDataFlowRepository, RopaDataFlowRepository>();
+builder.Services.AddScoped<IRopaDataFlowService, RopaDataFlowService>();
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];
 
