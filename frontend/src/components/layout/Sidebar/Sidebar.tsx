@@ -221,21 +221,7 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
 
                         {isRatDropdownOpen && (
                             <ul className="mt-2 ml-4 space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <li>
-                                    <NavLink
-                                        to="/app/rat/table"
-                                        className={({ isActive }) =>
-                                            `flex items-center gap-2 px-4 py-2 rounded-[13px] transition-colors text-sm ${
-                                                isActive
-                                                    ? 'bg-[#68363625] text-black dark:bg-[#3b82f6] dark:text-white'
-                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                            }`
-                                        }
-                                    >
-                                        <Icon icon="mdi:table-large" width="17" height="17" className="shrink-0" />
-                                        <span className="whitespace-nowrap">ROPA</span>
-                                    </NavLink>
-                                </li>
+                                
                                 <li>
                                     <NavLink
                                         to="/app/rat/data"
