@@ -11,7 +11,7 @@ namespace Compliance.Web.Controllers.ROPA
 {
     [Authorize]
     [ApiController]
-    [Route("api/rat/[controller]")]
+    [Route("api/rat/dataflow")]
     public class DataFlowController : ControllerBase
     {
         private readonly IRopaDataFlowService _service;
