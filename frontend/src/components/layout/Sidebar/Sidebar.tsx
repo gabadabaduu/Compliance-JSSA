@@ -7,19 +7,29 @@ import logoName from '../../../assets/korhex-logo-name.png';
 import logoi from '../../../assets/logo-i.png';
 import logonamei from '../../../assets/korhex-logo-name-i.png';
 import NotificationBell from '../NotificationBell/NotificationBell';
+import { useRefreshNotifications } from '../../../modules/notifications/hooks/useNotifications';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface SidebarProps {
     onNotificationClick: () => void;
 }
 
 export default function Sidebar({ onNotificationClick }: SidebarProps) {
-    const { hasAccess, userData } = useUserStore();
+    const { userData } = useUserStore();
+    const { hasAccess: hasPermission, isSuperAdmin } = usePermissions();
     const navigate = useNavigate();
     const location = useLocation();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSancionDropdownOpen, setIsSancionDropdownOpen] = useState(false);
     const [isRatDropdownOpen, setIsRatDropdownOpen] = useState(false);
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const refresh = useRefreshNotifications(userData?.email ?? '');
+
+    useEffect(() => {
+        if (userData?.email) {
+            refresh();
+        }
+    }, [userData?.email]); 
 
     useEffect(() => {
         const savedTheme = localStorage.getItem('theme');
@@ -65,14 +75,12 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
         }
     };
 
-    // RAT ya NO está aquí - se maneja como dropdown aparte
     const menuItems = [
-        { path: '/app/dashboard', label: 'Dashboard', access: 'accessDashboard', icon: 'mdi:view-dashboard' },
-        { path: '/app/habeasdata', label: 'Habeas Data', access: 'accessHabeasdata', icon: 'mdi:file-document' },
-        { path: '/app/ajustes', label: 'Ajustes', access: 'accessAjustes', icon: 'mdi:cog' },
+        { path: '/app/dashboard', label: 'Dashboard', access: 'accessDashboard', icon: 'mdi:view-dashboard', superadminHidden: false },
+        { path: '/app/habeasdata', label: 'Habeas Data', access: 'accessHabeasdata', icon: 'mdi:file-document', superadminHidden: true },
+        { path: '/app/ajustes', label: 'Ajustes', access: 'accessAjustes', icon: 'mdi:cog', superadminHidden: false },
     ];
 
-    // Abrir dropdowns automáticamente si estamos en una ruta relacionada
     useEffect(() => {
         if (location.pathname.includes('/app/normativa') || 
             location.pathname.includes('/app/sancion') || 
@@ -92,7 +100,8 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
-    const toggleRatDropdown = () => {
+    const handleRatClick = () => {
+        navigate('/app/rat');
         setIsRatDropdownOpen(!isRatDropdownOpen);
     };
 
@@ -101,7 +110,15 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
         setIsSancionDropdownOpen(!isSancionDropdownOpen);
     };
 
+    const isRatActive = location.pathname === '/app/rat';
     const isSancionActive = location.pathname === '/app/sancion';
+
+    // Helper: si superadminHidden es true y es superadmin, no lo ve
+    // Si no es superadmin, revisa permisos normales
+    const canAccess = (module: string, superadminHidden: boolean = false): boolean => {
+        if (isSuperAdmin) return !superadminHidden;
+        return hasPermission(module as any);
+    };
 
     return (
       <nav className="group w-[60px] hover:w-[200px] min-h-[95vh] p-2 m-3 bg-white dark:bg-[#02020248] rounded-xl transition-all duration-300 overflow-hidden flex flex-col">
@@ -128,7 +145,7 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
             </div>
 
             {/* Mi Cuenta - Debajo del logo */}
-            {hasAccess('accessUsuario' as any) && (
+            {canAccess('accessUsuario') && (
                 <div className="py-2 mb-10">
                     <NavLink
                         to="/app/usuario"
@@ -158,7 +175,7 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
 
             <ul className="list-none m-0 space-y-1 flex-1 py-4">
                 {menuItems.map((item) => (
-                    hasAccess(item.access as any) && (
+                    canAccess(item.access, item.superadminHidden) && (
                         <li key={item.path}>
                             <NavLink
                                 to={item.path}
@@ -178,15 +195,17 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
                 ))}
 
                 {/* ==================== DROPDOWN RAT ==================== */}
-                {hasAccess('accessRat' as any) && (
+                {canAccess('accessRat', true) && (
                     <li>
                         <button
                             className={`flex items-center justify-between w-full gap-2 px-4 py-2 rounded-[13px] transition-colors text-sm ${
-                                location.pathname.includes('/app/rat')
+                                isRatActive
                                     ? 'bg-[#68363625] text-black dark:bg-[#3b82f6] dark:text-white'
-                                    : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    : location.pathname.includes('/app/rat')
+                                        ? 'text-gray-800 dark:text-gray-200'
+                                        : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                             }`}
-                            onClick={toggleRatDropdown}
+                            onClick={handleRatClick}
                         >
                             <div className="flex items-center gap-2">
                                 <Icon icon="mdi:database-search" width="17" height="17" className="shrink-0" />
@@ -202,6 +221,7 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
 
                         {isRatDropdownOpen && (
                             <ul className="mt-2 ml-4 space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                
                                 <li>
                                     <NavLink
                                         to="/app/rat/data"

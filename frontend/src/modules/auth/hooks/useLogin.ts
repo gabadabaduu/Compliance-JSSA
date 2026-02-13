@@ -21,7 +21,7 @@ export function useLogin() {
         if (result.success) {
             navigate('/app/dashboard');
         } else {
-            setError(result.error || 'Error al iniciar sesión');
+            setError(result.error || 'Error al iniciar sesiï¿½n');
         }
 
         setLoading(false);

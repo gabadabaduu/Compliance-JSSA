@@ -25,7 +25,8 @@ import ResolutionPage from './modules/cumplimiento/resolucion/pages/ResolutionPa
 import ContractsPage from  './modules/rat/contracts/pages/ContractsPage'
 import DataPage from './modules/rat/data/pages/DataPage'
 import EntitiesPage from './modules/rat/entities/pages/EntitiesPage'
-
+import RatPage from './modules/rat/Rat/pages/RatPage'
+import DataFlow from './modules/rat/Rat/DataFlow/Dataflow'
 // Route components
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
@@ -116,6 +117,22 @@ function App() {
                         />
 
                         {/* RAT */}
+                        <Route
+                            path="rat"
+                            element={
+                                <ModuleRoute requiredAccess="accessRat">
+                                    <RatPage />
+                                </ModuleRoute>
+                            }
+                        />
+                        <Route
+                            path="rat/dataflow"
+                            element={
+                                <ModuleRoute requiredAccess="accessRat">
+                                    <DataFlow />
+                                </ModuleRoute>
+                            }
+                        />
                         <Route
                             path="rat/contracts"
                             element={

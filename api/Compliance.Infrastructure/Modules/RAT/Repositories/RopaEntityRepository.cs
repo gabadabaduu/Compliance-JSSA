@@ -16,12 +16,18 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
         private readonly AppDbContext _db;
         public RopaEntityRepository(AppDbContext db) => _db = db;
 
-        public async Task<IEnumerable<RopaEntityDto>> GetAllAsync(CancellationToken ct = default)
+        // ✅ ACTUALIZADO: Filtrar por tenant
+        public async Task<IEnumerable<RopaEntityDto>> GetAllAsync(string? tenant = null, CancellationToken ct = default)
         {
-            return await _db.Set<RopaEntityEntity>()
-                .AsNoTracking()
-                .Select(e => MapToDto(e))
-                .ToListAsync(ct);
+            var query = _db.Set<RopaEntityEntity>().AsNoTracking();
+
+            // ✅ Si hay tenant, filtrar por empresa
+            if (!string.IsNullOrEmpty(tenant))
+            {
+                query = query.Where(e => e.Tenant == tenant);
+            }
+
+            return await query.Select(e => MapToDto(e)).ToListAsync(ct);
         }
 
         public async Task<RopaEntityDto?> GetByIdAsync(int id, CancellationToken ct = default)
@@ -33,6 +39,7 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             return entity == null ? null : MapToDto(entity);
         }
 
+        // ✅ ACTUALIZADO: Agregar tenant al crear
         public async Task<RopaEntityDto> CreateAsync(CreateRopaEntityDto dto, CancellationToken ct = default)
         {
             var entity = new RopaEntityEntity
@@ -54,7 +61,8 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
                 PrivacyPolicyAttachment = dto.PrivacyPolicyAttachment,
                 PrivacyPolicyUrl = dto.PrivacyPolicyUrl,
                 CreatedBy = dto.CreatedBy,
-                UpdatedBy = dto.UpdatedBy
+                UpdatedBy = dto.UpdatedBy,
+                Tenant = dto.Tenant // ✅ NUEVO
             };
 
             _db.Set<RopaEntityEntity>().Add(entity);
@@ -63,6 +71,7 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             return MapToDto(entity);
         }
 
+        // ✅ ACTUALIZADO: Permitir actualizar tenant
         public async Task<RopaEntityDto> UpdateAsync(UpdateRopaEntityDto dto, CancellationToken ct = default)
         {
             var entity = await _db.Set<RopaEntityEntity>()
@@ -89,6 +98,7 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             if (dto.PrivacyPolicyUrl != null) entity.PrivacyPolicyUrl = dto.PrivacyPolicyUrl;
             if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy;
             if (dto.UpdatedBy != null) entity.UpdatedBy = dto.UpdatedBy;
+            if (dto.Tenant != null) entity.Tenant = dto.Tenant; // ✅ NUEVO
 
             await _db.SaveChangesAsync(ct);
 
@@ -108,6 +118,7 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             return true;
         }
 
+        // ✅ ACTUALIZADO: Incluir tenant en el DTO
         private static RopaEntityDto MapToDto(RopaEntityEntity entity)
         {
             return new RopaEntityDto
@@ -130,7 +141,8 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
                 PrivacyPolicyAttachment = entity.PrivacyPolicyAttachment,
                 PrivacyPolicyUrl = entity.PrivacyPolicyUrl,
                 CreatedBy = entity.CreatedBy,
-                UpdatedBy = entity.UpdatedBy
+                UpdatedBy = entity.UpdatedBy,
+                Tenant = entity.Tenant // ✅ NUEVO
             };
         }
     }

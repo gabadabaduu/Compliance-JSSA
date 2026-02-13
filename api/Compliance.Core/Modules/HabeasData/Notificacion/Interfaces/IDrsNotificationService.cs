@@ -12,4 +12,5 @@ public interface IDsrNotificationService
     Task<bool> HasBeenNotifiedAsync(int dsrId, int daysBeforeDue, string recipientEmail, CancellationToken ct = default);
     Task<List<DsrNotificationDto>> GetNotificationsByEmailAsync(string email, CancellationToken ct = default);
     Task<int> GetUnreadCountAsync(string email, CancellationToken ct = default);
+    Task RefreshNotificationsForUserAsync(string email, CancellationToken ct = default);
 }

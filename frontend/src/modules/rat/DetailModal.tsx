@@ -14,9 +14,10 @@ interface DetailModalProps {
     icon: string;
     iconColor: string;
     fields: DetailField[];
+    extraFooter?: ReactNode;
 }
 
-export default function DetailModal({ isOpen, onClose, title, icon, iconColor, fields }: DetailModalProps) {
+export default function DetailModal({ isOpen, onClose, title, icon, iconColor, fields, extraFooter }: DetailModalProps) {
     if (!isOpen) return null;
 
     return (
@@ -68,13 +69,14 @@ export default function DetailModal({ isOpen, onClose, title, icon, iconColor, f
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end p-6 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
                         <button
                             onClick={onClose}
                             className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
                         >
                             Cerrar
                         </button>
+                        {extraFooter}
                     </div>
                 </div>
             </div>
