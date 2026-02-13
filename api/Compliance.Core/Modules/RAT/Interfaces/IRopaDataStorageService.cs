@@ -7,7 +7,7 @@ namespace Compliance.Core.Modules.ROPA.Interfaces
 {
     public interface IRopaDataStorageService
     {
-        Task<IEnumerable<RopaDataStorageDto>> GetAllAsync(CancellationToken ct = default);
+        Task<IEnumerable<RopaDataStorageDto>> GetAllAsync(string? tenant = null, CancellationToken ct = default); // ✅ ACTUALIZADO
         Task<RopaDataStorageDto?> GetByIdAsync(int id, CancellationToken ct = default);
         Task<RopaDataStorageDto> CreateAsync(CreateRopaDataStorageDto dto, CancellationToken ct = default);
         Task<RopaDataStorageDto> UpdateAsync(UpdateRopaDataStorageDto dto, CancellationToken ct = default);

@@ -62,6 +62,7 @@ public class AppDbContext : DbContext
     public DbSet<RopaContractEntity> RopaContracts { get; set; } = null!;
     public DbSet<RopaDepartmentEntity> RopaDepartments { get; set; } = null!;
     public DbSet<ContactChannelEntity> ContactChannels { get; set; } = null!;
+    public DbSet<RopaEntity> Ropas { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -459,6 +460,29 @@ public class AppDbContext : DbContext
             eb.Property(e => e.MobilePhone).HasColumnName("mobile_phone").HasMaxLength(50);
             eb.Property(e => e.CreatedBy).HasColumnName("created_by");
             eb.Property(e => e.UpdatedBy).HasColumnName("updated_by");
+        });
+        modelBuilder.Entity<RopaEntity>(eb =>
+        {
+            eb.ToTable("ropa");
+            eb.HasKey(e => e.Id);
+            eb.Property(e => e.Id).HasColumnName("id");
+            eb.Property(e => e.ProcessingActivity).HasColumnName("processing_activity").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.CaptureMethod).HasColumnName("capture_method").IsRequired().HasMaxLength(30);
+            eb.Property(e => e.SystemId).HasColumnName("system_id");
+            eb.Property(e => e.DataSource).HasColumnName("data_source").HasMaxLength(30);
+            eb.Property(e => e.DataTypesId).HasColumnName("data_types_id");
+            eb.Property(e => e.DataCategories).HasColumnName("data_categories").HasMaxLength(30);
+            eb.Property(e => e.SubjectCategoriesId).HasColumnName("subject_categories_id");
+            eb.Property(e => e.PurposesId).HasColumnName("purposes_id");
+            eb.Property(e => e.PurposeDescription).HasColumnName("purpose_description").HasMaxLength(255);
+            eb.Property(e => e.StorageId).HasColumnName("storage_id");
+            eb.Property(e => e.DataShared).HasColumnName("data_shared").HasMaxLength(50);
+            eb.Property(e => e.RecipientsId).HasColumnName("recipients_id");
+            eb.Property(e => e.RetentionPeriod).HasColumnName("retention_period").IsRequired().HasMaxLength(255);
+            eb.Property(e => e.ProcessOwner).HasColumnName("process_owner");
+            eb.Property(e => e.Tenant).HasColumnName("tenant").HasMaxLength(255);
+            eb.Property(e => e.CreatedBy).HasColumnName("created_by").HasMaxLength(255);
+            eb.Property(e => e.UpdatedBy).HasColumnName("updated_by").HasMaxLength(255);
         });
         // =====================================================
         // OTRAS

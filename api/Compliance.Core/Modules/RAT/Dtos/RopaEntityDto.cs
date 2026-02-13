@@ -21,6 +21,7 @@ namespace Compliance.Core.Modules.ROPA.Dtos
         public string? PrivacyPolicyUrl { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+        public string? Tenant { get; set; }
     }
 
     public class CreateRopaEntityDto
@@ -43,6 +44,7 @@ namespace Compliance.Core.Modules.ROPA.Dtos
         public string? PrivacyPolicyUrl { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+        public string? Tenant { get; set; }
     }
 
     public class UpdateRopaEntityDto
@@ -66,5 +68,6 @@ namespace Compliance.Core.Modules.ROPA.Dtos
         public string? PrivacyPolicyUrl { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+        public string? Tenant { get; set; }
     }
 }

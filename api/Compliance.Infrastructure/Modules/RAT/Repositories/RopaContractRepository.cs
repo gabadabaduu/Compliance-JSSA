@@ -16,12 +16,18 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
         private readonly AppDbContext _db;
         public RopaContractRepository(AppDbContext db) => _db = db;
 
-        public async Task<IEnumerable<RopaContractDto>> GetAllAsync(CancellationToken ct = default)
+        // ✅ ACTUALIZADO: Filtrar por tenant
+        public async Task<IEnumerable<RopaContractDto>> GetAllAsync(string? tenant = null, CancellationToken ct = default)
         {
-            return await _db.Set<RopaContractEntity>()
-                .AsNoTracking()
-                .Select(e => MapToDto(e))
-                .ToListAsync(ct);
+            var query = _db.Set<RopaContractEntity>().AsNoTracking();
+
+            // ✅ Si hay tenant, filtrar por empresa
+            if (!string.IsNullOrEmpty(tenant))
+            {
+                query = query.Where(e => e.Tenant == tenant);
+            }
+
+            return await query.Select(e => MapToDto(e)).ToListAsync(ct);
         }
 
         public async Task<RopaContractDto?> GetByIdAsync(int id, CancellationToken ct = default)
@@ -33,15 +39,23 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             return entity == null ? null : MapToDto(entity);
         }
 
-        public async Task<IEnumerable<RopaContractDto>> GetByEntityIdAsync(int entityId, CancellationToken ct = default)
+        // ✅ ACTUALIZADO: También filtrar por tenant
+        public async Task<IEnumerable<RopaContractDto>> GetByEntityIdAsync(int entityId, string? tenant = null, CancellationToken ct = default)
         {
-            return await _db.Set<RopaContractEntity>()
+            var query = _db.Set<RopaContractEntity>()
                 .AsNoTracking()
-                .Where(e => e.EntityId == entityId)
-                .Select(e => MapToDto(e))
-                .ToListAsync(ct);
+                .Where(e => e.EntityId == entityId);
+
+            // ✅ Si hay tenant, filtrar por empresa
+            if (!string.IsNullOrEmpty(tenant))
+            {
+                query = query.Where(e => e.Tenant == tenant);
+            }
+
+            return await query.Select(e => MapToDto(e)).ToListAsync(ct);
         }
 
+        // ✅ ACTUALIZADO: Agregar tenant al crear
         public async Task<RopaContractDto> CreateAsync(CreateRopaContractDto dto, CancellationToken ct = default)
         {
             var entity = new RopaContractEntity
@@ -55,7 +69,8 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
                 Notes = dto.Notes,
                 Attachment = dto.Attachment,
                 CreatedBy = dto.CreatedBy,
-                UpdatedBy = dto.UpdatedBy
+                UpdatedBy = dto.UpdatedBy,
+                Tenant = dto.Tenant // ✅ NUEVO
             };
 
             _db.Set<RopaContractEntity>().Add(entity);
@@ -64,6 +79,7 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             return MapToDto(entity);
         }
 
+        // ✅ ACTUALIZADO: Permitir actualizar tenant
         public async Task<RopaContractDto> UpdateAsync(UpdateRopaContractDto dto, CancellationToken ct = default)
         {
             var entity = await _db.Set<RopaContractEntity>()
@@ -82,6 +98,7 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             if (dto.Attachment != null) entity.Attachment = dto.Attachment;
             if (dto.CreatedBy != null) entity.CreatedBy = dto.CreatedBy;
             if (dto.UpdatedBy != null) entity.UpdatedBy = dto.UpdatedBy;
+            if (dto.Tenant != null) entity.Tenant = dto.Tenant; // ✅ NUEVO
 
             await _db.SaveChangesAsync(ct);
 
@@ -101,6 +118,7 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             return true;
         }
 
+        // ✅ ACTUALIZADO: Incluir tenant en el DTO
         private static RopaContractDto MapToDto(RopaContractEntity entity)
         {
             return new RopaContractDto
@@ -115,7 +133,8 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
                 Notes = entity.Notes,
                 Attachment = entity.Attachment,
                 CreatedBy = entity.CreatedBy,
-                UpdatedBy = entity.UpdatedBy
+                UpdatedBy = entity.UpdatedBy,
+                Tenant = entity.Tenant // ✅ NUEVO
             };
         }
     }

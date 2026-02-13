@@ -163,6 +163,8 @@ builder.Services.AddScoped<IRopaDepartmentRepository, RopaDepartmentRepository>(
 builder.Services.AddScoped<IRopaDepartmentService, RopaDepartmentService>();
 builder.Services.AddScoped<IContactChannelRepository, ContactChannelRepository>();
 builder.Services.AddScoped<IContactChannelService, ContactChannelService>();
+builder.Services.AddScoped<IRopaRepository, RopaRepository>();
+builder.Services.AddScoped<IRopaService, RopaService>();
 
 // JWT Authentication
 var jwtSecret = builder.Configuration["Supabase:JwtSecret"];

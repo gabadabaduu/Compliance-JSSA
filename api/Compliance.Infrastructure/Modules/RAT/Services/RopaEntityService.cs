@@ -11,8 +11,8 @@ namespace Compliance.Infrastructure.Modules.ROPA.Services
         private readonly IRopaEntityRepository _repository;
         public RopaEntityService(IRopaEntityRepository repository) => _repository = repository;
 
-        public Task<IEnumerable<RopaEntityDto>> GetAllAsync(CancellationToken ct = default)
-            => _repository.GetAllAsync(ct);
+        public Task<IEnumerable<RopaEntityDto>> GetAllAsync(string? tenant = null, CancellationToken ct = default)
+            => _repository.GetAllAsync(tenant, ct);
 
         public Task<RopaEntityDto?> GetByIdAsync(int id, CancellationToken ct = default)
             => _repository.GetByIdAsync(id, ct);

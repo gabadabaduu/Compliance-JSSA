@@ -7,9 +7,9 @@ namespace Compliance.Core.Modules.ROPA.Interfaces
 {
     public interface IRopaContractRepository
     {
-        Task<IEnumerable<RopaContractDto>> GetAllAsync(CancellationToken ct = default);
+        Task<IEnumerable<RopaContractDto>> GetAllAsync(string? tenant = null, CancellationToken ct = default); // ✅ ACTUALIZADO
         Task<RopaContractDto?> GetByIdAsync(int id, CancellationToken ct = default);
-        Task<IEnumerable<RopaContractDto>> GetByEntityIdAsync(int entityId, CancellationToken ct = default);
+        Task<IEnumerable<RopaContractDto>> GetByEntityIdAsync(int entityId, string? tenant = null, CancellationToken ct = default); // ✅ ACTUALIZADO
         Task<RopaContractDto> CreateAsync(CreateRopaContractDto dto, CancellationToken ct = default);
         Task<RopaContractDto> UpdateAsync(UpdateRopaContractDto dto, CancellationToken ct = default);
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);

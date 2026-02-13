@@ -11,14 +11,14 @@ namespace Compliance.Infrastructure.Modules.ROPA.Services
         private readonly IRopaContractRepository _repository;
         public RopaContractService(IRopaContractRepository repository) => _repository = repository;
 
-        public Task<IEnumerable<RopaContractDto>> GetAllAsync(CancellationToken ct = default)
-            => _repository.GetAllAsync(ct);
+        public Task<IEnumerable<RopaContractDto>> GetAllAsync(string? tenant = null, CancellationToken ct = default)
+            => _repository.GetAllAsync(tenant, ct);
 
         public Task<RopaContractDto?> GetByIdAsync(int id, CancellationToken ct = default)
             => _repository.GetByIdAsync(id, ct);
 
-        public Task<IEnumerable<RopaContractDto>> GetByEntityIdAsync(int entityId, CancellationToken ct = default)
-            => _repository.GetByEntityIdAsync(entityId, ct);
+        public Task<IEnumerable<RopaContractDto>> GetByEntityIdAsync(int entityId, string? tenant = null, CancellationToken ct = default)
+            => _repository.GetByEntityIdAsync(entityId, tenant, ct);
 
         public Task<RopaContractDto> CreateAsync(CreateRopaContractDto dto, CancellationToken ct = default)
             => _repository.CreateAsync(dto, ct);
