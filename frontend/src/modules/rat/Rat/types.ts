@@ -1,3 +1,4 @@
+
 export interface RopaTable {
     id: number;
     processingActivity: string;
@@ -19,14 +20,6 @@ export interface RopaTable {
     updatedBy?: string;
     createdAt?: string;
     updatedAt?: string;
-    // Nombres resueltos desde el backend
-    systemName?: string;
-    dataTypeName?: string;
-    subjectCategoryName?: string;
-    purposeName?: string;
-    storageName?: string;
-    recipientName?: string;
-    processOwnerName?: string;
 }
 
 export interface CreateRopaTableDto {
@@ -53,12 +46,12 @@ export interface UpdateRopaTableDto extends CreateRopaTableDto {
     id: number;
 }
 
-// Lookup tables (para dropdowns)
+// Lookup genérico normalizado
 export interface RopaLookup {
     id: number;
     name: string;
 }
 export interface FilterOption {
-    value: number | string;
+    value: string | number;
     label: string;
 }

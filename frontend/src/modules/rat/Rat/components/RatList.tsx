@@ -14,10 +14,9 @@ import {
     useRopaStorageLookup,
     useRopaDataFlow,
 } from '../hooks/useRat';
-import type { RopaTable } from '../types';
-import TableFilter, { FilterConfig } from '../../../cumplimiento/TableFilter';
+import type { RopaTable, RopaLookup } from '../types';
+import TableFilter, { type FilterConfig } from '../../../cumplimiento/TableFilter';
 import DetailModal from '../../DetailModal';
-import { usePermissions } from '../../../../hooks/usePermissions';
 
 interface RopaTableListProps {
     records: RopaTable[];
@@ -25,7 +24,6 @@ interface RopaTableListProps {
 }
 
 export default function RopaTableList({ records: initialRecords, onEdit }: RopaTableListProps) {
-    const { isSuperAdmin } = usePermissions();
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [selectedRecord, setSelectedRecord] = useState<RopaTable | null>(null);
 
@@ -42,8 +40,7 @@ export default function RopaTableList({ records: initialRecords, onEdit }: RopaT
     const { data: dataFlow } = useRopaDataFlow();
     const deleteRecord = useDeleteRopaTable();
 
-    // Lookups helpers
-    const getLookupName = (list: { id: number; name: string }[] | undefined, id: number | null | undefined): string => {
+    const getLookupName = (list: RopaLookup[] | undefined, id: number | null | undefined): string => {
         if (!id || !list) return '-';
         return list.find(item => item.id === id)?.name || id.toString();
     };
@@ -97,18 +94,18 @@ export default function RopaTableList({ records: initialRecords, onEdit }: RopaT
     const getDetailFields = (record: RopaTable) => [
         { label: 'Actividad de Tratamiento', value: record.processingActivity, fullWidth: true },
         { label: 'Método de Captura', value: record.captureMethod },
-        { label: 'Sistema', value: record.systemName || getLookupName(systems, record.systemId) },
+        { label: 'Sistema', value: getLookupName(systems, record.systemId) },
         { label: 'Fuente de Datos', value: record.dataSource || '-' },
-        { label: 'Tipo de Dato', value: record.dataTypeName || getLookupName(dataTypes, record.dataTypesId) },
+        { label: 'Tipo de Dato', value: getLookupName(dataTypes, record.dataTypesId) },
         { label: 'Categoría de Dato', value: record.dataCategories || '-' },
-        { label: 'Categoría de Titular', value: record.subjectCategoryName || getLookupName(subjectCategories, record.subjectCategoriesId) },
-        { label: 'Finalidad', value: record.purposeName || getLookupName(purposes, record.purposesId) },
+        { label: 'Categoría de Titular', value: getLookupName(subjectCategories, record.subjectCategoriesId) },
+        { label: 'Finalidad', value: getLookupName(purposes, record.purposesId) },
         { label: 'Descripción Finalidad', value: record.purposeDescription || '-', fullWidth: true },
-        { label: 'Almacenamiento', value: record.storageName || getLookupName(storage, record.storageId) },
+        { label: 'Almacenamiento', value: getLookupName(storage, record.storageId) },
         { label: 'Dato Compartido', value: record.dataShared || '-' },
-        { label: 'Destinatarios', value: record.recipientName || getLookupName(dataFlow, record.recipientsId) },
+        { label: 'Destinatarios', value: getLookupName(dataFlow, record.recipientsId) },
         { label: 'Período de Retención', value: record.retentionPeriod },
-        { label: 'Responsable', value: record.processOwnerName || getLookupName(departments, record.processOwner) },
+        { label: 'Responsable', value: getLookupName(departments, record.processOwner) },
         { label: 'Creado Por', value: record.createdBy || '-' },
         { label: 'Actualizado Por', value: record.updatedBy || '-' },
     ];
@@ -175,7 +172,7 @@ export default function RopaTableList({ records: initialRecords, onEdit }: RopaT
                                     </td>
                                     <td className="py-4 px-4">
                                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {record.systemName || getLookupName(systems, record.systemId)}
+                                            {getLookupName(systems, record.systemId)}
                                         </span>
                                     </td>
                                     <td className="py-4 px-4">
@@ -204,7 +201,7 @@ export default function RopaTableList({ records: initialRecords, onEdit }: RopaT
                                     </td>
                                     <td className="py-4 px-4">
                                         <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {record.processOwnerName || getLookupName(departments, record.processOwner)}
+                                            {getLookupName(departments, record.processOwner)}
                                         </span>
                                     </td>
                                     <td className="py-4 px-4">
