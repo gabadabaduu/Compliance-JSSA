@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Icon } from '@iconify/react';
+import { useNavigate } from 'react-router-dom';
+// ...existing code (imports)...
 import {
     useRopaTableFiltered,
     useDeleteRopaTable,
@@ -24,9 +26,11 @@ interface RopaTableListProps {
 }
 
 export default function RopaTableList({ records: initialRecords, onEdit }: RopaTableListProps) {
+    const navigate = useNavigate();
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [selectedRecord, setSelectedRecord] = useState<RopaTable | null>(null);
 
+    // ...existing code (hooks, getLookupName, filterConfig, handlers)...
     const { data: records } = useRopaTableFiltered(filters);
     const { data: processOwnerOptions } = useProcessOwnerFilter();
     const { data: dataCategoriesOptions } = useDataCategoriesFilter();
@@ -89,6 +93,11 @@ export default function RopaTableList({ records: initialRecords, onEdit }: RopaT
     const handleEditClick = (record: RopaTable, e: React.MouseEvent) => {
         e.stopPropagation();
         onEdit(record);
+    };
+
+    const handleContinue = () => {
+        setSelectedRecord(null);
+        navigate('/app/rat/dataflow');
     };
 
     const getDetailFields = (record: RopaTable) => [
@@ -238,6 +247,15 @@ export default function RopaTableList({ records: initialRecords, onEdit }: RopaT
                     icon="mdi:table-large"
                     iconColor="text-purple-400"
                     fields={getDetailFields(selectedRecord)}
+                    extraFooter={
+                    <button
+                        onClick={() => handleContinue()}
+                        className="flex items-center gap-2 px-5 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors"
+                    >
+                        <Icon icon="mdi:arrow-right" width="20" height="20" />
+                        Continuar
+                    </button>
+                }
                 />
             )}
         </>
