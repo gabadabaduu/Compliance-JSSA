@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Icon } from '@iconify/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     useRopaDataFlows,
     useCreateRopaDataFlow,
@@ -10,12 +10,14 @@ import {
     useRopaContracts,
 } from '../hooks/useRat';
 import COUNTRIES from '../../../../constants/countries';
+import FlowDiagram from './FlowDiagram';
 import type { RopaDataFlowDto, CreateRopaDataFlowDto } from '../services/ratService';
 
 const ROLE_OPTIONS = ['Responsable', 'Área Interna', 'Encargado', 'Subencargado'];
 
 export default function Dataflow() {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const { data: dataflows, isLoading, error } = useRopaDataFlows();
     const createMutation = useCreateRopaDataFlow();
@@ -26,23 +28,28 @@ export default function Dataflow() {
     const { data: contracts } = useRopaContracts();
     const countries = COUNTRIES;
 
+    // safe arrays for TS
+    const safeEntities = (entities ?? []) as any[];
+    const safeContracts = (contracts ?? []) as any[];
+    const safeCountries = (countries ?? []) as any[];
+
     const entityMap = useMemo(() => {
         const m = new Map<number, string>();
-        (entities ?? []).forEach((e) => m.set(e.id, e.name));
+        safeEntities.forEach((e: any) => m.set(Number(e.id), e.name));
         return m;
-    }, [entities]);
+    }, [safeEntities]);
 
     const contractMap = useMemo(() => {
         const m = new Map<number, string>();
-        (contracts ?? []).forEach((c) => m.set(c.id, c.name));
+        safeContracts.forEach((c: any) => m.set(Number(c.id), c.name));
         return m;
-    }, [contracts]);
+    }, [safeContracts]);
 
     const countryMap = useMemo(() => {
         const m = new Map<string, string>();
-        (countries ?? []).forEach((c) => m.set(String(c.id), c.name));
+        safeCountries.forEach((c: any) => m.set(String(c.id), c.name));
         return m;
-    }, [countries]);
+    }, [safeCountries]);
 
     const items: RopaDataFlowDto[] = dataflows ?? [];
     const errorMessage = (error as Error)?.message ?? 'Error desconocido';
@@ -61,6 +68,53 @@ export default function Dataflow() {
     });
     const [formError, setFormError] = useState<string | null>(null);
 
+    // fixed processing activity when navigated from ROPA form
+    const [fixedProcessingActivityId, setFixedProcessingActivityId] = useState<number | null>(null);
+    const [fixedProcessingActivityName, setFixedProcessingActivityName] = useState<string | null>(null);
+
+    // Read incoming state/query param and prefill + open modal if present
+    useEffect(() => {
+        const stateAny = (location.state ?? {}) as any;
+        const fromState = stateAny.processingActivityId ?? stateAny.processing_activity_id;
+        const fromName = stateAny.processingActivityName ?? stateAny.processing_activity_name ?? null;
+
+        if (fromState) {
+            const idNum = Number(fromState);
+            if (!Number.isNaN(idNum)) {
+                setFixedProcessingActivityId(idNum);
+                if (fromName) setFixedProcessingActivityName(String(fromName));
+                setForm((s) => ({ ...s, processingActivityId: idNum }));
+                setEditingItem(null);
+                setShowForm(true);
+                return;
+            }
+        }
+
+        try {
+            const searchParams = new URLSearchParams(location.search);
+            const q = searchParams.get('processingActivityId') ?? searchParams.get('processing_activity_id');
+            if (q) {
+                const idNum = Number(q);
+                if (!Number.isNaN(idNum)) {
+                    setFixedProcessingActivityId(idNum);
+                    setForm((s) => ({ ...s, processingActivityId: idNum }));
+                    setEditingItem(null);
+                    setShowForm(true);
+                }
+            }
+        } catch {
+            // noop
+        }
+    }, [location]);
+
+    // If fixedProcessingActivityId is set, show only flows for that activity
+    const filteredItems = useMemo(() => {
+        if (fixedProcessingActivityId != null) {
+            return items.filter((f) => Number(f.processingActivityId) === Number(fixedProcessingActivityId));
+        }
+        return items;
+    }, [items, fixedProcessingActivityId]);
+
     const openForm = (item?: RopaDataFlowDto) => {
         if (item) {
             setEditingItem(item);
@@ -72,10 +126,11 @@ export default function Dataflow() {
                 parentEntity: item.parentEntity ?? '',
                 dataAgreement: item.dataAgreement ?? '',
             });
+            if (item.processingActivityId) setFixedProcessingActivityId(item.processingActivityId);
         } else {
             setEditingItem(null);
             setForm({
-                processingActivityId: undefined,
+                processingActivityId: fixedProcessingActivityId ?? undefined,
                 entityId: undefined,
                 entityRole: '',
                 country: '',
@@ -87,13 +142,17 @@ export default function Dataflow() {
         setShowForm(true);
     };
 
-    // change handler: convert numbers only when appropriate
+    // change handler: protect fixed processingActivityId
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+
+        if (name === 'processingActivityId' && fixedProcessingActivityId != null) return;
+
         if (name === 'processingActivityId' || name === 'entityId') {
             setForm((s) => ({ ...s, [name]: value === '' ? undefined : Number(value) } as any));
             return;
         }
+        // parentEntity is kept as string ('' or numeric string)
         setForm((s) => ({ ...s, [name]: value } as any));
     };
 
@@ -106,27 +165,26 @@ export default function Dataflow() {
             return;
         }
 
+        const processingId = fixedProcessingActivityId ?? form.processingActivityId;
         const payload: CreateRopaDataFlowDto = {
-            processingActivityId: form.processingActivityId && form.processingActivityId > 0 ? form.processingActivityId : undefined,
+            processingActivityId: processingId && processingId > 0 ? processingId : undefined,
             entityId: form.entityId && form.entityId > 0 ? form.entityId : undefined,
             entityRole: form.entityRole?.trim() ?? '',
             country: form.country?.trim() ?? '',
-            parentEntity: form.parentEntity?.trim() ?? '',
+            parentEntity: form.parentEntity?.trim() ?? '', // server can accept '' or null; adjust if needed
             dataAgreement: form.dataAgreement?.trim() ?? '',
         };
 
         try {
             if (editingItem) {
-                // update
                 await updateMutation.mutateAsync({ ...(payload as any), id: editingItem.id } as RopaDataFlowDto);
             } else {
-                // create
                 await createMutation.mutateAsync(payload);
             }
             setShowForm(false);
             setEditingItem(null);
             setForm({
-                processingActivityId: undefined,
+                processingActivityId: fixedProcessingActivityId ?? undefined,
                 entityId: undefined,
                 entityRole: '',
                 country: '',
@@ -174,12 +232,14 @@ export default function Dataflow() {
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
                     <div>
                         <h2 className="text-sm font-medium text-gray-300 uppercase tracking-wider">Flujo de Datos</h2>
-                        <p className="text-xs text-gray-500 mt-1">Listado de flujos de datos</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            {fixedProcessingActivityId ? `Flujos para actividad ${fixedProcessingActivityName ?? `#${fixedProcessingActivityId}`}` : 'Listado de flujos de datos'}
+                        </p>
                     </div>
 
                     <div className="flex items-center gap-3">
                         <button onClick={() => openForm()} className="inline-flex items-center gap-2 px-3 py-2 bg-[#6b46c1] hover:bg-[#7b57d6] text-white rounded-md text-sm">
-                            <Icon icon="mdi:plus" width="16" height="16" /> Agregar
+                            <Icon icon="mdi:plus" width="16" height="16" /> {fixedProcessingActivityId ? 'Agregar flujo a esta actividad' : 'Agregar'}
                         </button>
 
                         <button onClick={() => navigate('/app/rat')} className="inline-flex items-center gap-2 px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded-md text-sm">
@@ -209,7 +269,7 @@ export default function Dataflow() {
                             </thead>
 
                             <tbody>
-                                {items.map((df) => (
+                                {filteredItems.map((df) => (
                                     <tr key={df.id} className="border-b border-gray-800 last:border-b-0 hover:bg-[#08121a]">
                                         <td className="px-8 py-6 text-left">
                                             <div className="font-semibold text-gray-100">{getProcessingActivityDisplay(df)}</div>
@@ -248,15 +308,29 @@ export default function Dataflow() {
                                     </tr>
                                 ))}
 
-                                {items.length === 0 && (
+                                {filteredItems.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="px-8 py-8 text-center text-gray-500">No se encontraron flujos de datos.</td>
+                                        <td colSpan={7} className="px-8 py-8 text-center text-gray-500">
+                                            {fixedProcessingActivityId ? 'No hay flujos para esta actividad.' : 'No se encontraron flujos de datos.'}
+                                        </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     )}
                 </div>
+
+                {/* Diagram for fixed activity */}
+                {fixedProcessingActivityId && (
+                    <div className="mt-6">
+                        <FlowDiagram
+                            processingActivityId={fixedProcessingActivityId}
+                            processingActivityName={fixedProcessingActivityName}
+                            flows={filteredItems}
+                            entities={safeEntities.map((e: any) => ({ id: Number(e.id), name: e.name }))}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Modal */}
@@ -265,7 +339,7 @@ export default function Dataflow() {
                     <div className="w-full max-w-2xl bg-[#07121a] rounded-md p-6 border border-gray-800">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-100">{editingItem ? 'Editar flujo de datos' : 'Agregar flujo de datos'}</h3>
-                            <button onClick={() => { setShowForm(false); setEditingItem(null); }} className="text-gray-400 hover:text-gray-200">
+                            <button onClick={() => { setShowForm(false); setEditingItem(null); setFixedProcessingActivityId(null); setFixedProcessingActivityName(null); }} className="text-gray-400 hover:text-gray-200">
                                 <Icon icon="mdi:close" width="18" height="18" />
                             </button>
                         </div>
@@ -274,14 +348,21 @@ export default function Dataflow() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs text-gray-400 mb-1">Registro de tratamiento</label>
-                                    <input name="processingActivityId" type="number" min={1} value={form.processingActivityId ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800" />
+
+                                    {fixedProcessingActivityId ? (
+                                        <div className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                            {fixedProcessingActivityName ?? `ID ${fixedProcessingActivityId}`}
+                                        </div>
+                                    ) : (
+                                        <input name="processingActivityId" type="number" min={1} value={form.processingActivityId ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800" />
+                                    )}
                                 </div>
 
                                 <div>
                                     <label className="block text-xs text-gray-400 mb-1">Entidad</label>
                                     <select name="entityId" value={form.entityId ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
                                         <option value="">-- Seleccionar --</option>
-                                        {(entities ?? []).map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+                                        {safeEntities.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -299,15 +380,15 @@ export default function Dataflow() {
                                     <label className="block text-xs text-gray-400 mb-1">País</label>
                                     <select name="country" value={form.country ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
                                         <option value="">-- Seleccionar --</option>
-                                        {(countries ?? []).map((c) => <option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
+                                        {safeCountries.map((c: any) => <option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
                                     </select>
                                 </div>
 
                                 <div>
                                     <label className="block text-xs text-gray-400 mb-1">Entidad Padre</label>
                                     <select name="parentEntity" value={form.parentEntity ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
-                                        <option value="">-- Seleccionar --</option>
-                                        {(entities ?? []).map((e) => <option key={e.id} value={String(e.id)}>{e.name}</option>)}
+                                        <option value="">Ninguno</option>
+                                        {safeEntities.map((e: any) => <option key={e.id} value={String(e.id)}>{e.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -316,14 +397,14 @@ export default function Dataflow() {
                                 <label className="block text-xs text-gray-400 mb-1">Acuerdo de datos</label>
                                 <select name="dataAgreement" value={form.dataAgreement ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
                                     <option value="">-- Seleccionar --</option>
-                                    {(contracts ?? []).map((c) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+                                    {safeContracts.map((c: any) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
                                 </select>
                             </div>
 
                             {formError && <div className="text-sm text-red-500">{formError}</div>}
 
                             <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" onClick={() => { setShowForm(false); setEditingItem(null); }} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">Cancelar</button>
+                                <button type="button" onClick={() => { setShowForm(false); setEditingItem(null); setFixedProcessingActivityId(null); setFixedProcessingActivityName(null); }} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">Cancelar</button>
                                 <button type="submit" disabled={saving} className="px-4 py-2 bg-[#6b46c1] text-white rounded">{saving ? 'Guardando...' : 'Guardar'}</button>
                             </div>
                         </form>

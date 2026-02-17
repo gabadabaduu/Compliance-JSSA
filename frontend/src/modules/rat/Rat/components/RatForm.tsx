@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
+import { useNavigate } from 'react-router-dom';
 import {
     useCreateRopaTable,
     useUpdateRopaTable,
@@ -21,6 +22,7 @@ interface RopaTableFormProps {
 }
 
 export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
+    const navigate = useNavigate();
     const createRecord = useCreateRopaTable();
     const updateRecord = useUpdateRopaTable();
     const isEditing = !!record;
@@ -50,7 +52,7 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
         purposeDescription: '',
         storageId: 0,
         dataShared: '',
-        recipientsId: 0,
+        recipientsId: 0, // kept in state but not shown in the UI anymore
         retentionPeriod: '',
         processOwner: 0,
     });
@@ -118,7 +120,7 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                 purposeDescription: formData.purposeDescription || null,
                 storageId: formData.storageId || null,
                 dataShared: formData.dataShared || null,
-                recipientsId: formData.recipientsId || null,
+                recipientsId: null, // intentionally null: flow selection is handled in Dataflow
                 retentionPeriod: formData.retentionPeriod,
                 processOwner: formData.processOwner || null,
                 tenant: userData?.nombreEmpresa,
@@ -126,16 +128,37 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                 updatedBy: isEditing ? userData?.id : undefined,
             };
 
-            // Debug: ver payload en consola (quitar en producción)
-            console.log('RopaTable payload ->', isEditing ? { id: record?.id, ...payload } : payload);
-
+            // create or update
             if (isEditing && record?.id != null) {
-                // Asegurar que id existe antes de llamar update
-                await updateRecord.mutateAsync({ id: record.id, ...payload });
+                const updated = await updateRecord.mutateAsync({ id: record.id, ...payload } as any);
+                const sharesData = String(payload.dataShared) === 'Sí' || String((updated as any)?.dataShared) === 'Sí';
+                onClose();
+                if (sharesData) {
+                    navigate('/app/rat/dataflow', {
+                        state: {
+                            processingActivityId: record.id,
+                            processingActivityName: payload.processingActivity ?? record.processingActivity,
+                        }
+                    });
+                    return;
+                }
             } else {
-                await createRecord.mutateAsync(payload);
+                const created = await createRecord.mutateAsync(payload as any);
+                const createdId = (created as any)?.id ?? (created as any)?.data?.id ?? undefined;
+                const sharesData = String(payload.dataShared) === 'Sí' || String((created as any)?.dataShared) === 'Sí';
+                onClose();
+                if (sharesData && createdId) {
+                    navigate('/app/rat/dataflow', {
+                        state: {
+                            processingActivityId: createdId,
+                            processingActivityName: payload.processingActivity,
+                        }
+                    });
+                    return;
+                }
             }
-            onClose();
+
+            // default: just close
         } catch (error) {
             console.error('Error al guardar registro:', error);
             alert('Error al guardar el registro');
@@ -151,7 +174,19 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
         transition-colors
     `;
 
-    const isPending = createRecord.isPending || updateRecord.isPending;
+    const isPending = (createRecord as any).isPending || (updateRecord as any).isPending;
+
+    // New helper: navigate to dataflow for this record (used by the new header button)
+    const goToDataflowForRecord = () => {
+        if (!record?.id) return;
+        onClose();
+        navigate('/app/rat/dataflow', {
+            state: {
+                processingActivityId: record.id,
+                processingActivityName: record.processingActivity,
+            }
+        });
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -173,9 +208,25 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                        <Icon icon="mdi:close" width="24" height="24" className="text-gray-500" />
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        {/* New button: only visible when editing and record shares data */}
+                        {isEditing && record?.dataShared === 'Sí' && (
+                            <button
+                                type="button"
+                                onClick={goToDataflowForRecord}
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-[#10b981] hover:bg-[#11c48a] text-white rounded-md text-sm"
+                                title="Ir a los flujos de datos de este registro"
+                            >
+                                <Icon icon="mdi:database-search" width="16" height="16" />
+                                Ir a flujos
+                            </button>
+                        )}
+
+                        <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                            <Icon icon="mdi:close" width="24" height="24" className="text-gray-500" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Body */}
@@ -208,7 +259,7 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                                         <option value="Correo electrónico">Correo electrónico</option>
                                         <option value="Presencial">Presencial</option>
                                         <option value="Web">Web</option>
-                                        <option value="App móvil">App móvil</option>
+                                        <option value="App m��vil">App móvil</option>
                                         <option value="Tercero">Tercero</option>
                                         <option value="Otro">Otro</option>
                                     </select>
@@ -223,14 +274,12 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                                     <select name="systemId" value={formData.systemId} onChange={handleChange} className={inputClass('systemId')}>
                                         <option value={0}>Seleccionar...</option>
 
-                                        {/* Si el registro tiene un systemId que no está en systems, mostrarlo como opción guardada */}
                                         {record?.systemId && systems && !systems.some(s => s.id === record.systemId) && (
                                             <option value={record.systemId}>
                                                 {`(Guardado) ID ${record.systemId}`}
                                             </option>
                                         )}
 
-                                        {/* Rellenar con las opciones del catálogo */}
                                         {systems?.map(s => (
                                             <option key={s.id} value={s.id}>{s.name}</option>
                                         ))}
@@ -320,15 +369,8 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                                 </div>
                             </div>
 
-                            {/* Fila 7: Destinatarios + Período de Retención */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="flex flex-col gap-1">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Destinatarios</label>
-                                    <select name="recipientsId" value={formData.recipientsId} onChange={handleChange} className={inputClass('recipientsId')}>
-                                        <option value={0}>Seleccionar...</option>
-                                        {dataFlow?.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                                    </select>
-                                </div>
+                            {/* Fila 7: Período de Retención (ahora ocupa toda la fila) */}
+                            <div className="grid grid-cols-1 gap-4">
                                 <div className="flex flex-col gap-1">
                                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Período de Retención *</label>
                                     <input
