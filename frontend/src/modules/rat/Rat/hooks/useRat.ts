@@ -13,12 +13,14 @@ import {
     getRopaStorage,
     getRopaDataFlow,
     getAllRopaDataFlows,
+    createRopaDataFlow,
     getRopaDepartments,
     getProcessOwnerFilterOptions,
     getDataCategoriesFilterOptions,
     getDataSharedFilterOptions,
     type RopaTableFilters,
-    type RopaDataFlowDto
+    type RopaDataFlowDto,
+    type CreateRopaDataFlowDto,
 } from '../services/ratService';
 import type { CreateRopaTableDto, UpdateRopaTableDto } from '../types';
 import { useUserStore } from '../../../../stores/userStore';
@@ -90,6 +92,17 @@ export function useRopaDataFlows() {
         queryFn: getAllRopaDataFlows,
         staleTime: 1000 * 60 * 10,
         gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useCreateRopaDataFlow() {
+    const queryClient = useQueryClient();
+    return useMutation<RopaDataFlowDto, Error, CreateRopaDataFlowDto>({
+        mutationFn: (dto: CreateRopaDataFlowDto) => createRopaDataFlow(dto),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-lookups', 'dataflows'] });
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+        },
     });
 }
 

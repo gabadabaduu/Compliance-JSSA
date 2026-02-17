@@ -5,7 +5,7 @@ import type {
     CreateRopaTableDto,
     UpdateRopaTableDto,
     RopaLookup,
-    FilterOption
+    FilterOption,
 } from '../types';
 
 // ============================================
@@ -145,3 +145,15 @@ export async function getAllRopaDataFlows(): Promise<RopaDataFlowDto[]> {
     return apiClient.get<RopaDataFlowDto[]>('/rat/dataflow');
 }
 
+// Para POST: omitimos 'id' y campos de auditoría
+export type CreateRopaDataFlowDto = Omit<RopaDataFlowDto, 'id' | 'createdBy' | 'updatedBy'>;
+
+export async function createRopaDataFlow(dto: CreateRopaDataFlowDto): Promise<RopaDataFlowDto> {
+    const res = await apiClient.post<RopaDataFlowDto>('/rat/dataflow', dto);
+    // apiClient puede devolver directamente el body o un objeto tipo axios.
+    // Manejamos ambos casos:
+    if (res && typeof (res as any).data !== 'undefined') {
+        return (res as any).data as RopaDataFlowDto;
+    }
+    return res as unknown as RopaDataFlowDto;
+}
