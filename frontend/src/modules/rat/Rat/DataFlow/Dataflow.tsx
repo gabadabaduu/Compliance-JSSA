@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Icon } from '@iconify/react';
 import { useNavigate } from 'react-router-dom';
-import { useRopaDataFlows, useCreateRopaDataFlow } from '../hooks/useRat';
+import {
+    useRopaDataFlows,
+    useCreateRopaDataFlow,
+    useRopaEntities,
+    useRopaContracts,
+} from '../hooks/useRat';
+import COUNTRIES from '../../../../constants/countries';
 import type { RopaDataFlowDto, CreateRopaDataFlowDto } from '../services/ratService';
+
+const ROLE_OPTIONS = ['Responsable', 'Área Interna', 'Encargado', 'Subencargado'];
 
 export default function Dataflow() {
     const navigate = useNavigate();
@@ -10,10 +18,32 @@ export default function Dataflow() {
     const { data: dataflows, isLoading, error } = useRopaDataFlows();
     const createMutation = useCreateRopaDataFlow();
 
+    const { data: entities } = useRopaEntities();
+    const { data: contracts } = useRopaContracts();
+    const countries = COUNTRIES;
+
+    const entityMap = useMemo(() => {
+        const m = new Map<number, string>();
+        (entities ?? []).forEach((e) => m.set(e.id, e.name));
+        return m;
+    }, [entities]);
+
+    const contractMap = useMemo(() => {
+        const m = new Map<number, string>();
+        (contracts ?? []).forEach((c) => m.set(c.id, c.name));
+        return m;
+    }, [contracts]);
+
+    const countryMap = useMemo(() => {
+        const m = new Map<string, string>();
+        (countries ?? []).forEach((c) => m.set(String(c.id), c.name));
+        return m;
+    }, [countries]);
+
     const items: RopaDataFlowDto[] = dataflows ?? [];
     const errorMessage = (error as Error)?.message ?? 'Error desconocido';
 
-    // form/modal state (kept minimal)
+    // form/modal state
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState<CreateRopaDataFlowDto>({
         processingActivityId: undefined,
@@ -25,26 +55,39 @@ export default function Dataflow() {
     });
     const [formError, setFormError] = useState<string | null>(null);
 
-    const openForm = () => {
-        setForm({
-            processingActivityId: undefined,
-            entityId: undefined,
-            entityRole: '',
-            country: '',
-            parentEntity: '',
-            dataAgreement: '',
-        });
+    const openForm = (item?: RopaDataFlowDto) => {
+        if (item) {
+            setForm({
+                processingActivityId: item.processingActivityId ?? undefined,
+                entityId: item.entityId ?? undefined,
+                entityRole: item.entityRole ?? '',
+                country: item.country ?? '',
+                parentEntity: item.parentEntity ?? '',
+                dataAgreement: item.dataAgreement ?? '',
+            });
+        } else {
+            setForm({
+                processingActivityId: undefined,
+                entityId: undefined,
+                entityRole: '',
+                country: '',
+                parentEntity: '',
+                dataAgreement: '',
+            });
+        }
         setFormError(null);
         setShowForm(true);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        // numeric ids -> convert for processingActivityId and entityId
         if (name === 'processingActivityId' || name === 'entityId') {
-            setForm((s) => ({ ...s, [name]: value === '' ? undefined : Number(value) }));
-        } else {
-            setForm((s) => ({ ...s, [name]: value }));
+            setForm((s) => ({ ...s, [name]: value === '' ? undefined : Number(value) } as any));
+            return;
         }
+        // others keep as strings
+        setForm((s) => ({ ...s, [name]: value } as any));
     };
 
     const handleSubmit = async (e?: React.FormEvent) => {
@@ -56,8 +99,17 @@ export default function Dataflow() {
             return;
         }
 
+        const payload: CreateRopaDataFlowDto = {
+            processingActivityId: form.processingActivityId && form.processingActivityId > 0 ? form.processingActivityId : undefined,
+            entityId: form.entityId && form.entityId > 0 ? form.entityId : undefined,
+            entityRole: form.entityRole?.trim() ?? '',
+            country: form.country?.trim() ?? '',
+            parentEntity: form.parentEntity?.trim() ?? '',
+            dataAgreement: form.dataAgreement?.trim() ?? '',
+        };
+
         try {
-            await createMutation.mutateAsync(form);
+            await createMutation.mutateAsync(payload);
             setShowForm(false);
             setForm({
                 processingActivityId: undefined,
@@ -72,35 +124,41 @@ export default function Dataflow() {
         }
     };
 
-    // your react-query status literal for "in progress" appears to be 'pending'
     const saving = createMutation.status === 'pending';
+
+    // display helpers
+    const getProcessingActivityDisplay = (df: RopaDataFlowDto) =>
+        (df as any).processingActivityName ?? (df.processingActivityId ? String(df.processingActivityId) : '-');
+
+    const getEntityDisplay = (df: RopaDataFlowDto) =>
+        (df as any).entityName ?? (df.entityId ? entityMap.get(Number(df.entityId)) ?? String(df.entityId) : '-');
+
+    const getCountryDisplay = (df: RopaDataFlowDto) =>
+        (df as any).countryName ?? countryMap.get(String(df.country ?? '')) ?? df.country ?? '-';
+
+    const getParentEntityDisplay = (df: RopaDataFlowDto) =>
+        (df as any).parentEntityName ?? entityMap.get(Number(df.parentEntity ?? '')) ?? df.parentEntity ?? '-';
+
+    const getDataAgreementDisplay = (df: RopaDataFlowDto) =>
+        (df as any).dataAgreementName ?? contractMap.get(Number(df.dataAgreement ?? '')) ?? df.dataAgreement ?? '-';
 
     return (
         <div className="min-h-full p-6">
-            {/* Card wrapper with dark background similar to habeas data */}
             <div className="bg-[#07121a] rounded-md shadow-sm overflow-hidden">
-                {/* Header / toolbar */}
+                {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
                     <div>
-                        <h2 className="text-sm font-medium text-gray-300 uppercase tracking-wider">Nombre</h2>
+                        <h2 className="text-sm font-medium text-gray-300 uppercase tracking-wider">Flujo de Datos</h2>
                         <p className="text-xs text-gray-500 mt-1">Listado de flujos de datos</p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={openForm}
-                            className="inline-flex items-center gap-2 px-3 py-2 bg-[#6b46c1] hover:bg-[#7b57d6] text-white rounded-md text-sm"
-                        >
-                            <Icon icon="mdi:plus" width="16" height="16" />
-                            Agregar
+                        <button onClick={() => openForm()} className="inline-flex items-center gap-2 px-3 py-2 bg-[#6b46c1] hover:bg-[#7b57d6] text-white rounded-md text-sm">
+                            <Icon icon="mdi:plus" width="16" height="16" /> Agregar
                         </button>
 
-                        <button
-                            onClick={() => navigate('/app/rat')}
-                            className="inline-flex items-center gap-2 px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded-md text-sm"
-                        >
-                            <Icon icon="mdi:arrow-left" width="16" height="16" />
-                            Volver
+                        <button onClick={() => navigate('/app/rat')} className="inline-flex items-center gap-2 px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded-md text-sm">
+                            <Icon icon="mdi:arrow-left" width="16" height="16" /> Volver
                         </button>
                     </div>
                 </div>
@@ -115,13 +173,12 @@ export default function Dataflow() {
                         <table className="min-w-full table-auto">
                             <thead>
                                 <tr className="border-b border-gray-800">
-                                    <th className="px-8 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Nombre</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Processing Activity</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Entity ID</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Country</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Parent Entity</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Data Agreement</th>
+                                    <th className="px-8 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Registro de tratamiento</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Entidad</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Rol de entidad</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">País</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Entidad padre</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Acuerdo de datos</th>
                                     <th className="px-8 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
@@ -130,37 +187,25 @@ export default function Dataflow() {
                                 {items.map((df) => (
                                     <tr key={df.id} className="border-b border-gray-800 last:border-b-0 hover:bg-[#08121a]">
                                         <td className="px-8 py-6 text-left">
-                                            <div className="font-semibold text-gray-100">{/* Example: combine fields if you need a "name" */}
-                                                {df.entityRole ? df.entityRole : `ID ${df.id}`}
-                                            </div>
+                                            <div className="font-semibold text-gray-100">{getProcessingActivityDisplay(df)}</div>
                                         </td>
 
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.processingActivityId ?? '-'}</td>
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.entityId ?? '-'}</td>
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{getEntityDisplay(df)}</td>
+
                                         <td className="px-8 py-6 text-center text-sm text-gray-300">{df.entityRole ?? '-'}</td>
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.country ?? '-'}</td>
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.parentEntity ?? '-'}</td>
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300 whitespace-pre-wrap">{df.dataAgreement ?? '-'}</td>
+
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{getCountryDisplay(df)}</td>
+
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{getParentEntityDisplay(df)}</td>
+
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300 whitespace-pre-wrap">{getDataAgreementDisplay(df)}</td>
 
                                         <td className="px-8 py-6 text-right">
                                             <div className="inline-flex items-center gap-3 justify-end">
-                                                <button
-                                                    onClick={() => openForm()}
-                                                    title="Editar"
-                                                    className="p-1 rounded hover:bg-transparent"
-                                                >
+                                                <button onClick={() => openForm(df)} title="Editar" className="p-1 rounded hover:bg-transparent">
                                                     <Icon icon="mdi:pencil" width="18" height="18" className="text-[#9f7aea]" />
                                                 </button>
-
-                                                <button
-                                                    onClick={() => {
-                                                        // implement delete flow or call delete hook
-                                                        // e.g. deleteMutation.mutate(df.id)
-                                                        console.log('Eliminar', df.id);
-                                                    }}
-                                                    title="Eliminar"
-                                                    className="p-1 rounded hover:bg-transparent"
-                                                >
+                                                <button onClick={() => console.log('Eliminar', df.id)} title="Eliminar" className="p-1 rounded hover:bg-transparent">
                                                     <Icon icon="mdi:trash-can-outline" width="18" height="18" className="text-[#ff6b6b]" />
                                                 </button>
                                             </div>
@@ -170,9 +215,7 @@ export default function Dataflow() {
 
                                 {items.length === 0 && (
                                     <tr>
-                                        <td colSpan={8} className="px-8 py-8 text-center text-gray-500">
-                                            No se encontraron flujos de datos.
-                                        </td>
+                                        <td colSpan={7} className="px-8 py-8 text-center text-gray-500">No se encontraron flujos de datos.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -181,7 +224,7 @@ export default function Dataflow() {
                 </div>
             </div>
 
-            {/* Simple modal (keeps same dark style) */}
+            {/* Modal */}
             {showForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="w-full max-w-2xl bg-[#07121a] rounded-md p-6 border border-gray-800">
@@ -195,80 +238,58 @@ export default function Dataflow() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Processing Activity ID</label>
-                                    <input
-                                        name="processingActivityId"
-                                        type="number"
-                                        value={form.processingActivityId ?? ''}
-                                        onChange={handleChange}
-                                        className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
-                                    />
+                                    <label className="block text-xs text-gray-400 mb-1">Registro de tratamiento</label>
+                                    <input name="processingActivityId" type="number" min={1} value={form.processingActivityId ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800" />
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Entity ID</label>
-                                    <input
-                                        name="entityId"
-                                        type="number"
-                                        value={form.entityId ?? ''}
-                                        onChange={handleChange}
-                                        className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
-                                    />
+                                    <label className="block text-xs text-gray-400 mb-1">Entidad</label>
+                                    <select name="entityId" value={form.entityId ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                        <option value="">-- Seleccionar --</option>
+                                        {(entities ?? []).map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+                                    </select>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Role (obligatorio)</label>
-                                <input
-                                    name="entityRole"
-                                    value={form.entityRole}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
-                                />
+                                <label className="block text-xs text-gray-400 mb-1">Rol de entidad</label>
+                                <select name="entityRole" value={form.entityRole} onChange={handleChange} required className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                    <option value="">-- Seleccionar --</option>
+                                    {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                                </select>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Country</label>
-                                    <input
-                                        name="country"
-                                        value={form.country ?? ''}
-                                        onChange={handleChange}
-                                        className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
-                                    />
+                                    <label className="block text-xs text-gray-400 mb-1">País</label>
+                                    <select name="country" value={form.country ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                        <option value="">-- Seleccionar --</option>
+                                        {(countries ?? []).map((c) => <option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
+                                    </select>
                                 </div>
+
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Parent Entity</label>
-                                    <input
-                                        name="parentEntity"
-                                        value={form.parentEntity ?? ''}
-                                        onChange={handleChange}
-                                        className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
-                                    />
+                                    <label className="block text-xs text-gray-400 mb-1">Entidad Padre</label>
+                                    <select name="parentEntity" value={form.parentEntity ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                        <option value="">-- Seleccionar --</option>
+                                        {(entities ?? []).map((e) => <option key={e.id} value={String(e.id)}>{e.name}</option>)}
+                                    </select>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Data Agreement</label>
-                                <textarea
-                                    name="dataAgreement"
-                                    value={form.dataAgreement ?? ''}
-                                    onChange={handleChange}
-                                    rows={3}
-                                    className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
-                                />
+                                <label className="block text-xs text-gray-400 mb-1">Acuerdo de datos</label>
+                                <select name="dataAgreement" value={form.dataAgreement ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                    <option value="">-- Seleccionar --</option>
+                                    {(contracts ?? []).map((c) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+                                </select>
                             </div>
 
                             {formError && <div className="text-sm text-red-500">{formError}</div>}
 
                             <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" onClick={() => setShowForm(false)} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">
-                                    Cancelar
-                                </button>
-                                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#6b46c1] text-white rounded">
-                                    {saving ? 'Guardando...' : 'Guardar'}
-                                </button>
+                                <button type="button" onClick={() => setShowForm(false)} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">Cancelar</button>
+                                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#6b46c1] text-white rounded">{saving ? 'Guardando...' : 'Guardar'}</button>
                             </div>
                         </form>
                     </div>

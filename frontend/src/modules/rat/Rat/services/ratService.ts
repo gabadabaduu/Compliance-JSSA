@@ -123,7 +123,7 @@ export async function getDataSharedFilterOptions(): Promise<FilterOption[]> {
         { value: 'Sí', label: 'Sí' },
         { value: 'No', label: 'No' },
     ];
-}   
+}
 
 // ============================================
 // 🔍 DATAFLOW
@@ -137,8 +137,14 @@ export interface RopaDataFlowDto {
     country?: string | null;
     parentEntity?: string | null;
     dataAgreement?: string | null;
-    createdBy?: string | null;   
-    updatedBy?: string | null;   
+    // optional name fields that backend may return
+    processingActivityName?: string | null;
+    entityName?: string | null;
+    parentEntityName?: string | null;
+    countryName?: string | null;
+    dataAgreementName?: string | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
 }
 
 export async function getAllRopaDataFlows(): Promise<RopaDataFlowDto[]> {
@@ -156,4 +162,31 @@ export async function createRopaDataFlow(dto: CreateRopaDataFlowDto): Promise<Ro
         return (res as any).data as RopaDataFlowDto;
     }
     return res as unknown as RopaDataFlowDto;
+}
+
+// ============================================
+// 🔍 LOOKUPS para Dataflow: entidades y contratos
+// Ajusta rutas si tu API usa paths distintos
+// ============================================
+
+export interface RopaEntityDto {
+    id: number;
+    name: string;
+}
+
+export interface RopaContractDto {
+    id: number;
+    name: string;
+}
+
+export async function getAllRopaEntities(): Promise<RopaEntityDto[]> {
+    const res = await apiClient.get<RopaEntityDto[]>('/rat/entities');
+    if (res && typeof (res as any).data !== 'undefined') return (res as any).data;
+    return res as unknown as RopaEntityDto[];
+}
+
+export async function getAllRopaContracts(): Promise<RopaContractDto[]> {
+    const res = await apiClient.get<RopaContractDto[]>('/rat/contracts');
+    if (res && typeof (res as any).data !== 'undefined') return (res as any).data;
+    return res as unknown as RopaContractDto[];
 }

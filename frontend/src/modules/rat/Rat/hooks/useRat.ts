@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     getAllRopaTable,
@@ -18,9 +19,13 @@ import {
     getProcessOwnerFilterOptions,
     getDataCategoriesFilterOptions,
     getDataSharedFilterOptions,
+    getAllRopaEntities,
+    getAllRopaContracts,
     type RopaTableFilters,
     type RopaDataFlowDto,
     type CreateRopaDataFlowDto,
+    type RopaEntityDto,
+    type RopaContractDto,
 } from '../services/ratService';
 import type { CreateRopaTableDto, UpdateRopaTableDto } from '../types';
 import { useUserStore } from '../../../../stores/userStore';
@@ -71,7 +76,7 @@ export function useUpdateRopaTable() {
         mutationFn: (data: UpdateRopaTableDto) => updateRopaTable(data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
-            queryClient.invalidateQueries({ queryKey: ['ropa-table', variables.id] });
+            queryClient.invalidateQueries({ queryKey: ['ropa-table', (variables as any).id] });
         },
     });
 }
@@ -169,6 +174,25 @@ export function useRopaDepartments() {
         queryKey: ['ropa-lookups', 'departments'],
         queryFn: getRopaDepartments,
         staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+// New: entities & contracts lookups
+export function useRopaEntities() {
+    return useQuery<RopaEntityDto[], Error>({
+        queryKey: ['ropa-lookups', 'entities'],
+        queryFn: getAllRopaEntities,
+        staleTime: 1000 * 60 * 60,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useRopaContracts() {
+    return useQuery<RopaContractDto[], Error>({
+        queryKey: ['ropa-lookups', 'contracts'],
+        queryFn: getAllRopaContracts,
+        staleTime: 1000 * 60 * 60,
         gcTime: 1000 * 60 * 60,
     });
 }

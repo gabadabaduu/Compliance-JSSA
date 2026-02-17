@@ -15,10 +15,10 @@ export default function HabeasDataHeader({ onCreateClick }: HabeasDataHeaderProp
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                            Habeas Data
+                            Entidades
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Gestión de solicitudes de derechos de datos personales (DSR)
+                            Entidades pertenecientes al Resgistro de actividades de tratamiento 
                         </p>
                     </div>
                 </div>
