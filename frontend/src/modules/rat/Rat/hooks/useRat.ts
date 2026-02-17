@@ -15,6 +15,8 @@ import {
     getRopaDataFlow,
     getAllRopaDataFlows,
     createRopaDataFlow,
+    updateRopaDataFlow,
+    deleteRopaDataFlow,
     getRopaDepartments,
     getProcessOwnerFilterOptions,
     getDataCategoriesFilterOptions,
@@ -104,6 +106,30 @@ export function useCreateRopaDataFlow() {
     const queryClient = useQueryClient();
     return useMutation<RopaDataFlowDto, Error, CreateRopaDataFlowDto>({
         mutationFn: (dto: CreateRopaDataFlowDto) => createRopaDataFlow(dto),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-lookups', 'dataflows'] });
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+        },
+    });
+}
+
+// Nuevo: update mutation para dataflow
+export function useUpdateRopaDataFlow() {
+    const queryClient = useQueryClient();
+    return useMutation<RopaDataFlowDto, Error, RopaDataFlowDto>({
+        mutationFn: (dto: RopaDataFlowDto) => updateRopaDataFlow(dto),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-lookups', 'dataflows'] });
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+        },
+    });
+}
+
+// Nuevo: delete mutation para dataflow
+export function useDeleteRopaDataFlow() {
+    const queryClient = useQueryClient();
+    return useMutation<void, Error, number>({
+        mutationFn: (id: number) => deleteRopaDataFlow(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['ropa-lookups', 'dataflows'] });
             queryClient.invalidateQueries({ queryKey: ['ropa-table'] });

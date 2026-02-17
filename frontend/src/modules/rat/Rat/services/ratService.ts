@@ -164,6 +164,20 @@ export async function createRopaDataFlow(dto: CreateRopaDataFlowDto): Promise<Ro
     return res as unknown as RopaDataFlowDto;
 }
 
+// UPDATE (PUT) para Dataflow
+export async function updateRopaDataFlow(dto: RopaDataFlowDto): Promise<RopaDataFlowDto> {
+    const res = await apiClient.put<RopaDataFlowDto>(`/rat/dataflow/${dto.id}`, dto);
+    if (res && typeof (res as any).data !== 'undefined') {
+        return (res as any).data as RopaDataFlowDto;
+    }
+    return res as unknown as RopaDataFlowDto;
+}
+
+// DELETE para Dataflow
+export async function deleteRopaDataFlow(id: number): Promise<void> {
+    await apiClient.delete(`/rat/dataflow/${id}`);
+}
+
 // ============================================
 // 🔍 LOOKUPS para Dataflow: entidades y contratos
 // Ajusta rutas si tu API usa paths distintos

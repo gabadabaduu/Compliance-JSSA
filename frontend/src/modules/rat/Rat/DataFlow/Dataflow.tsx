@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import {
     useRopaDataFlows,
     useCreateRopaDataFlow,
+    useUpdateRopaDataFlow,
+    useDeleteRopaDataFlow,
     useRopaEntities,
     useRopaContracts,
 } from '../hooks/useRat';
@@ -17,6 +19,8 @@ export default function Dataflow() {
 
     const { data: dataflows, isLoading, error } = useRopaDataFlows();
     const createMutation = useCreateRopaDataFlow();
+    const updateMutation = useUpdateRopaDataFlow();
+    const deleteMutation = useDeleteRopaDataFlow();
 
     const { data: entities } = useRopaEntities();
     const { data: contracts } = useRopaContracts();
@@ -45,6 +49,8 @@ export default function Dataflow() {
 
     // form/modal state
     const [showForm, setShowForm] = useState(false);
+    const [editingItem, setEditingItem] = useState<RopaDataFlowDto | null>(null);
+
     const [form, setForm] = useState<CreateRopaDataFlowDto>({
         processingActivityId: undefined,
         entityId: undefined,
@@ -57,6 +63,7 @@ export default function Dataflow() {
 
     const openForm = (item?: RopaDataFlowDto) => {
         if (item) {
+            setEditingItem(item);
             setForm({
                 processingActivityId: item.processingActivityId ?? undefined,
                 entityId: item.entityId ?? undefined,
@@ -66,6 +73,7 @@ export default function Dataflow() {
                 dataAgreement: item.dataAgreement ?? '',
             });
         } else {
+            setEditingItem(null);
             setForm({
                 processingActivityId: undefined,
                 entityId: undefined,
@@ -79,14 +87,13 @@ export default function Dataflow() {
         setShowForm(true);
     };
 
+    // change handler: convert numbers only when appropriate
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        // numeric ids -> convert for processingActivityId and entityId
         if (name === 'processingActivityId' || name === 'entityId') {
             setForm((s) => ({ ...s, [name]: value === '' ? undefined : Number(value) } as any));
             return;
         }
-        // others keep as strings
         setForm((s) => ({ ...s, [name]: value } as any));
     };
 
@@ -109,8 +116,15 @@ export default function Dataflow() {
         };
 
         try {
-            await createMutation.mutateAsync(payload);
+            if (editingItem) {
+                // update
+                await updateMutation.mutateAsync({ ...(payload as any), id: editingItem.id } as RopaDataFlowDto);
+            } else {
+                // create
+                await createMutation.mutateAsync(payload);
+            }
             setShowForm(false);
+            setEditingItem(null);
             setForm({
                 processingActivityId: undefined,
                 entityId: undefined,
@@ -120,11 +134,12 @@ export default function Dataflow() {
                 dataAgreement: '',
             });
         } catch (err) {
-            setFormError((err as Error)?.message ?? 'Error al crear registro');
+            setFormError((err as Error)?.message ?? 'Error al guardar registro');
         }
     };
 
-    const saving = createMutation.status === 'pending';
+    const saving = createMutation.status === 'pending' || updateMutation.status === 'pending';
+    const deleting = deleteMutation.status === 'pending';
 
     // display helpers
     const getProcessingActivityDisplay = (df: RopaDataFlowDto) =>
@@ -141,6 +156,16 @@ export default function Dataflow() {
 
     const getDataAgreementDisplay = (df: RopaDataFlowDto) =>
         (df as any).dataAgreementName ?? contractMap.get(Number(df.dataAgreement ?? '')) ?? df.dataAgreement ?? '-';
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('¿Eliminar este flujo de datos? Esta acción no se puede deshacer.')) return;
+        try {
+            await deleteMutation.mutateAsync(id);
+        } catch (err) {
+            console.error('Error eliminando', err);
+            alert((err as Error)?.message ?? 'Error al eliminar');
+        }
+    };
 
     return (
         <div className="min-h-full p-6">
@@ -202,10 +227,20 @@ export default function Dataflow() {
 
                                         <td className="px-8 py-6 text-right">
                                             <div className="inline-flex items-center gap-3 justify-end">
-                                                <button onClick={() => openForm(df)} title="Editar" className="p-1 rounded hover:bg-transparent">
+                                                <button
+                                                    onClick={() => openForm(df)}
+                                                    title="Editar"
+                                                    className="p-1 rounded hover:bg-transparent"
+                                                    disabled={saving || deleting}
+                                                >
                                                     <Icon icon="mdi:pencil" width="18" height="18" className="text-[#9f7aea]" />
                                                 </button>
-                                                <button onClick={() => console.log('Eliminar', df.id)} title="Eliminar" className="p-1 rounded hover:bg-transparent">
+                                                <button
+                                                    onClick={() => handleDelete(df.id)}
+                                                    title="Eliminar"
+                                                    className="p-1 rounded hover:bg-transparent"
+                                                    disabled={deleting}
+                                                >
                                                     <Icon icon="mdi:trash-can-outline" width="18" height="18" className="text-[#ff6b6b]" />
                                                 </button>
                                             </div>
@@ -229,8 +264,8 @@ export default function Dataflow() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="w-full max-w-2xl bg-[#07121a] rounded-md p-6 border border-gray-800">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-100">Agregar flujo de datos</h3>
-                            <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-100">{editingItem ? 'Editar flujo de datos' : 'Agregar flujo de datos'}</h3>
+                            <button onClick={() => { setShowForm(false); setEditingItem(null); }} className="text-gray-400 hover:text-gray-200">
                                 <Icon icon="mdi:close" width="18" height="18" />
                             </button>
                         </div>
@@ -288,7 +323,7 @@ export default function Dataflow() {
                             {formError && <div className="text-sm text-red-500">{formError}</div>}
 
                             <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" onClick={() => setShowForm(false)} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">Cancelar</button>
+                                <button type="button" onClick={() => { setShowForm(false); setEditingItem(null); }} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">Cancelar</button>
                                 <button type="submit" disabled={saving} className="px-4 py-2 bg-[#6b46c1] text-white rounded">{saving ? 'Guardando...' : 'Guardar'}</button>
                             </div>
                         </form>
