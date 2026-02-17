@@ -28,6 +28,17 @@ export default function Dataflow() {
     const { data: contracts } = useRopaContracts();
     const countries = COUNTRIES;
 
+    // theme detection (light/dark) — reads root .dark class
+    const [isDark, setIsDark] = useState<boolean>(
+        typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true
+    );
+    useEffect(() => {
+        const root = document.documentElement;
+        const mo = new MutationObserver(() => setIsDark(root.classList.contains('dark')));
+        mo.observe(root, { attributes: true, attributeFilter: ['class'] });
+        return () => mo.disconnect();
+    }, []);
+
     // safe arrays for TS
     const safeEntities = (entities ?? []) as any[];
     const safeContracts = (contracts ?? []) as any[];
@@ -107,10 +118,14 @@ export default function Dataflow() {
         }
     }, [location]);
 
-    // If fixedProcessingActivityId is set, show only flows for that activity
+    // Robust filteredItems: compare via String to avoid number/string mismatch
     const filteredItems = useMemo(() => {
         if (fixedProcessingActivityId != null) {
-            return items.filter((f) => Number(f.processingActivityId) === Number(fixedProcessingActivityId));
+            const key = String(fixedProcessingActivityId);
+            return items.filter((f) => {
+                const pid = (f as any).processingActivityId ?? (f as any).processing_activity_id ?? (f as any).processingActivity;
+                return String(pid) === key;
+            });
         }
         return items;
     }, [items, fixedProcessingActivityId]);
@@ -152,7 +167,7 @@ export default function Dataflow() {
             setForm((s) => ({ ...s, [name]: value === '' ? undefined : Number(value) } as any));
             return;
         }
-        // parentEntity is kept as string ('' or numeric string)
+        // parentEntity kept as string ('' or numeric string)
         setForm((s) => ({ ...s, [name]: value } as any));
     };
 
@@ -171,7 +186,7 @@ export default function Dataflow() {
             entityId: form.entityId && form.entityId > 0 ? form.entityId : undefined,
             entityRole: form.entityRole?.trim() ?? '',
             country: form.country?.trim() ?? '',
-            parentEntity: form.parentEntity?.trim() ?? '', // server can accept '' or null; adjust if needed
+            parentEntity: form.parentEntity?.trim() ?? '',
             dataAgreement: form.dataAgreement?.trim() ?? '',
         };
 
@@ -225,24 +240,30 @@ export default function Dataflow() {
         }
     };
 
+    // colors for panel/table adapted to theme
+    const panelBg = isDark ? '#07121a' : '#ffffff';
+    const outerBg = isDark ? '#06121a' : '#f8fafc';
+    const textColor = isDark ? '#e6eef6' : '#0f172a';
+    const subTextColor = isDark ? '#94a3b8' : '#6b7280';
+
     return (
-        <div className="min-h-full p-6">
-            <div className="bg-[#07121a] rounded-md shadow-sm overflow-hidden">
+        <div className="min-h-full p-6" style={{ background: outerBg }}>
+            <div style={{ background: panelBg }} className="rounded-md shadow-sm overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+                <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: isDark ? '#0f1724' : '#e6eef6' }}>
                     <div>
-                        <h2 className="text-sm font-medium text-gray-300 uppercase tracking-wider">Flujo de Datos</h2>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <h2 className="text-sm font-medium uppercase tracking-wider" style={{ color: textColor }}>Flujo de Datos</h2>
+                        <p className="text-xs mt-1" style={{ color: subTextColor }}>
                             {fixedProcessingActivityId ? `Flujos para actividad ${fixedProcessingActivityName ?? `#${fixedProcessingActivityId}`}` : 'Listado de flujos de datos'}
                         </p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button onClick={() => openForm()} className="inline-flex items-center gap-2 px-3 py-2 bg-[#6b46c1] hover:bg-[#7b57d6] text-white rounded-md text-sm">
+                        <button onClick={() => openForm()} className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm" style={{ background: '#6b46c1', color: '#fff' }}>
                             <Icon icon="mdi:plus" width="16" height="16" /> {fixedProcessingActivityId ? 'Agregar flujo a esta actividad' : 'Agregar'}
                         </button>
 
-                        <button onClick={() => navigate('/app/rat')} className="inline-flex items-center gap-2 px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded-md text-sm">
+                        <button onClick={() => navigate('/app/rat')} className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm" style={{ background: isDark ? '#07121a' : 'transparent', color: subTextColor, border: `1px solid ${isDark ? '#0f1724' : '#e6eef6'}` }}>
                             <Icon icon="mdi:arrow-left" width="16" height="16" /> Volver
                         </button>
                     </div>
@@ -251,57 +272,59 @@ export default function Dataflow() {
                 {/* Table */}
                 <div className="overflow-auto">
                     {isLoading ? (
-                        <div className="p-6 text-center text-gray-400">Cargando flujos de datos...</div>
+                        <div className="p-6 text-center" style={{ color: subTextColor }}>Cargando flujos de datos...</div>
                     ) : error ? (
-                        <div className="p-6 text-center text-red-500">Error al cargar flujos: {errorMessage}</div>
+                        <div className="p-6 text-center" style={{ color: '#ff6b6b' }}>Error al cargar flujos: {errorMessage}</div>
                     ) : (
                         <table className="min-w-full table-auto">
                             <thead>
-                                <tr className="border-b border-gray-800">
-                                    <th className="px-8 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Registro de tratamiento</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Entidad</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Rol de entidad</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">País</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Entidad padre</th>
-                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Acuerdo de datos</th>
-                                    <th className="px-8 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
+                                <tr style={{ borderBottom: `1px solid ${isDark ? '#0f1724' : '#e6eef6'}` }}>
+                                    <th className="px-8 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: subTextColor }}>Registro de tratamiento</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold uppercase tracking-wider" style={{ color: subTextColor }}>Entidad</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold uppercase tracking-wider" style={{ color: subTextColor }}>Rol de entidad</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold uppercase tracking-wider" style={{ color: subTextColor }}>País</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold uppercase tracking-wider" style={{ color: subTextColor }}>Entidad padre</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold uppercase tracking-wider" style={{ color: subTextColor }}>Acuerdo de datos</th>
+                                    <th className="px-8 py-4 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: subTextColor }}>Acciones</th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {filteredItems.map((df) => (
-                                    <tr key={df.id} className="border-b border-gray-800 last:border-b-0 hover:bg-[#08121a]">
+                                    <tr key={df.id} style={{ borderBottom: `1px solid ${isDark ? '#0f1724' : '#eef2f6'}` }}>
                                         <td className="px-8 py-6 text-left">
-                                            <div className="font-semibold text-gray-100">{getProcessingActivityDisplay(df)}</div>
+                                            <div className="font-semibold" style={{ color: textColor }}>{getProcessingActivityDisplay(df)}</div>
                                         </td>
 
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{getEntityDisplay(df)}</td>
+                                        <td className="px-8 py-6 text-center text-sm" style={{ color: isDark ? '#cfe7ff' : '#0f172a' }}>{getEntityDisplay(df)}</td>
 
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.entityRole ?? '-'}</td>
+                                        <td className="px-8 py-6 text-center text-sm" style={{ color: isDark ? '#cfe7ff' : '#0f172a' }}>{df.entityRole ?? '-'}</td>
 
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{getCountryDisplay(df)}</td>
+                                        <td className="px-8 py-6 text-center text-sm" style={{ color: isDark ? '#cfe7ff' : '#0f172a' }}>{getCountryDisplay(df)}</td>
 
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{getParentEntityDisplay(df)}</td>
+                                        <td className="px-8 py-6 text-center text-sm" style={{ color: isDark ? '#cfe7ff' : '#0f172a' }}>{getParentEntityDisplay(df)}</td>
 
-                                        <td className="px-8 py-6 text-center text-sm text-gray-300 whitespace-pre-wrap">{getDataAgreementDisplay(df)}</td>
+                                        <td className="px-8 py-6 text-center text-sm whitespace-pre-wrap" style={{ color: isDark ? '#cfe7ff' : '#0f172a' }}>{getDataAgreementDisplay(df)}</td>
 
                                         <td className="px-8 py-6 text-right">
                                             <div className="inline-flex items-center gap-3 justify-end">
                                                 <button
                                                     onClick={() => openForm(df)}
                                                     title="Editar"
-                                                    className="p-1 rounded hover:bg-transparent"
+                                                    className="p-1 rounded"
+                                                    style={{ color: '#9f7aea' }}
                                                     disabled={saving || deleting}
                                                 >
-                                                    <Icon icon="mdi:pencil" width="18" height="18" className="text-[#9f7aea]" />
+                                                    <Icon icon="mdi:pencil" width="18" height="18" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(df.id)}
                                                     title="Eliminar"
-                                                    className="p-1 rounded hover:bg-transparent"
+                                                    className="p-1 rounded"
+                                                    style={{ color: '#ff6b6b' }}
                                                     disabled={deleting}
                                                 >
-                                                    <Icon icon="mdi:trash-can-outline" width="18" height="18" className="text-[#ff6b6b]" />
+                                                    <Icon icon="mdi:trash-can-outline" width="18" height="18" />
                                                 </button>
                                             </div>
                                         </td>
@@ -310,7 +333,7 @@ export default function Dataflow() {
 
                                 {filteredItems.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="px-8 py-8 text-center text-gray-500">
+                                        <td colSpan={7} className="px-8 py-8 text-center" style={{ color: subTextColor }}>
                                             {fixedProcessingActivityId ? 'No hay flujos para esta actividad.' : 'No se encontraron flujos de datos.'}
                                         </td>
                                     </tr>
@@ -320,15 +343,22 @@ export default function Dataflow() {
                     )}
                 </div>
 
-                {/* Diagram for fixed activity */}
-                {fixedProcessingActivityId && (
-                    <div className="mt-6">
-                        <FlowDiagram
-                            processingActivityId={fixedProcessingActivityId}
-                            processingActivityName={fixedProcessingActivityName}
-                            flows={filteredItems}
-                            entities={safeEntities.map((e: any) => ({ id: Number(e.id), name: e.name }))}
-                        />
+                {/* ----- Espacio + panel blanco/oscuro con diagrama ----- */}
+                {fixedProcessingActivityId != null && (
+                    <div className="mt-12 px-4">
+                        <div style={{ background: isDark ? '#07121a' : '#fff' }} className="rounded-lg shadow-lg p-6">
+                            <div className="mb-4">
+                                <h3 style={{ color: isDark ? '#e6eef6' : '#0f172a' }} className="text-sm font-semibold">Mapa de flujo</h3>
+                                <p style={{ color: isDark ? '#94a3b8' : '#6b7280' }} className="text-xs">Vista gráfica de los flujos asociados a la actividad</p>
+                            </div>
+
+                            <FlowDiagram
+                                processingActivityId={fixedProcessingActivityId}
+                                processingActivityName={fixedProcessingActivityName}
+                                flows={filteredItems}
+                                entities={safeEntities.map((e: any) => ({ id: Number(e.id), name: e.name }))}
+                            />
+                        </div>
                     </div>
                 )}
             </div>
@@ -336,9 +366,9 @@ export default function Dataflow() {
             {/* Modal */}
             {showForm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-2xl bg-[#07121a] rounded-md p-6 border border-gray-800">
+                    <div className="w-full max-w-2xl rounded-md p-6 border" style={{ background: isDark ? '#07121a' : '#fff' }}>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-100">{editingItem ? 'Editar flujo de datos' : 'Agregar flujo de datos'}</h3>
+                            <h3 style={{ color: isDark ? '#e6eef6' : '#0f172a' }} className="text-lg font-semibold">{editingItem ? 'Editar flujo de datos' : 'Agregar flujo de datos'}</h3>
                             <button onClick={() => { setShowForm(false); setEditingItem(null); setFixedProcessingActivityId(null); setFixedProcessingActivityName(null); }} className="text-gray-400 hover:text-gray-200">
                                 <Icon icon="mdi:close" width="18" height="18" />
                             </button>
