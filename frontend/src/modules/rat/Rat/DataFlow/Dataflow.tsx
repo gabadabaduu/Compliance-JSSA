@@ -13,7 +13,7 @@ export default function Dataflow() {
     const items: RopaDataFlowDto[] = dataflows ?? [];
     const errorMessage = (error as Error)?.message ?? 'Error desconocido';
 
-    // modal / form state
+    // form/modal state (kept minimal)
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState<CreateRopaDataFlowDto>({
         processingActivityId: undefined,
@@ -43,7 +43,6 @@ export default function Dataflow() {
         if (name === 'processingActivityId' || name === 'entityId') {
             setForm((s) => ({ ...s, [name]: value === '' ? undefined : Number(value) }));
         } else {
-            // keep exact types: empty string -> '' (acceptable for optional string fields)
             setForm((s) => ({ ...s, [name]: value }));
         }
     };
@@ -52,7 +51,6 @@ export default function Dataflow() {
         e?.preventDefault();
         setFormError(null);
 
-        // minimal validation
         if (!form.entityRole || form.entityRole.trim() === '') {
             setFormError('El rol de la entidad es obligatorio.');
             return;
@@ -61,7 +59,6 @@ export default function Dataflow() {
         try {
             await createMutation.mutateAsync(form);
             setShowForm(false);
-            // reset form after success
             setForm({
                 processingActivityId: undefined,
                 entityId: undefined,
@@ -71,165 +68,205 @@ export default function Dataflow() {
                 dataAgreement: '',
             });
         } catch (err) {
-            console.error('Error creando dataflow', err);
             setFormError((err as Error)?.message ?? 'Error al crear registro');
         }
     };
 
-    // react-query mutation status may be 'idle' | 'pending' | 'success' | 'error' in your setup
+    // your react-query status literal for "in progress" appears to be 'pending'
     const saving = createMutation.status === 'pending';
 
     return (
-        <div className="min-h-full p-6 space-y-6">
-            <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                            <Icon icon="mdi:swap-horizontal" width="32" height="32" className="text-purple-500" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Flujo de Datos</h1>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Listado de flujos (ropa_data_flow)</p>
-                        </div>
+        <div className="min-h-full p-6">
+            {/* Card wrapper with dark background similar to habeas data */}
+            <div className="bg-[#07121a] rounded-md shadow-sm overflow-hidden">
+                {/* Header / toolbar */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+                    <div>
+                        <h2 className="text-sm font-medium text-gray-300 uppercase tracking-wider">Nombre</h2>
+                        <p className="text-xs text-gray-500 mt-1">Listado de flujos de datos</p>
                     </div>
 
                     <div className="flex items-center gap-3">
                         <button
                             onClick={openForm}
-                            className="px-3 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition"
+                            className="inline-flex items-center gap-2 px-3 py-2 bg-[#6b46c1] hover:bg-[#7b57d6] text-white rounded-md text-sm"
                         >
-                            + Agregar registro
+                            <Icon icon="mdi:plus" width="16" height="16" />
+                            Agregar
                         </button>
 
                         <button
                             onClick={() => navigate('/app/rat')}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded-lg"
+                            className="inline-flex items-center gap-2 px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded-md text-sm"
                         >
-                            <Icon icon="mdi:arrow-left" width="20" height="20" />
+                            <Icon icon="mdi:arrow-left" width="16" height="16" />
                             Volver
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
-                {isLoading ? (
-                    <div className="min-h-[200px] flex items-center justify-center text-gray-500">Cargando flujos de datos...</div>
-                ) : error ? (
-                    <div className="min-h-[200px] flex items-center justify-center text-red-600">Error al cargar flujos: {errorMessage}</div>
-                ) : (
-                    <div className="overflow-auto">
-                        <table className="w-full table-auto border-collapse">
+                {/* Table */}
+                <div className="overflow-auto">
+                    {isLoading ? (
+                        <div className="p-6 text-center text-gray-400">Cargando flujos de datos...</div>
+                    ) : error ? (
+                        <div className="p-6 text-center text-red-500">Error al cargar flujos: {errorMessage}</div>
+                    ) : (
+                        <table className="min-w-full table-auto">
                             <thead>
-                                <tr className="text-left bg-gray-50">
-                                    <th className="p-2 border-b">ID</th>
-                                    <th className="p-2 border-b">Processing Activity</th>
-                                    <th className="p-2 border-b">Entity ID</th>
-                                    <th className="p-2 border-b">Role</th>
-                                    <th className="p-2 border-b">Country</th>
-                                    <th className="p-2 border-b">Parent Entity</th>
-                                    <th className="p-2 border-b">Data Agreement</th>
+                                <tr className="border-b border-gray-800">
+                                    <th className="px-8 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Nombre</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Processing Activity</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Entity ID</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Country</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Parent Entity</th>
+                                    <th className="px-8 py-4 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Data Agreement</th>
+                                    <th className="px-8 py-4 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 {items.map((df) => (
-                                    <tr key={df.id} className="hover:bg-gray-50">
-                                        <td className="p-2 border-b align-top">{df.id}</td>
-                                        <td className="p-2 border-b align-top">{df.processingActivityId ?? '-'}</td>
-                                        <td className="p-2 border-b align-top">{df.entityId ?? '-'}</td>
-                                        <td className="p-2 border-b align-top">{df.entityRole ?? '-'}</td>
-                                        <td className="p-2 border-b align-top">{df.country ?? '-'}</td>
-                                        <td className="p-2 border-b align-top">{df.parentEntity ?? '-'}</td>
-                                        <td className="p-2 border-b align-top whitespace-pre-wrap">{df.dataAgreement ?? '-'}</td>
+                                    <tr key={df.id} className="border-b border-gray-800 last:border-b-0 hover:bg-[#08121a]">
+                                        <td className="px-8 py-6 text-left">
+                                            <div className="font-semibold text-gray-100">{/* Example: combine fields if you need a "name" */}
+                                                {df.entityRole ? df.entityRole : `ID ${df.id}`}
+                                            </div>
+                                        </td>
+
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.processingActivityId ?? '-'}</td>
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.entityId ?? '-'}</td>
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.entityRole ?? '-'}</td>
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.country ?? '-'}</td>
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300">{df.parentEntity ?? '-'}</td>
+                                        <td className="px-8 py-6 text-center text-sm text-gray-300 whitespace-pre-wrap">{df.dataAgreement ?? '-'}</td>
+
+                                        <td className="px-8 py-6 text-right">
+                                            <div className="inline-flex items-center gap-3 justify-end">
+                                                <button
+                                                    onClick={() => openForm()}
+                                                    title="Editar"
+                                                    className="p-1 rounded hover:bg-transparent"
+                                                >
+                                                    <Icon icon="mdi:pencil" width="18" height="18" className="text-[#9f7aea]" />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => {
+                                                        // implement delete flow or call delete hook
+                                                        // e.g. deleteMutation.mutate(df.id)
+                                                        console.log('Eliminar', df.id);
+                                                    }}
+                                                    title="Eliminar"
+                                                    className="p-1 rounded hover:bg-transparent"
+                                                >
+                                                    <Icon icon="mdi:trash-can-outline" width="18" height="18" className="text-[#ff6b6b]" />
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
 
                                 {items.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="p-4 text-center text-gray-500">
+                                        <td colSpan={8} className="px-8 py-8 text-center text-gray-500">
                                             No se encontraron flujos de datos.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
-            {/* Modal simple */}
+            {/* Simple modal (keeps same dark style) */}
             {showForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="w-full max-w-2xl bg-white dark:bg-[#0b1220] rounded-lg p-6">
-                        <h3 className="text-lg font-semibold mb-4">Agregar nuevo flujo de datos</h3>
-                        <form onSubmit={handleSubmit} className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-2xl bg-[#07121a] rounded-md p-6 border border-gray-800">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-100">Agregar flujo de datos</h3>
+                            <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-200">
+                                <Icon icon="mdi:close" width="18" height="18" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm">Processing Activity ID</label>
+                                    <label className="block text-xs text-gray-400 mb-1">Processing Activity ID</label>
                                     <input
                                         name="processingActivityId"
                                         type="number"
                                         value={form.processingActivityId ?? ''}
                                         onChange={handleChange}
-                                        className="w-full border rounded px-2 py-1"
+                                        className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
                                     />
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm">Entity ID</label>
+                                    <label className="block text-xs text-gray-400 mb-1">Entity ID</label>
                                     <input
                                         name="entityId"
                                         type="number"
                                         value={form.entityId ?? ''}
                                         onChange={handleChange}
-                                        className="w-full border rounded px-2 py-1"
+                                        className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm">Role (obligatorio)</label>
+                                <label className="block text-xs text-gray-400 mb-1">Role (obligatorio)</label>
                                 <input
                                     name="entityRole"
                                     value={form.entityRole}
                                     onChange={handleChange}
-                                    className="w-full border rounded px-2 py-1"
                                     required
+                                    className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm">Country</label>
-                                <input name="country" value={form.country ?? ''} onChange={handleChange} className="w-full border rounded px-2 py-1" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-1">Country</label>
+                                    <input
+                                        name="country"
+                                        value={form.country ?? ''}
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-gray-400 mb-1">Parent Entity</label>
+                                    <input
+                                        name="parentEntity"
+                                        value={form.parentEntity ?? ''}
+                                        onChange={handleChange}
+                                        className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
+                                    />
+                                </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm">Parent Entity</label>
-                                <input name="parentEntity" value={form.parentEntity ?? ''} onChange={handleChange} className="w-full border rounded px-2 py-1" />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm">Data Agreement</label>
+                                <label className="block text-xs text-gray-400 mb-1">Data Agreement</label>
                                 <textarea
                                     name="dataAgreement"
                                     value={form.dataAgreement ?? ''}
                                     onChange={handleChange}
-                                    className="w-full border rounded px-2 py-1"
                                     rows={3}
+                                    className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800"
                                 />
                             </div>
 
-                            {formError && <div className="text-sm text-red-600">{formError}</div>}
+                            {formError && <div className="text-sm text-red-500">{formError}</div>}
 
-                            <div className="flex items-center justify-end gap-3 mt-3">
-                                <button type="button" onClick={() => setShowForm(false)} className="px-3 py-2 bg-gray-200 rounded">
+                            <div className="flex justify-end gap-3 mt-4">
+                                <button type="button" onClick={() => setShowForm(false)} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">
                                     Cancelar
                                 </button>
-                                <button
-                                    type="submit"
-                                    className="px-3 py-2 bg-blue-600 text-white rounded"
-                                    disabled={saving}
-                                >
+                                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#6b46c1] text-white rounded">
                                     {saving ? 'Guardando...' : 'Guardar'}
                                 </button>
                             </div>
