@@ -122,6 +122,26 @@ export async function getDataSharedFilterOptions(): Promise<FilterOption[]> {
     return [
         { value: 'Sí', label: 'Sí' },
         { value: 'No', label: 'No' },
-        { value: 'Parcialmente', label: 'Parcialmente' },
     ];
 }   
+
+// ============================================
+// 🔍 DATAFLOW
+// ============================================
+
+export interface RopaDataFlowDto {
+    id: number;
+    processingActivityId?: number | null;
+    entityId?: number | null;
+    entityRole: string;
+    country?: string | null;
+    parentEntity?: string | null;
+    dataAgreement?: string | null;
+    createdBy?: string | null;   
+    updatedBy?: string | null;   
+}
+
+export async function getAllRopaDataFlows(): Promise<RopaDataFlowDto[]> {
+    return apiClient.get<RopaDataFlowDto[]>('/rat/dataflow');
+}
+

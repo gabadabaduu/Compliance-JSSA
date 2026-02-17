@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Icon } from '@iconify/react';
-import { useCreateSanction, useUpdateSanction, useSanctions } from "../hooks/useSancion";
+import { useCreateSanction, useUpdateSanction } from "../hooks/useSancion";
 import { SANCTION_STAGES, SANCTION_STATUSES } from "../types";
 import type { Sanction, CreateSanctionDto } from "../types";
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
@@ -11,9 +12,9 @@ interface Props {
 }
 
 export default function SancionForm({ sanction, onClose }: Props) {
+    const navigate = useNavigate();
     const createSanction = useCreateSanction();
     const updateSanction = useUpdateSanction();
-    const { data: allSanctions } = useSanctions(); // ✅ NUEVO: Obtener todas las sanciones
     const isEditing = !!sanction;
 
     const [formData, setFormData] = useState<CreateSanctionDto>({
@@ -28,6 +29,7 @@ export default function SancionForm({ sanction, onClose }: Props) {
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [savingThenCreatingResolution, setSavingThenCreatingResolution] = useState(false);
 
     useEffect(() => {
         if (!sanction) return;
@@ -62,44 +64,6 @@ export default function SancionForm({ sanction, onClose }: Props) {
         }
     };
 
-    // ✅ NUEVO: Validar que las resoluciones no estén duplicadas
-    const validateResolutions = (): boolean => {
-        const newErrors: Record<string, string> = {};
-
-        // 1. Validar que no haya duplicados dentro de la misma sanción
-        const resolutions = [formData.initial, formData.reconsideration, formData.appeal].filter(r => r !== null);
-        const uniqueResolutions = new Set(resolutions);
-
-        if (resolutions.length !== uniqueResolutions.size) {
-            newErrors.initial = 'No puedes usar la misma resolución en diferentes campos';
-            newErrors.reconsideration = 'No puedes usar la misma resolución en diferentes campos';
-            newErrors.appeal = 'No puedes usar la misma resolución en diferentes campos';
-        }
-
-        // 2. Validar que las resoluciones no estén siendo usadas en otras sanciones
-        if (allSanctions) {
-            allSanctions.forEach(s => {
-                // Ignorar la sanción actual si estamos editando
-                if (isEditing && s.id === sanction?.id) return;
-
-                const usedResolutions = [s.initial, s.reconsideration, s.appeal].filter(r => r !== null);
-
-                if (formData.initial && usedResolutions.includes(formData.initial)) {
-                    newErrors.initial = `Esta resolución ya está siendo usada en la sanción #${s.number}`;
-                }
-                if (formData.reconsideration && usedResolutions.includes(formData.reconsideration)) {
-                    newErrors.reconsideration = `Esta resolución ya está siendo usada en la sanción #${s.number}`;
-                }
-                if (formData.appeal && usedResolutions.includes(formData.appeal)) {
-                    newErrors.appeal = `Esta resolución ya está siendo usada en la sanción #${s.number}`;
-                }
-            });
-        }
-
-        setErrors(prev => ({ ...prev, ...newErrors }));
-        return Object.keys(newErrors).length === 0;
-    };
-
     const validate = () => {
         const newErrors: Record<string, string> = {};
 
@@ -110,13 +74,7 @@ export default function SancionForm({ sanction, onClose }: Props) {
         if (!formData.status) newErrors.status = 'Requerido';
 
         setErrors(newErrors);
-
-        // ✅ NUEVO: Validar resoluciones después de validaciones básicas
-        if (Object.keys(newErrors).length === 0) {
-            return validateResolutions();
-        }
-
-        return false;
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -140,16 +98,70 @@ export default function SancionForm({ sanction, onClose }: Props) {
         }
     };
 
+    // Navegar a la resolución específica
+    const handleNavigateToResolution = (resolutionId: number) => {
+        navigate(`/cumplimiento/resoluciones?resolutionId=${resolutionId}`);
+        onClose();
+    };
+
+    // Crear nueva resolución desde sanción.
+    // Si la sanción no existe, primero la guarda y usa el id devuelto.
+    const handleCreateResolution = async (resolutionType: 'initial' | 'reconsideration' | 'appeal') => {
+        // Si la sanción ya existe -> navegar directamente a creación de resolución con el ID
+        if (sanction?.id) {
+            const resolutionTypeMap = {
+                'initial': 'Decisión Inicial',
+                'reconsideration': 'Recurso de Reposición',
+                'appeal': 'Recurso de Apelación'
+            };
+
+            navigate(`/cumplimiento/resoluciones?createNew=true&sanctionId=${sanction.id}&resolutionType=${encodeURIComponent(resolutionTypeMap[resolutionType])}`);
+            onClose();
+            return;
+        }
+
+        // Si no existe, validar y guardar primero
+        if (!validate()) {
+            // muestra errores en el formulario
+            return;
+        }
+
+        setSavingThenCreatingResolution(true);
+        try {
+            // createSanction.mutateAsync debe retornar la sanción creada (con id)
+            const created: Sanction = await createSanction.mutateAsync(formData);
+            if (!created?.id) {
+                alert('No se pudo obtener el ID de la sanción creada');
+                setSavingThenCreatingResolution(false);
+                return;
+            }
+
+            const resolutionTypeMap = {
+                'initial': 'Decisión Inicial',
+                'reconsideration': 'Recurso de Reposición',
+                'appeal': 'Recurso de Apelación'
+            };
+
+            navigate(`/cumplimiento/resoluciones?createNew=true&sanctionId=${created.id}&resolutionType=${encodeURIComponent(resolutionTypeMap[resolutionType])}`);
+            onClose();
+        } catch (err) {
+            console.error(err);
+            alert("Error al crear sanción antes de crear la resolución");
+        } finally {
+            setSavingThenCreatingResolution(false);
+        }
+    };
+
     const inputClass = (field: string) => `
         w-full h-[40px] px-4 rounded-lg border 
         ${errors[field] ? 'border-red-500 dark:border-red-500' : 'border-gray-300 dark:border-gray-700'}
         bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
         placeholder-gray-400 dark:placeholder-gray-500 
         focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent 
-        transition-colors
+        transition-colors disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed
     `;
 
-    const isPending = createSanction.isPending || updateSanction.isPending;
+    const isPending = createSanction.isPending || updateSanction.isPending || savingThenCreatingResolution;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -225,43 +237,116 @@ export default function SancionForm({ sanction, onClose }: Props) {
                             {errors.facts && <span className="text-xs text-red-500">{errors.facts}</span>}
                         </div>
 
-                        {/* ✅ MODIFICADO: Resoluciones relacionadas con validación */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Decisión Inicial</label>
-                                <input
-                                    type="number"
-                                    name="initial"
-                                    value={formData.initial ?? ''}
-                                    onChange={handleChange}
-                                    className={inputClass('initial')}
-                                    placeholder="ID resolución"
-                                />
-                                {errors.initial && <span className="text-xs text-red-500">{errors.initial}</span>}
+                        {/* RESOLUCIONES RELACIONADAS */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Resoluciones Relacionadas</label>
+                                {!isEditing && (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 italic">
+                                        (Guarda la sanción o presiona Crear para habilitar los botones +)
+                                    </span>
+                                )}
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Recurso Reposición</label>
-                                <input
-                                    type="number"
-                                    name="reconsideration"
-                                    value={formData.reconsideration ?? ''}
-                                    onChange={handleChange}
-                                    className={inputClass('reconsideration')}
-                                    placeholder="ID resolución"
-                                />
-                                {errors.reconsideration && <span className="text-xs text-red-500">{errors.reconsideration}</span>}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Recurso Apelación</label>
-                                <input
-                                    type="number"
-                                    name="appeal"
-                                    value={formData.appeal ?? ''}
-                                    onChange={handleChange}
-                                    className={inputClass('appeal')}
-                                    placeholder="ID resolución"
-                                />
-                                {errors.appeal && <span className="text-xs text-red-500">{errors.appeal}</span>}
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* Decisión Inicial */}
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Decisión Inicial</label>
+                                    <div className="flex gap-2">
+                                        {formData.initial ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleNavigateToResolution(formData.initial!)}
+                                                className="flex-1 h-[40px] px-4 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors flex items-center justify-center gap-2 font-medium"
+                                            >
+                                                <Icon icon="mdi:file-document" width="18" height="18" />
+                                                Resolución #{formData.initial}
+                                            </button>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value="Sin resolución"
+                                                className={inputClass('initial')}
+                                                disabled
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCreateResolution('initial')}
+                                            disabled={isPending}
+                                            className={`h-[40px] w-[40px] ${isPending ? 'bg-gray-400' : 'bg-amber-500 hover:bg-amber-600'} text-white rounded-lg transition-colors flex items-center justify-center`}
+                                            title={!isEditing ? "Se guardará la sanción y luego se creará la resolución" : "Crear resolución"}
+                                        >
+                                            {savingThenCreatingResolution ? <LoadingSpinner size="small" /> : <Icon icon="mdi:plus" width="20" height="20" />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Recurso Reposición */}
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Recurso Reposición</label>
+                                    <div className="flex gap-2">
+                                        {formData.reconsideration ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleNavigateToResolution(formData.reconsideration!)}
+                                                className="flex-1 h-[40px] px-4 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors flex items-center justify-center gap-2 font-medium"
+                                            >
+                                                <Icon icon="mdi:file-document" width="18" height="18" />
+                                                Resolución #{formData.reconsideration}
+                                            </button>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value="Sin resolución"
+                                                className={inputClass('reconsideration')}
+                                                disabled
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCreateResolution('reconsideration')}
+                                            disabled={isPending}
+                                            className={`h-[40px] w-[40px] ${isPending ? 'bg-gray-400' : 'bg-amber-500 hover:bg-amber-600'} text-white rounded-lg transition-colors flex items-center justify-center`}
+                                            title={!isEditing ? "Se guardará la sanción y luego se creará la resolución" : "Crear resolución"}
+                                        >
+                                            {savingThenCreatingResolution ? <LoadingSpinner size="small" /> : <Icon icon="mdi:plus" width="20" height="20" />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Recurso Apelación */}
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Recurso Apelación</label>
+                                    <div className="flex gap-2">
+                                        {formData.appeal ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleNavigateToResolution(formData.appeal!)}
+                                                className="flex-1 h-[40px] px-4 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors flex items-center justify-center gap-2 font-medium"
+                                            >
+                                                <Icon icon="mdi:file-document" width="18" height="18" />
+                                                Resolución #{formData.appeal}
+                                            </button>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value="Sin resolución"
+                                                className={inputClass('appeal')}
+                                                disabled
+                                            />
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCreateResolution('appeal')}
+                                            disabled={isPending}
+                                            className={`h-[40px] w-[40px] ${isPending ? 'bg-gray-400' : 'bg-amber-500 hover:bg-amber-600'} text-white rounded-lg transition-colors flex items-center justify-center`}
+                                            title={!isEditing ? "Se guardará la sanción y luego se creará la resolución" : "Crear resolución"}
+                                        >
+                                            {savingThenCreatingResolution ? <LoadingSpinner size="small" /> : <Icon icon="mdi:plus" width="20" height="20" />}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>

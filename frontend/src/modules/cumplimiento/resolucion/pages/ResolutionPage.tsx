@@ -1,7 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
-import { usePermissions } from '../../../../hooks/usePermissions'; 
 import ResolutionHeader from '../components/ResolutionHeader';
 import ResolutionList from '../components/ResolutionList';
 import ResolutionForm from '../components/ResolutionForm';
@@ -28,21 +27,42 @@ const CATALOG_CONFIGS: CatalogConfig[] = [
 ];
 
 export default function ResolutionPage() {
-    const { isSuperAdmin } = usePermissions();
     const [searchParams, setSearchParams] = useSearchParams();
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedResolution, setSelectedResolution] = useState<Resolution | null>(null);
     const [shouldOpenModal, setShouldOpenModal] = useState<number | null>(null);
+    const [initialSanctionData, setInitialSanctionData] = useState<{
+        sanctionId: number;
+        resolutionType: string;
+    } | null>(null);
 
     const { data: resolutions, isLoading, error } = useResolutions();
 
-    // ✅ Detectar si viene un resolutionId en la URL
+    // ✅ Detectar si viene desde Sanciones para crear una nueva Resolución
     useEffect(() => {
+        const createNew = searchParams.get('createNew');
+        const sanctionId = searchParams.get('sanctionId');
+        const resolutionType = searchParams.get('resolutionType');
+
+        if (createNew === 'true' && sanctionId && resolutionType) {
+            setInitialSanctionData({
+                sanctionId: parseInt(sanctionId, 10),
+                resolutionType: decodeURIComponent(resolutionType)
+            });
+            setIsFormOpen(true);
+
+            // Limpiar parámetros
+            searchParams.delete('createNew');
+            searchParams.delete('sanctionId');
+            searchParams.delete('resolutionType');
+            setSearchParams(searchParams);
+        }
+
+        // ✅ Detectar si viene un resolutionId en la URL para ver detalles
         const resolutionId = searchParams.get('resolutionId');
         if (resolutionId && resolutions) {
             const id = parseInt(resolutionId, 10);
             setShouldOpenModal(id);
-            // Limpiar el parámetro de la URL
             searchParams.delete('resolutionId');
             setSearchParams(searchParams);
         }
@@ -50,17 +70,20 @@ export default function ResolutionPage() {
 
     const handleCreate = () => {
         setSelectedResolution(null);
+        setInitialSanctionData(null);
         setIsFormOpen(true);
     };
 
     const handleEdit = (resolution: Resolution) => {
         setSelectedResolution(resolution);
+        setInitialSanctionData(null);
         setIsFormOpen(true);
     };
 
     const handleCloseForm = () => {
         setIsFormOpen(false);
         setSelectedResolution(null);
+        setInitialSanctionData(null);
     };
 
     if (isLoading) {
@@ -90,36 +113,39 @@ export default function ResolutionPage() {
                 <ResolutionList
                     resolutions={resolutions || []}
                     onEdit={handleEdit}
-                    autoOpenResolutionId={shouldOpenModal} // ✅ Pasar ID para abrir automáticamente
-                    onModalOpened={() => setShouldOpenModal(null)} // ✅ Resetear después de abrir
+                    autoOpenResolutionId={shouldOpenModal}
+                    onModalOpened={() => setShouldOpenModal(null)}
                 />
             </div>
 
-            {/* ✅ Sección de catálogos - SOLO PARA SUPERADMIN */}
-            {isSuperAdmin && (
-                <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <Icon icon="mdi:folder-cog" width="28" height="28" className="text-amber-400" />
-                        <div>
-                            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                                Catálogos Auxiliares
-                            </h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Administra las categorías de clasificación
-                            </p>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {CATALOG_CONFIGS.map((config) => (
-                            <CatalogManager key={config.endpoint} config={config} />
-                        ))}
+            {/* Sección de catálogos */}
+            <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <Icon icon="mdi:folder-cog" width="28" height="28" className="text-amber-400" />
+                    <div>
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+                            Catálogos Auxiliares
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Administra las categorías de clasificación
+                        </p>
                     </div>
                 </div>
-            )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {CATALOG_CONFIGS.map((config) => (
+                        <CatalogManager key={config.endpoint} config={config} />
+                    ))}
+                </div>
+            </div>
 
             {/* Modal del formulario */}
             {isFormOpen && (
-                <ResolutionForm resolution={selectedResolution} onClose={handleCloseForm} />
+                <ResolutionForm
+                    resolution={selectedResolution}
+                    onClose={handleCloseForm}
+                    initialSanctionId={initialSanctionData?.sanctionId}
+                    initialResolutionType={initialSanctionData?.resolutionType}
+                />
             )}
         </div>
     );

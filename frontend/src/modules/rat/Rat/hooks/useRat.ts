@@ -12,11 +12,13 @@ import {
     getRopaPurposes,
     getRopaStorage,
     getRopaDataFlow,
+    getAllRopaDataFlows,
     getRopaDepartments,
     getProcessOwnerFilterOptions,
     getDataCategoriesFilterOptions,
     getDataSharedFilterOptions,
-    type RopaTableFilters
+    type RopaTableFilters,
+    type RopaDataFlowDto
 } from '../services/ratService';
 import type { CreateRopaTableDto, UpdateRopaTableDto } from '../types';
 import { useUserStore } from '../../../../stores/userStore';
@@ -79,6 +81,15 @@ export function useDeleteRopaTable() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
         },
+    });
+}
+
+export function useRopaDataFlows() {
+    return useQuery<RopaDataFlowDto[], Error>({
+        queryKey: ['ropa-lookups', 'dataflows'],
+        queryFn: getAllRopaDataFlows,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
     });
 }
 

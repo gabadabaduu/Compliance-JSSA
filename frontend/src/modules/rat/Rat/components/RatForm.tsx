@@ -60,20 +60,20 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
     useEffect(() => {
         if (record) {
             setFormData({
-                processingActivity: record.processingActivity,
-                captureMethod: record.captureMethod,
-                systemId: record.systemId || 0,
-                dataSource: record.dataSource || '',
-                dataTypesId: record.dataTypesId || 0,
-                dataCategories: record.dataCategories || '',
-                subjectCategoriesId: record.subjectCategoriesId || 0,
-                purposesId: record.purposesId || 0,
-                purposeDescription: record.purposeDescription || '',
-                storageId: record.storageId || 0,
-                dataShared: record.dataShared || '',
-                recipientsId: record.recipientsId || 0,
-                retentionPeriod: record.retentionPeriod,
-                processOwner: record.processOwner || 0,
+                processingActivity: record.processingActivity ?? '',
+                captureMethod: record.captureMethod ?? '',
+                systemId: record.systemId ?? 0,
+                dataSource: record.dataSource ?? '',
+                dataTypesId: record.dataTypesId ?? 0,
+                dataCategories: record.dataCategories ?? '',
+                subjectCategoriesId: record.subjectCategoriesId ?? 0,
+                purposesId: record.purposesId ?? 0,
+                purposeDescription: record.purposeDescription ?? '',
+                storageId: record.storageId ?? 0,
+                dataShared: record.dataShared ?? '',
+                recipientsId: record.recipientsId ?? 0,
+                retentionPeriod: record.retentionPeriod ?? '',
+                processOwner: record.processOwner ?? 0,
             });
         }
     }, [record]);
@@ -84,7 +84,7 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
 
         setFormData(prev => ({
             ...prev,
-            [name]: numericFields.includes(name) ? parseInt(value) || 0 : value
+            [name]: numericFields.includes(name) ? (value === '' ? 0 : Number(value)) : value
         }));
 
         if (errors[name]) {
@@ -126,7 +126,11 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                 updatedBy: isEditing ? userData?.id : undefined,
             };
 
-            if (isEditing && record) {
+            // Debug: ver payload en consola (quitar en producción)
+            console.log('RopaTable payload ->', isEditing ? { id: record?.id, ...payload } : payload);
+
+            if (isEditing && record?.id != null) {
+                // Asegurar que id existe antes de llamar update
                 await updateRecord.mutateAsync({ id: record.id, ...payload });
             } else {
                 await createRecord.mutateAsync(payload);
@@ -218,7 +222,18 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Sistema</label>
                                     <select name="systemId" value={formData.systemId} onChange={handleChange} className={inputClass('systemId')}>
                                         <option value={0}>Seleccionar...</option>
-                                        {systems?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+
+                                        {/* Si el registro tiene un systemId que no está en systems, mostrarlo como opción guardada */}
+                                        {record?.systemId && systems && !systems.some(s => s.id === record.systemId) && (
+                                            <option value={record.systemId}>
+                                                {`(Guardado) ID ${record.systemId}`}
+                                            </option>
+                                        )}
+
+                                        {/* Rellenar con las opciones del catálogo */}
+                                        {systems?.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="flex flex-col gap-1">
@@ -247,9 +262,9 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Categoría de Dato</label>
                                     <select name="dataCategories" value={formData.dataCategories} onChange={handleChange} className={inputClass('dataCategories')}>
                                         <option value="">Seleccionar...</option>
-                                        <option value="Pública">Pública</option>
-                                        <option value="Privada">Privada</option>
-                                        <option value="Semiprivada">Semiprivada</option>
+                                        <option value="Potenciales Clientes">Potenciales Clientes</option>
+                                        <option value="Clientes">Clientes</option>
+                                        <option value="Proveedores">Proveedores</option>
                                         <option value="Sensible">Sensible</option>
                                     </select>
                                 </div>
@@ -301,7 +316,6 @@ export default function RopaTableForm({ record, onClose }: RopaTableFormProps) {
                                         <option value="">Seleccionar...</option>
                                         <option value="Sí">Sí</option>
                                         <option value="No">No</option>
-                                        <option value="Parcialmente">Parcialmente</option>
                                     </select>
                                 </div>
                             </div>
