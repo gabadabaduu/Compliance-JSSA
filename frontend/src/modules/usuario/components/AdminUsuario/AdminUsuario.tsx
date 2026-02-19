@@ -4,6 +4,7 @@ import { usuarioService } from '../../services/usuarioService'
 import { UserDto } from '../../../../types/user.types'
 import { useAuthStore } from '../../../../stores/authStore'
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner'
+import { usePermissions } from '@/hooks/usePermissions'
 
 export default function AdminUsuario() {
     const [users, setUsers] = useState<UserDto[]>([])
@@ -13,6 +14,7 @@ export default function AdminUsuario() {
     const [editingUser, setEditingUser] = useState<UserDto | null>(null)
     const [savingPermissions, setSavingPermissions] = useState<boolean>(false)
     const { user: currentUser } = useAuthStore()
+    const { isSuperAdmin } = usePermissions()
 
     useEffect(() => {
         fetchUsers()
@@ -104,9 +106,19 @@ export default function AdminUsuario() {
     ]
 
     const hasAnyAccess = (user: UserDto) => {
-        return user.accessDashboard  || user.accessRat ||
-             user.accessHabeasdata || 
+        return user.accessDashboard || user.accessRat ||
+            user.accessHabeasdata ||
             user.accessAjustes || user.accessUsuario
+    }
+
+    // helper to display tenant (try several possible property names)
+    const getTenant = (u: UserDto) => {
+        return (u as any).tenant ?? (u as any).nombreEmpresa ?? (u as any).companyName ?? '-'
+    }
+
+    // helper to display username
+    const getUsername = (u: UserDto) => {
+        return (u as any).username ?? u.email ?? '-'
     }
 
     return (
@@ -154,7 +166,17 @@ export default function AdminUsuario() {
                                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Email</th>
                                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Nombre</th>
                                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Rol</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Módulos</th>
+
+                                {/* If current viewer is superadmin show Tenant + Usuario, otherwise show Módulos */}
+                                {isSuperAdmin ? (
+                                    <>
+                                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Tenant</th>
+                                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Usuario</th>
+                                    </>
+                                ) : (
+                                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Módulos</th>
+                                )}
+
                                 <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Acciones</th>
                             </tr>
                         </thead>
@@ -164,25 +186,34 @@ export default function AdminUsuario() {
                                     <td className="py-3 px-4 text-sm text-gray-800 dark:text-gray-200">{user.email}</td>
                                     <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{user.fullName || '-'}</td>
                                     <td className="py-3 px-4">
-                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                            user.role === 'superadmin' 
+                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${user.role === 'superadmin'
                                                 ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                                                 : user.role === 'admin'
-                                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                        }`}>
+                                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                            }`}>
                                             {user.role}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4">
-                                        <div className="flex flex-wrap gap-1">
-                                            {user.accessDashboard && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Dashboard</span>}
-                                            {user.accessRat && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">RAT</span>}
-                                            {user.accessHabeasdata && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Habeas</span>}
-                                            {user.accessAjustes && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Ajustes</span>}
-                                            {!hasAnyAccess(user) && <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 rounded">Sin acceso</span>}
-                                        </div>
-                                    </td>
+
+                                    {/* Conditional cells */}
+                                    {isSuperAdmin ? (
+                                        <>
+                                            <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{getTenant(user)}</td>
+                                            <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{getUsername(user)}</td>
+                                        </>
+                                    ) : (
+                                        <td className="py-3 px-4">
+                                            <div className="flex flex-wrap gap-1">
+                                                {user.accessDashboard && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Dashboard</span>}
+                                                {user.accessRat && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">RAT</span>}
+                                                {user.accessHabeasdata && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Habeas</span>}
+                                                {user.accessAjustes && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded">Ajustes</span>}
+                                                {!hasAnyAccess(user) && <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 rounded">Sin acceso</span>}
+                                            </div>
+                                        </td>
+                                    )}
+
                                     <td className="py-3 px-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <button

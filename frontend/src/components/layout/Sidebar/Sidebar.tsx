@@ -76,7 +76,7 @@ export default function Sidebar({ onNotificationClick }: SidebarProps) {
     };
 
     const menuItems = [
-        { path: '/app/dashboard', label: 'Dashboard', access: 'accessDashboard', icon: 'mdi:view-dashboard', superadminHidden: true },
+        { path: '/app/dashboard', label: 'Dashboard', access: 'accessDashboard', icon: 'mdi:view-dashboard', superadminHidden: false },
         { path: '/app/habeasdata', label: 'Habeas Data', access: 'accessHabeasdata', icon: 'mdi:file-document', superadminHidden: true },
         { path: '/app/ajustes', label: 'Ajustes', access: 'accessAjustes', icon: 'mdi:cog', superadminHidden: false },
     ];
