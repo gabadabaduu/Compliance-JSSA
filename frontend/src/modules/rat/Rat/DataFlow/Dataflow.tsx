@@ -130,6 +130,55 @@ export default function Dataflow() {
         return items;
     }, [items, fixedProcessingActivityId]);
 
+    // Construir la lista de entidades que participan en los flujos visibles (para el diagrama),
+    // incluyendo nombre, país y rol (si están disponibles en el flujo o en entityMap/countryMap).
+    const entitiesForDiagram = useMemo(() => {
+        const map = new Map<string, { id: number; name: string; country?: string; role?: string }>();
+
+        filteredItems.forEach((f) => {
+            const entityId = (f as any).entityId ?? (f as any).entity_id ?? null;
+            const parentEntity = (f as any).parentEntity ?? (f as any).parent_entity ?? null;
+
+            // prefer entityName in flow, otherwise lookup in entityMap
+            if (entityId != null && String(entityId) !== '') {
+                const idNum = Number(entityId);
+                const name =
+                    (f as any).entityName ??
+                    entityMap.get(idNum) ??
+                    String(entityId);
+
+                // country prefer flow countryName then countryMap
+                const country =
+                    (f as any).countryName ?? countryMap.get(String((f as any).country ?? '')) ?? undefined;
+
+                const role = (f as any).entityRole ?? undefined;
+
+                map.set(String(entityId), { id: idNum, name, country, role });
+            }
+
+            if (parentEntity != null && String(parentEntity) !== '') {
+                const idNum = Number(parentEntity);
+                const name =
+                    (f as any).parentEntityName ??
+                    entityMap.get(idNum) ??
+                    String(parentEntity);
+
+                // For parent entity we try to find a matching flow that contains country/role for that id
+                // fallback: no country/role provided
+                const country = undefined;
+                const role = undefined;
+
+                // if there's already an entry, don't override name unless empty
+                if (!map.has(String(parentEntity))) {
+                    map.set(String(parentEntity), { id: idNum, name, country, role });
+                }
+            }
+        });
+
+        // Preserve insertion order: convert to array
+        return Array.from(map.values());
+    }, [filteredItems, entityMap, countryMap]);
+
     const openForm = (item?: RopaDataFlowDto) => {
         if (item) {
             setEditingItem(item);
@@ -356,7 +405,7 @@ export default function Dataflow() {
                                 processingActivityId={fixedProcessingActivityId}
                                 processingActivityName={fixedProcessingActivityName}
                                 flows={filteredItems}
-                                entities={safeEntities.map((e: any) => ({ id: Number(e.id), name: e.name }))}
+                                entities={entitiesForDiagram}
                             />
                         </div>
                     </div>
