@@ -39,13 +39,7 @@ interface FlowDiagramProps {
     entities: Entity[];
 }
 
-/**
- * Custom node that renders a card similar to the second screenshot:
- * - title (name) bold
- * - subtitle (country)
- * - role badge
- * - handles (dots) on top/bottom/left/right
- */
+
 function CustomNode({ data, selected }: NodeProps<any>): React.ReactElement {
     const cardStyle: React.CSSProperties = {
         background: '#fff',
@@ -100,18 +94,14 @@ function CustomNode({ data, selected }: NodeProps<any>): React.ReactElement {
 
 const nodeTypes: NodeTypes = { custom: CustomNode };
 
-/**
- * FlowDiagram component:
- * - nodes use type 'custom' and data: { name, country, role }
- * - edges are dashed and animated
- */
+
 export default function FlowDiagram({
     processingActivityId,
     processingActivityName,
     flows,
     entities,
 }: FlowDiagramProps): React.ReactElement {
-    // inline edge CSS to animate dash (no external file)
+    
     const edgeCss = `
 .react-flow__edge-path.animated {
   animation: rf-dash 1s linear infinite;
@@ -121,7 +111,7 @@ export default function FlowDiagram({
 .react-flow__edge-path { filter: none; }
 `;
 
-    // nodes built from entities prop (entities already includes country/role where possible)
+    
     const initialNodes = useMemo<Node[]>(() => {
         return entities.map((e, i) => {
             const x = (i % 6) * 260;
@@ -135,10 +125,10 @@ export default function FlowDiagram({
                 selectable: true,
             } as Node;
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // build once on mount so positions persist after drags
+        
+    }, []); 
 
-    // edges from flows (parentEntity -> entityId)
+    
     const initialEdges = useMemo<Edge[]>(() => {
         return flows
             .map((f, idx) => {
@@ -161,13 +151,13 @@ export default function FlowDiagram({
                 return null;
             })
             .filter(Boolean) as Edge[];
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, [flows]);
 
     const [nodes, setNodes, onNodesChangeInternal] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChangeInternal] = useEdgesState(initialEdges);
 
-    // sync selection when nodes change
+    
     const handleNodesChange: OnNodesChange = useCallback(
         (changes: NodeChange[]) => {
             setNodes((nds) => {
@@ -192,7 +182,7 @@ export default function FlowDiagram({
 
     const onConnect: OnConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
-    // onNodeClick: toggle selected state
+   
     const onNodeClick: NodeMouseHandler = useCallback(
         (_evt, node) => {
             setNodes((nds) => nds.map((n) => (n.id === node.id ? { ...n, selected: !(n as any).selected } : n)));
@@ -200,15 +190,13 @@ export default function FlowDiagram({
         []
     );
 
-    // update node position on dragStop (only single node)
     const onNodeDragStop = useCallback((_evt: any, node: Node) => {
         setNodes((nds) => nds.map((n) => (n.id === node.id ? { ...n, position: node.position } : n)));
     }, []);
 
-    // if entities prop changes, sync nodes but preserve positions when possible
     useEffect(() => {
         setNodes((current) => {
-            // Build position map
+            
             const posMap = new Map(current.map((n) => [n.id, n.position]));
             const recreated = entities.map((e, i) => {
                 const id = String(e.id);
@@ -225,7 +213,7 @@ export default function FlowDiagram({
             return recreated;
         });
         setEdges(initialEdges);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, [entities, flows]);
 
     return (
@@ -239,7 +227,7 @@ export default function FlowDiagram({
                 </div>
             </div>
 
-            <div style={{ width: '100%', height: 420, borderRadius: 8, overflow: 'hidden', background: '#f8fafc' }}>
+            <div style={{ width: '100%', height: 480, borderRadius: 8, overflow: 'hidden', background: '#f8fafc' }}>
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}
