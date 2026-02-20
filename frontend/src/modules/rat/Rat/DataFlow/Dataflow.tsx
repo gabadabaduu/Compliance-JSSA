@@ -163,19 +163,15 @@ export default function Dataflow() {
                     entityMap.get(idNum) ??
                     String(parentEntity);
 
-                // For parent entity we try to find a matching flow that contains country/role for that id
-                // fallback: no country/role provided
                 const country = undefined;
                 const role = undefined;
 
-                // if there's already an entry, don't override name unless empty
                 if (!map.has(String(parentEntity))) {
                     map.set(String(parentEntity), { id: idNum, name, country, role });
                 }
             }
         });
 
-        // Preserve insertion order: convert to array
         return Array.from(map.values());
     }, [filteredItems, entityMap, countryMap]);
 
@@ -206,7 +202,6 @@ export default function Dataflow() {
         setShowForm(true);
     };
 
-    // change handler: protect fixed processingActivityId
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
@@ -216,7 +211,7 @@ export default function Dataflow() {
             setForm((s) => ({ ...s, [name]: value === '' ? undefined : Number(value) } as any));
             return;
         }
-        // parentEntity kept as string ('' or numeric string)
+       
         setForm((s) => ({ ...s, [name]: value } as any));
     };
 
@@ -263,7 +258,6 @@ export default function Dataflow() {
     const saving = createMutation.status === 'pending' || updateMutation.status === 'pending';
     const deleting = deleteMutation.status === 'pending';
 
-    // display helpers
     const getProcessingActivityDisplay = (df: RopaDataFlowDto) =>
         (df as any).processingActivityName ?? (df.processingActivityId ? String(df.processingActivityId) : '-');
 
@@ -318,7 +312,7 @@ export default function Dataflow() {
                     </div>
                 </div>
 
-                {/* Table */}
+                {/* Tabla */}
                 <div className="overflow-auto">
                     {isLoading ? (
                         <div className="p-6 text-center" style={{ color: subTextColor }}>Cargando flujos de datos...</div>
@@ -418,7 +412,7 @@ export default function Dataflow() {
                     <div className="w-full max-w-2xl rounded-md p-6 border" style={{ background: isDark ? '#07121a' : '#fff' }}>
                         <div className="flex items-center justify-between mb-4">
                             <h3 style={{ color: isDark ? '#e6eef6' : '#0f172a' }} className="text-lg font-semibold">{editingItem ? 'Editar flujo de datos' : 'Agregar flujo de datos'}</h3>
-                            <button onClick={() => { setShowForm(false); setEditingItem(null); setFixedProcessingActivityId(null); setFixedProcessingActivityName(null); }} className="text-gray-400 hover:text-gray-200">
+                            <button onClick={() => { setShowForm(false); setEditingItem(null); }} className="text-gray-400 hover:text-gray-200">
                                 <Icon icon="mdi:close" width="18" height="18" />
                             </button>
                         </div>
@@ -483,7 +477,7 @@ export default function Dataflow() {
                             {formError && <div className="text-sm text-red-500">{formError}</div>}
 
                             <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" onClick={() => { setShowForm(false); setEditingItem(null); setFixedProcessingActivityId(null); setFixedProcessingActivityName(null); }} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">Cancelar</button>
+                                <button type="button" onClick={() => { setShowForm(false); setEditingItem(null); }} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">Cancelar</button>
                                 <button type="submit" disabled={saving} className="px-4 py-2 bg-[#6b46c1] text-white rounded">{saving ? 'Guardando...' : 'Guardar'}</button>
                             </div>
                         </form>

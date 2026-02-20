@@ -95,9 +95,16 @@ export default function RopaTableList({ records: initialRecords, onEdit }: RopaT
         onEdit(record);
     };
 
-    const handleContinue = () => {
+    const handleContinue = (rec?: RopaTable) => {
+        const r = rec ?? selectedRecord;
+        if (!r) return;
         setSelectedRecord(null);
-        navigate('/app/rat/dataflow');
+        navigate('/app/rat/dataflow', {
+            state: {
+                processingActivityId: r.id,
+                processingActivityName: r.processingActivity,
+            },
+        });
     };
 
     const getDetailFields = (record: RopaTable) => [
