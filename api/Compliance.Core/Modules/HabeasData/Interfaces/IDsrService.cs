@@ -16,5 +16,10 @@ namespace Compliance.Core.Modules.DSR.Interfaces
         Task<bool> DeleteAsync(long id, CancellationToken ct = default);
         Task<IEnumerable<DsrDto>> GetByCaseIdAsync(string caseId, CancellationToken ct = default);
         Task<IEnumerable<DsrDto>> GetByTypeAsync(int typeId, CancellationToken ct = default);
+
+    
+        Task<DsrDto?> GetNextDueSoonAsync(string? tenant = null, CancellationToken ct = default);
+        Task<IEnumerable<DsrDto>> GetPendingAsync(string? tenant = null, CancellationToken ct = default);
+        Task<IEnumerable<DsrDto>> GetCompletedAsync(string? tenant = null, CancellationToken ct = default);
     }
 }

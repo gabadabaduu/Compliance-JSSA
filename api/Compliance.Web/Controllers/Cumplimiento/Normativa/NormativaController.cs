@@ -123,5 +123,20 @@ namespace Compliance.Web.Controllers.Cumplimiento.Normativa
                 type, issueDate, year, regulation, authority, industry, domain, status, companyName, ct);
             return Ok(result);
         }
+
+        /// <summary>
+        /// GET: api/Normativa/latest
+        /// ✅ Obtiene la última normativa creada (global, sin filtros)
+        /// </summary>
+        [HttpGet("latest")]
+        public async Task<ActionResult<NormativaDto>> GetLatest(CancellationToken ct)
+        {
+            var result = await _service.GetLatestAsync(ct);
+
+            if (result == null)
+                return NotFound(new { message = "No hay normativas creadas" });
+
+            return Ok(result);
+        }
     }
 }

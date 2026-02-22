@@ -54,5 +54,8 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Entities
 
         [Column("allowed")]
         public bool Allowed { get; set; } = false;
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
     }
 }

@@ -102,6 +102,26 @@ namespace Compliance.Infrastructure.Modules.ROPA.Repositories
             return true;
         }
 
+        
+        public async Task<IEnumerable<string>> GetCountriesAsync(string? tenant = null, CancellationToken ct = default)
+        {
+            var query = _db.Set<RopaDataStorageEntity>().AsNoTracking();
+
+            // ✅ Filtrar por tenant si aplica
+            if (!string.IsNullOrEmpty(tenant))
+            {
+                query = query.Where(e => e.Tenant == tenant);
+            }
+
+            // ✅ Obtener países únicos, ordenados alfabéticamente, excluyendo vacíos/nulls
+            return await query
+                .Where(e => !string.IsNullOrEmpty(e.Country))
+                .Select(e => e.Country)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync(ct);
+        }
+
         // ✅ ACTUALIZADO: Incluir tenant en el DTO
         private static RopaDataStorageDto MapToDto(RopaDataStorageEntity entity)
         {
