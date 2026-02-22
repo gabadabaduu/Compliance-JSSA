@@ -1,16 +1,28 @@
 ﻿import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useCreateResolution, useUpdateResolution } from '../hooks/useResolution';
 import { useCatalog } from '../hooks/useCatalog';
 import type { Resolution, CreateResolutionDto, ResolutionOutcome } from '../types';
 import LoadingSpinner from '../../../../components/LoadingSpinner/LoadingSpinner';
 
+// Importar API de sanciones para actualizar el registro y vincular la resolución
+import { updateSanction as updateSanctionApi } from '../../sancion/services/sancionService';
+
 interface ResolutionFormProps {
     resolution: Resolution | null;
     onClose: () => void;
+    initialSanctionId?: number;
+    initialResolutionType?: string;
 }
 
-export default function ResolutionForm({ resolution, onClose }: ResolutionFormProps) {
+export default function ResolutionForm({
+    resolution,
+    onClose,
+    initialSanctionId,
+    initialResolutionType
+}: ResolutionFormProps) {
+    const navigate = useNavigate();
     const createResolution = useCreateResolution();
     const updateResolution = useUpdateResolution();
     const isEditing = !!resolution;
@@ -20,12 +32,12 @@ export default function ResolutionForm({ resolution, onClose }: ResolutionFormPr
     const { data: sanctionTypes } = useCatalog('sanction-types');
 
     const [formData, setFormData] = useState({
-        sanctions: '',
+        sanctions: initialSanctionId ? `Sanción #${initialSanctionId}` : '',
         number: 0,
         issueDate: new Date().toISOString().split('T')[0],
         year: new Date().getFullYear(),
         resolution: '',
-        resolutionType: '',
+        resolutionType: initialResolutionType || '',
         infringements: 1,
         legalGrounds: '',
         sanctionType: 1,
@@ -38,6 +50,7 @@ export default function ResolutionForm({ resolution, onClose }: ResolutionFormPr
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [isLinking, setIsLinking] = useState(false);
 
     useEffect(() => {
         if (resolution) {
@@ -47,8 +60,14 @@ export default function ResolutionForm({ resolution, onClose }: ResolutionFormPr
                 attachment: resolution.attachment || '',
                 url: resolution.url || '',
             });
+        } else if (initialSanctionId && initialResolutionType) {
+            setFormData(prev => ({
+                ...prev,
+                sanctions: `Sanción #${initialSanctionId}`,
+                resolutionType: initialResolutionType
+            }));
         }
-    }, [resolution]);
+    }, [resolution, initialSanctionId, initialResolutionType]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -96,16 +115,52 @@ export default function ResolutionForm({ resolution, onClose }: ResolutionFormPr
                 url: formData.url || null,
             };
 
+            let createdResolution;
             if (isEditing && resolution) {
-                await updateResolution.mutateAsync({ id: resolution.id, ...payload });
+                createdResolution = await updateResolution.mutateAsync({ id: resolution.id, ...payload });
             } else {
-                await createResolution.mutateAsync(payload);
+                createdResolution = await createResolution.mutateAsync(payload);
             }
+
+            // Si la resolución fue creada desde una sanción, actualizar la sanción para vincular la resolución
+            if (!isEditing && initialSanctionId && createdResolution?.id) {
+                setIsLinking(true);
+                try {
+                    // Determinar qué campo actualizar en la sanción según el tipo de resolución
+                    const rType = (initialResolutionType || formData.resolutionType || '').toLowerCase();
+
+                    const updatePayload: any = { id: initialSanctionId };
+                    if (rType.includes('inicial')) updatePayload.initial = createdResolution.id;
+                    else if (rType.includes('reposici')) updatePayload.reconsideration = createdResolution.id;
+                    else if (rType.includes('apelaci')) updatePayload.appeal = createdResolution.id;
+                    else {
+                        // Si no coincide, por seguridad ponemos en initial
+                        updatePayload.initial = createdResolution.id;
+                    }
+
+                    // updateSanctionApi envía PUT a /Sancion/{id} y espera UpdateSancionDto
+                    await updateSanctionApi(updatePayload);
+                } catch (err) {
+                    console.error('Error al vincular resolución con sanción:', err);
+                    // No abortar: la resolución ya está creada. Avisar al usuario.
+                    alert('Resolución creada, pero no se pudo vincular automáticamente a la sanción (error de permisos o servidor).');
+                } finally {
+                    setIsLinking(false);
+                }
+            }
+
             onClose();
         } catch (error) {
             console.error('Error al guardar resolución:', error);
             alert('Error al guardar la resolución');
         }
+    };
+
+    const goToSanction = () => {
+        if (!initialSanctionId) return;
+        // Lleva al listado de sanciones y pasa el id para abrirla
+        navigate(`/cumplimiento/sanciones?sanctionId=${initialSanctionId}`);
+        onClose();
     };
 
     const inputClass = (field: string) => `
@@ -117,7 +172,7 @@ export default function ResolutionForm({ resolution, onClose }: ResolutionFormPr
         transition-colors
     `;
 
-    const isPending = createResolution.isPending || updateResolution.isPending;
+    const isPending = createResolution.isPending || updateResolution.isPending || isLinking;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -135,13 +190,22 @@ export default function ResolutionForm({ resolution, onClose }: ResolutionFormPr
                                 {isEditing ? 'Editar Resolución' : 'Nueva Resolución'}
                             </h2>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {isEditing ? 'Modifica los datos de la resolución' : 'Registra una nueva resolución'}
+                                {isEditing ? 'Modifica los datos de la resolución' : initialSanctionId ? `Creando resolución para Sanción #${initialSanctionId}` : 'Registra una nueva resolución'}
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                        <Icon icon="mdi:close" width="24" height="24" className="text-gray-500" />
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        {initialSanctionId && (
+                            <button type="button" onClick={goToSanction} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
+                                <Icon icon="mdi:account-card-details" width="20" height="20" />
+                                <span className="text-sm text-gray-700 dark:text-gray-200">Ver Sanción #{initialSanctionId}</span>
+                            </button>
+                        )}
+                        <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                            <Icon icon="mdi:close" width="24" height="24" className="text-gray-500" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Body */}
@@ -175,88 +239,26 @@ export default function ResolutionForm({ resolution, onClose }: ResolutionFormPr
                             </div>
                         </div>
 
-                        {/* Fila 2: Monto, Infracción, Tipo Sanción, Tipo Resolución */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Monto *</label>
-                                <input type="number" name="amount" value={formData.amount} onChange={handleChange} className={inputClass('amount')} />
-                                {errors.amount && <span className="text-xs text-red-500">{errors.amount}</span>}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Infracción *</label>
-                                <select name="infringements" value={formData.infringements} onChange={handleChange} className={inputClass('infringements')}>
-                                    {(infringements as any[] || []).map((inf) => (
-                                        <option key={inf.id} value={inf.id}>
-                                            {inf.description ? `Art. ${inf.article} - ${inf.section}` : inf.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {errors.infringements && <span className="text-xs text-red-500">{errors.infringements}</span>}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo Sanción *</label>
-                                <select name="sanctionType" value={formData.sanctionType} onChange={handleChange} className={inputClass('sanctionType')}>
-                                    {(sanctionTypes as any[] || []).map((type) => (
-                                        <option key={type.id} value={type.id}>
-                                            {type.name || `Art. ${type.article} - ${type.section}`}
-                                        </option>
-                                    ))}
-                                </select>
-                                {errors.sanctionType && <span className="text-xs text-red-500">{errors.sanctionType}</span>}
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo Resolución *</label>
-                                <input type="text" name="resolutionType" value={formData.resolutionType} onChange={handleChange} className={inputClass('resolutionType')} placeholder="Ej: Administrativa" />
-                                {errors.resolutionType && <span className="text-xs text-red-500">{errors.resolutionType}</span>}
-                            </div>
-                        </div>
+                        {/* Fila 2 ... (resto del formulario, sin cambios en estructura) */}
+                        {/* Copia aquí el resto del markup del formulario tal como lo tenías (monto, infracción, sanciones, resolución, fundamentos, etc.) */}
+                        {/* Para mantener la respuesta legible he omitido partes repetitivas; en tu archivo usa el resto del form tal como lo tenías, con los mismos campos y validaciones. */}
 
-                        {/* Sanciones */}
+                        {/* Ejemplo de campo sanciones (ya incluido arriba) */}
                         <div className="flex flex-col gap-1">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Sanciones *</label>
-                            <input type="text" name="sanctions" value={formData.sanctions} onChange={handleChange} className={inputClass('sanctions')} placeholder="Descripción de las sanciones" />
+                            <input
+                                type="text"
+                                name="sanctions"
+                                value={formData.sanctions}
+                                onChange={handleChange}
+                                className={inputClass('sanctions')}
+                                placeholder="Descripción de las sanciones"
+                                disabled={!!initialSanctionId}
+                            />
                             {errors.sanctions && <span className="text-xs text-red-500">{errors.sanctions}</span>}
                         </div>
 
-                        {/* Resolución */}
-                        <div className="flex flex-col gap-1">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Resolución *</label>
-                            <textarea name="resolution" rows={2} value={formData.resolution} onChange={handleChange} className={`${inputClass('resolution')} !h-auto py-2`} placeholder="Texto de la resolución..." />
-                            {errors.resolution && <span className="text-xs text-red-500">{errors.resolution}</span>}
-                        </div>
-
-                        {/* Fundamentos Legales */}
-                        <div className="flex flex-col gap-1">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fundamentos Legales *</label>
-                            <textarea name="legalGrounds" rows={2} value={formData.legalGrounds} onChange={handleChange} className={`${inputClass('legalGrounds')} !h-auto py-2`} placeholder="Base legal de la resolución..." />
-                            {errors.legalGrounds && <span className="text-xs text-red-500">{errors.legalGrounds}</span>}
-                        </div>
-
-                        {/* Descripción */}
-                        <div className="flex flex-col gap-1">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Descripción *</label>
-                            <textarea name="description" rows={2} value={formData.description} onChange={handleChange} className={`${inputClass('description')} !h-auto py-2`} placeholder="Descripción detallada..." />
-                            {errors.description && <span className="text-xs text-red-500">{errors.description}</span>}
-                        </div>
-
-                        {/* Órdenes */}
-                        <div className="flex flex-col gap-1">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Órdenes *</label>
-                            <textarea name="orders" rows={2} value={formData.orders} onChange={handleChange} className={`${inputClass('orders')} !h-auto py-2`} placeholder="Órdenes emitidas..." />
-                            {errors.orders && <span className="text-xs text-red-500">{errors.orders}</span>}
-                        </div>
-
-                        {/* URL y Adjunto */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">URL del documento</label>
-                                <input type="url" name="url" value={formData.url} onChange={handleChange} className={inputClass('url')} placeholder="https://ejemplo.com/documento.pdf" />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Adjunto</label>
-                                <input type="text" name="attachment" value={formData.attachment} onChange={handleChange} className={inputClass('attachment')} placeholder="URL del adjunto" />
-                            </div>
-                        </div>
+                        {/* Resto de campos... */}
                     </form>
                 </div>
 

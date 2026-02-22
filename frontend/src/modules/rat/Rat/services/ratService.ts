@@ -5,7 +5,7 @@ import type {
     CreateRopaTableDto,
     UpdateRopaTableDto,
     RopaLookup,
-    FilterOption
+    FilterOption,
 } from '../types';
 
 // ============================================
@@ -122,6 +122,85 @@ export async function getDataSharedFilterOptions(): Promise<FilterOption[]> {
     return [
         { value: 'Sí', label: 'Sí' },
         { value: 'No', label: 'No' },
-        { value: 'Parcialmente', label: 'Parcialmente' },
     ];
-}   
+}
+
+// ============================================
+// 🔍 DATAFLOW
+// ============================================
+
+export interface RopaDataFlowDto {
+    id: number;
+    processingActivityId?: number | null;
+    entityId?: number | null;
+    entityRole: string;
+    country?: string | null;
+    parentEntity?: string | null;
+    dataAgreement?: string | null;
+    // optional name fields that backend may return
+    processingActivityName?: string | null;
+    entityName?: string | null;
+    parentEntityName?: string | null;
+    countryName?: string | null;
+    dataAgreementName?: string | null;
+    createdBy?: string | null;
+    updatedBy?: string | null;
+}
+
+export async function getAllRopaDataFlows(): Promise<RopaDataFlowDto[]> {
+    return apiClient.get<RopaDataFlowDto[]>('/rat/dataflow');
+}
+
+// Para POST: omitimos 'id' y campos de auditoría
+export type CreateRopaDataFlowDto = Omit<RopaDataFlowDto, 'id' | 'createdBy' | 'updatedBy'>;
+
+export async function createRopaDataFlow(dto: CreateRopaDataFlowDto): Promise<RopaDataFlowDto> {
+    const res = await apiClient.post<RopaDataFlowDto>('/rat/dataflow', dto);
+    // apiClient puede devolver directamente el body o un objeto tipo axios.
+    // Manejamos ambos casos:
+    if (res && typeof (res as any).data !== 'undefined') {
+        return (res as any).data as RopaDataFlowDto;
+    }
+    return res as unknown as RopaDataFlowDto;
+}
+
+// UPDATE (PUT) para Dataflow
+export async function updateRopaDataFlow(dto: RopaDataFlowDto): Promise<RopaDataFlowDto> {
+    const res = await apiClient.put<RopaDataFlowDto>(`/rat/dataflow/${dto.id}`, dto);
+    if (res && typeof (res as any).data !== 'undefined') {
+        return (res as any).data as RopaDataFlowDto;
+    }
+    return res as unknown as RopaDataFlowDto;
+}
+
+// DELETE para Dataflow
+export async function deleteRopaDataFlow(id: number): Promise<void> {
+    await apiClient.delete(`/rat/dataflow/${id}`);
+}
+
+// ============================================
+// 🔍 LOOKUPS para Dataflow: entidades y contratos
+// Ajusta rutas si tu API usa paths distintos
+// ============================================
+
+export interface RopaEntityDto {
+    id: number;
+    name: string;
+}
+
+export interface RopaContractDto {
+    id: number;
+    name: string;
+}
+
+export async function getAllRopaEntities(): Promise<RopaEntityDto[]> {
+    const res = await apiClient.get<RopaEntityDto[]>('/rat/entities');
+    if (res && typeof (res as any).data !== 'undefined') return (res as any).data;
+    return res as unknown as RopaEntityDto[];
+}
+
+export async function getAllRopaContracts(): Promise<RopaContractDto[]> {
+    const res = await apiClient.get<RopaContractDto[]>('/rat/contracts');
+    if (res && typeof (res as any).data !== 'undefined') return (res as any).data;
+    return res as unknown as RopaContractDto[];
+}
