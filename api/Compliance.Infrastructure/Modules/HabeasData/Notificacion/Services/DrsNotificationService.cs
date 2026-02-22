@@ -37,16 +37,24 @@ public class DsrNotificationService : IDsrNotificationService
     }
 
     // =====================================================
-    // JOB COMPLETO - Revisa TODOS los DSRs (para las 8 AM)
+    // JOB PRINCIPAL - Se ejecuta al iniciar la app y diariamente
+    // Lógica simple:
+    //   1. Limpiar notificaciones de DSRs cerrados
+    //   2. Para cada DSR abierto que vence en <= 3 días:
+    //      - Para cada destinatario:
+    //        - Si YA existe notificación para hoy (mismo DSR + email + fecha) → no hacer nada
+    //        - Si NO existe → crear notificación + enviar correo
     // =====================================================
     public async Task CheckDsrDeadlinesAndNotifyAsync(CancellationToken ct = default)
     {
         _logger.LogInformation("🔔 Iniciando revisión de vencimientos DSR...");
 
-        await CleanAllClosedDsrNotificationsAsync(ct);
+        // 1. Limpiar notificaciones de DSRs cerrados
+        await CleanClosedDsrNotificationsAsync(ct);
 
         var today = DateTime.UtcNow.Date;
 
+        // 2. Obtener DSRs abiertos
         var openDsrs = await _db.Set<DsrEntity>()
             .AsNoTracking()
             .Where(d => d.Status == "Abierto")
@@ -58,25 +66,26 @@ public class DsrNotificationService : IDsrNotificationService
 
         foreach (var dsr in openDsrs)
         {
-            var dueDate = dsr.DueDate.Date;
-            var daysRemaining = (dueDate - today).Days;
+            var daysRemaining = (dsr.DueDate.Date - today).Days;
 
+            // Solo notificar si faltan 3 días o menos
             if (daysRemaining > 3) continue;
-
-            _logger.LogInformation("⚠️ DSR {CaseId} - Días restantes: {Days}", dsr.CaseId, daysRemaining);
 
             var recipients = await GetRecipientsAsync(dsr, ct);
 
             foreach (var recipient in recipients)
             {
-                var alreadyNotified = await _repository.ExistsAsync(
-                    (int)dsr.Id, daysRemaining, recipient.Email, ct);
+                // ¿Ya existe notificación para este DSR + email + hoy?
+                var alreadyNotifiedToday = await ExistsForTodayAsync(
+                    (int)dsr.Id, recipient.Email, today, ct);
 
-                if (alreadyNotified) continue;
+                if (alreadyNotifiedToday)
+                {
+                    _logger.LogDebug("⏭️ Ya notificado hoy: DSR {CaseId} -> {Email}", dsr.CaseId, recipient.Email);
+                    continue;
+                }
 
-                var htmlBody = BuildHtmlEmailBody(dsr, daysRemaining);
-                var subject = $"Radicado No. {dsr.CaseId} - Solicitud Hábeas Data";
-
+                // Crear notificación
                 var notificationDto = new CreateDsrNotificationDto
                 {
                     DsrId = (int)dsr.Id,
@@ -88,6 +97,10 @@ public class DsrNotificationService : IDsrNotificationService
 
                 var notification = await _repository.CreateAsync(notificationDto, ct);
 
+                // Enviar correo
+                var htmlBody = BuildHtmlEmailBody(dsr, daysRemaining);
+                var subject = $"Radicado No. {dsr.CaseId} - Solicitud Hábeas Data";
+
                 var emailSent = await _emailService.SendEmailAsync(
                     recipient.Email, recipient.FullName, subject, htmlBody, ct);
 
@@ -95,12 +108,13 @@ public class DsrNotificationService : IDsrNotificationService
 
                 notifiedEmails.Add(recipient.Email);
 
-                _logger.LogInformation("📧 Notificación {Status}: DSR {CaseId} -> {Email} ({Role}, días: {Days})",
+                _logger.LogInformation("📧 Notificación {Status}: DSR {CaseId} -> {Email} (días: {Days})",
                     emailSent ? "ENVIADA" : "FALLIDA",
-                    dsr.CaseId, recipient.Email, recipient.Role, daysRemaining);
+                    dsr.CaseId, recipient.Email, daysRemaining);
             }
         }
 
+        // Notificar por WebSocket
         if (notifiedEmails.Count > 0)
         {
             await _hubService.NotifyMultipleUsersAsync(notifiedEmails,
@@ -111,9 +125,10 @@ public class DsrNotificationService : IDsrNotificationService
     }
 
     // =====================================================
-    // VERIFICAR UN SOLO DSR (para crear/actualizar)
+    // VERIFICAR UN SOLO DSR (cuando se crea o actualiza un DSR)
+    // No borra nada. Solo agrega si falta.
     // =====================================================
-   public async Task CheckSingleDsrAndNotifyAsync(int dsrId, CancellationToken ct = default)
+    public async Task CheckSingleDsrAndNotifyAsync(int dsrId, CancellationToken ct = default)
     {
         var dsr = await _db.Set<DsrEntity>()
             .AsNoTracking()
@@ -121,52 +136,30 @@ public class DsrNotificationService : IDsrNotificationService
 
         if (dsr == null) return;
 
-        // Si está cerrado, limpiar
+        // Si está cerrado, limpiar sus notificaciones
         if (dsr.Status == "Cerrado")
         {
             await CleanDsrNotificationsAsync(dsrId, ct);
             return;
         }
 
-        // Si no está abierto, no notificar
         if (dsr.Status != "Abierto") return;
 
         var today = DateTime.UtcNow.Date;
-        var dueDate = dsr.DueDate.Date;
-        var daysRemaining = (dueDate - today).Days;
+        var daysRemaining = (dsr.DueDate.Date - today).Days;
 
-        // SIEMPRE limpiar notificaciones anteriores de este DSR antes de re-evaluar
-        var existingNotifications = await _repository.GetByDsrIdAsync(dsrId, ct);
-        var previousEmails = existingNotifications.Select(n => n.RecipientEmail).Distinct().ToList();
-
-        if (existingNotifications.Any())
-        {
-            await _repository.DeleteByDsrIdAsync(dsrId, ct);
-            _logger.LogInformation("🗑️ Notificaciones anteriores eliminadas para DSR {DsrId} (re-evaluando)", dsrId);
-        }
-
-        // Si faltan más de 3 días, avisar que se limpiaron y salir
-        if (daysRemaining > 3)
-        {
-            foreach (var email in previousEmails)
-            {
-                await _hubService.NotifyClearedAsync(email);
-            }
-            if (previousEmails.Any())
-            {
-                _logger.LogInformation("🗑️ DSR {DsrId} ya no está próximo a vencer, notificaciones eliminadas", dsrId);
-            }
-            return;
-        }
-
-        _logger.LogInformation("⚠️ DSR {CaseId} - Días restantes: {Days}", dsr.CaseId, daysRemaining);
+        // Si faltan más de 3 días, no hacer nada
+        if (daysRemaining > 3) return;
 
         var recipients = await GetRecipientsAsync(dsr, ct);
         var notifiedEmails = new HashSet<string>();
 
         foreach (var recipient in recipients)
         {
-            // Crear notificación nueva con los días actualizados
+            var alreadyNotifiedToday = await ExistsForTodayAsync(dsrId, recipient.Email, today, ct);
+
+            if (alreadyNotifiedToday) continue;
+
             var notificationDto = new CreateDsrNotificationDto
             {
                 DsrId = dsrId,
@@ -176,27 +169,32 @@ public class DsrNotificationService : IDsrNotificationService
                 EmailSent = false
             };
 
-            await _repository.CreateAsync(notificationDto, ct);
+            var notification = await _repository.CreateAsync(notificationDto, ct);
+
+            // Enviar correo
+            var htmlBody = BuildHtmlEmailBody(dsr, daysRemaining);
+            var subject = $"Radicado No. {dsr.CaseId} - Solicitud Hábeas Data";
+
+            var emailSent = await _emailService.SendEmailAsync(
+                recipient.Email, recipient.FullName, subject, htmlBody, ct);
+
+            await _repository.UpdateEmailSentAsync(notification.Id, emailSent, ct);
             notifiedEmails.Add(recipient.Email);
 
-            _logger.LogInformation("🔔 Notificación creada: DSR {CaseId} -> {Email} (días: {Days})",
+            _logger.LogInformation("📧 Notificación individual {Status}: DSR {CaseId} -> {Email} (días: {Days})",
+                emailSent ? "ENVIADA" : "FALLIDA",
                 dsr.CaseId, recipient.Email, daysRemaining);
         }
 
-        // Avisar por WebSocket
         if (notifiedEmails.Count > 0)
         {
             await _hubService.NotifyMultipleUsersAsync(notifiedEmails,
                 $"Solicitud {dsr.CaseId} requiere atención ({daysRemaining} días restantes)");
         }
-        // También avisar a los que tenían notificaciones antes pero ya no
-        foreach (var email in previousEmails.Where(e => !notifiedEmails.Contains(e)))
-        {
-            await _hubService.NotifyClearedAsync(email);
-        }
     }
+
     // =====================================================
-    // LIMPIAR NOTIFICACIONES DE UN DSR ESPECÍFICO
+    // LIMPIAR NOTIFICACIONES DE UN DSR ESPECÍFICO (cuando se cierra)
     // =====================================================
     public async Task CleanDsrNotificationsAsync(int dsrId, CancellationToken ct = default)
     {
@@ -215,40 +213,7 @@ public class DsrNotificationService : IDsrNotificationService
     }
 
     // =====================================================
-    // LIMPIAR TODOS LOS DSRs CERRADOS
-    // =====================================================
-    private async Task CleanAllClosedDsrNotificationsAsync(CancellationToken ct)
-    {
-        var affectedData = await (
-            from n in _db.Set<DsrNotificationEntity>()
-            join d in _db.Set<DsrEntity>() on n.DsrId equals (int)d.Id
-            where d.Status == "Cerrado"
-            select new { n.DsrId, n.RecipientEmail }
-        ).ToListAsync(ct);
-
-        var affectedEmails = affectedData.Select(x => x.RecipientEmail).Distinct().ToList();
-        var closedDsrIds = affectedData.Select(x => x.DsrId).Distinct().ToList();
-
-        foreach (var dsrId in closedDsrIds)
-        {
-            await _repository.DeleteByDsrIdAsync(dsrId, ct);
-            _logger.LogInformation("🗑️ Notificaciones eliminadas para DSR cerrado: {DsrId}", dsrId);
-        }
-
-        foreach (var email in affectedEmails)
-        {
-            await _hubService.NotifyClearedAsync(email);
-        }
-
-        if (closedDsrIds.Count > 0)
-        {
-            _logger.LogInformation("🧹 Se limpiaron notificaciones de {Count} DSR(s) cerrado(s)",
-                closedDsrIds.Count);
-        }
-    }
-
-    // =====================================================
-    // REINTENTAR ENVÍOS FALLIDOS
+    // REINTENTAR ENVÍOS FALLIDOS - Solo los que NO se enviaron
     // =====================================================
     public async Task RetryFailedNotificationsAsync(CancellationToken ct = default)
     {
@@ -262,9 +227,20 @@ public class DsrNotificationService : IDsrNotificationService
                 .AsNoTracking()
                 .FirstOrDefaultAsync(d => (int)d.Id == notification.DsrId, ct);
 
-            if (dsr == null) continue;
+            if (dsr == null || dsr.Status != "Abierto")
+            {
+                // DSR ya no existe o está cerrado, eliminar la notificación huérfana
+                if (dsr == null || dsr.Status == "Cerrado")
+                {
+                    await _repository.DeleteByDsrIdAsync(notification.DsrId, ct);
+                }
+                continue;
+            }
 
-            var htmlBody = BuildHtmlEmailBody(dsr, notification.DaysBeforeDue);
+            var today = DateTime.UtcNow.Date;
+            var daysRemaining = (dsr.DueDate.Date - today).Days;
+
+            var htmlBody = BuildHtmlEmailBody(dsr, daysRemaining);
             var subject = $"Radicado No. {dsr.CaseId} - Solicitud Hábeas Data";
 
             var emailSent = await _emailService.SendEmailAsync(
@@ -281,7 +257,97 @@ public class DsrNotificationService : IDsrNotificationService
     }
 
     // =====================================================
-    // CONSULTAS
+    // REFRESH PARA FRONTEND (cuando el usuario presiona la campana)
+    // Solo sincroniza la tabla: limpia cerrados, agrega faltantes para hoy.
+    // NO envía correos (eso lo hace el job).
+    // =====================================================
+    public async Task RefreshNotificationsForUserAsync(string email, CancellationToken ct = default)
+    {
+        _logger.LogInformation("🔄 Refrescando notificaciones para {Email}...", email);
+
+        var today = DateTime.UtcNow.Date;
+
+        // 1. Eliminar notificaciones de DSRs cerrados para este usuario
+        var userNotifications = await _repository.GetByRecipientEmailAsync(email, ct);
+        foreach (var notification in userNotifications)
+        {
+            var dsr = await _db.Set<DsrEntity>()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => (int)d.Id == notification.DsrId, ct);
+
+            if (dsr == null || dsr.Status != "Abierto")
+            {
+                await _repository.DeleteByDsrIdAsync(notification.DsrId, ct);
+                await _hubService.NotifyClearedAsync(email);
+                continue;
+            }
+
+            // Si el DSR ya no está en rango (> 3 días), limpiar
+            var daysRemaining = (dsr.DueDate.Date - today).Days;
+            if (daysRemaining > 3)
+            {
+                await _repository.DeleteByDsrIdAsync(notification.DsrId, ct);
+                await _hubService.NotifyClearedAsync(email);
+            }
+        }
+
+        // 2. Buscar DSRs que deberían tener notificación hoy pero no la tienen
+        var user = await _db.Set<AppUser>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email == email, ct);
+
+        if (user == null) return;
+
+        var relevantDsrs = await _db.Set<DsrEntity>()
+            .AsNoTracking()
+            .Where(d => d.Status == "Abierto" &&
+                (d.CreatedBy == user.Id.ToString() || d.Tenant == user.NombreEmpresa))
+            .ToListAsync(ct);
+
+        var hasNewNotifications = false;
+
+        foreach (var dsr in relevantDsrs)
+        {
+            var daysRemaining = (dsr.DueDate.Date - today).Days;
+            if (daysRemaining > 3) continue;
+
+            var alreadyNotifiedToday = await ExistsForTodayAsync((int)dsr.Id, email, today, ct);
+            if (alreadyNotifiedToday) continue;
+
+            // Solo verificar si es admin o creador
+            var isCreator = dsr.CreatedBy == user.Id.ToString();
+            var isAdmin = user.Role == "admin" && user.NombreEmpresa == dsr.Tenant;
+
+            if (!isCreator && !isAdmin) continue;
+
+            var role = isCreator ? "user" : "admin";
+
+            var dto = new CreateDsrNotificationDto
+            {
+                DsrId = (int)dsr.Id,
+                RecipientEmail = email,
+                RecipientRole = role,
+                DaysBeforeDue = daysRemaining,
+                EmailSent = true // No enviar correo desde refresh, marcar como enviado
+            };
+
+            await _repository.CreateAsync(dto, ct);
+            hasNewNotifications = true;
+
+            _logger.LogInformation("🔔 Notificación sincronizada (refresh): DSR {CaseId} -> {Email} (días: {Days})",
+                dsr.CaseId, email, daysRemaining);
+        }
+
+        if (hasNewNotifications)
+        {
+            await _hubService.NotifyUserAsync(email, "Notificaciones actualizadas");
+        }
+
+        _logger.LogInformation("✅ Refresh completado para {Email}", email);
+    }
+
+    // =====================================================
+    // CONSULTAS SIMPLES
     // =====================================================
     public async Task<List<DsrNotificationDto>> GetNotificationsByDsrIdAsync(int dsrId, CancellationToken ct = default)
     {
@@ -304,139 +370,59 @@ public class DsrNotificationService : IDsrNotificationService
     {
         return await _repository.GetUnreadCountByEmailAsync(email, ct);
     }
-     public async Task RefreshNotificationsForUserAsync(string email, CancellationToken ct = default)
-    {
-        _logger.LogInformation("🔄 Refrescando notificaciones para {Email}...", email);
-
-        var today = DateTime.UtcNow.Date;
-
-        // 1. Obtener las notificaciones actuales de este usuario
-        var currentNotifications = await _repository.GetByRecipientEmailAsync(email, ct);
-
-        // 2. Eliminar notificaciones de días anteriores (daysBeforeDue ya no coincide con hoy)
-        var outdatedNotifications = new List<DsrNotificationDto>();
-        foreach (var notification in currentNotifications)
-        {
-            var dsr = await _db.Set<DsrEntity>()
-                .AsNoTracking()
-                .FirstOrDefaultAsync(d => (int)d.Id == notification.DsrId, ct);
-
-            if (dsr == null)
-            {
-                // DSR eliminado, marcar como obsoleta
-                outdatedNotifications.Add(notification);
-                continue;
-            }
-
-            // Si el DSR ya no está abierto, eliminar
-            if (dsr.Status != "Abierto")
-            {
-                outdatedNotifications.Add(notification);
-                continue;
-            }
-
-            // Recalcular días restantes
-            var actualDaysRemaining = (dsr.DueDate.Date - today).Days;
-
-            // Si los días cambiaron respecto a lo guardado, está obsoleta
-            if (notification.DaysBeforeDue != actualDaysRemaining)
-            {
-                outdatedNotifications.Add(notification);
-            }
-
-            // Si ya no está en rango (> 3 días), eliminar
-            if (actualDaysRemaining > 3)
-            {
-                outdatedNotifications.Add(notification);
-            }
-        }
-
-        // 3. Eliminar las obsoletas por DSR (para no dejar huérfanas)
-        var dsrIdsToRefresh = outdatedNotifications.Select(n => n.DsrId).Distinct().ToList();
-        foreach (var dsrId in dsrIdsToRefresh)
-        {
-            await _repository.DeleteByDsrIdAsync(dsrId, ct);
-            _logger.LogInformation("🗑️ Notificaciones obsoletas eliminadas para DSR {DsrId}", dsrId);
-        }
-
-        // 4. Re-evaluar los DSRs que tenían notificaciones obsoletas
-        foreach (var dsrId in dsrIdsToRefresh)
-        {
-            var dsr = await _db.Set<DsrEntity>()
-                .AsNoTracking()
-                .FirstOrDefaultAsync(d => (int)d.Id == dsrId, ct);
-
-            if (dsr == null || dsr.Status != "Abierto") continue;
-
-            var daysRemaining = (dsr.DueDate.Date - today).Days;
-            if (daysRemaining > 3) continue;
-
-            // Recrear notificaciones para TODOS los recipients de este DSR
-            var recipients = await GetRecipientsAsync(dsr, ct);
-            foreach (var recipient in recipients)
-            {
-                var exists = await _repository.ExistsAsync(dsrId, daysRemaining, recipient.Email, ct);
-                if (exists) continue;
-
-                var dto = new CreateDsrNotificationDto
-                {
-                    DsrId = dsrId,
-                    RecipientEmail = recipient.Email,
-                    RecipientRole = recipient.Role,
-                    DaysBeforeDue = daysRemaining,
-                    EmailSent = false
-                };
-
-                await _repository.CreateAsync(dto, ct);
-                _logger.LogInformation("🔔 Notificación actualizada: DSR {CaseId} -> {Email} (días: {Days})",
-                    dsr.CaseId, recipient.Email, daysRemaining);
-            }
-        }
-
-        // 5. Buscar DSRs abiertos del usuario que NO tienen notificación aún
-        var user = await _db.Set<AppUser>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Email == email, ct);
-
-        if (user != null)
-        {
-            var userDsrs = await _db.Set<DsrEntity>()
-                .AsNoTracking()
-                .Where(d => d.Status == "Abierto" &&
-                    (d.CreatedBy == user.Id.ToString() || d.Tenant == user.NombreEmpresa))
-                .ToListAsync(ct);
-
-            foreach (var dsr in userDsrs)
-            {
-                var daysRemaining = (dsr.DueDate.Date - today).Days;
-                if (daysRemaining > 3) continue;
-
-                var exists = await _repository.ExistsAsync((int)dsr.Id, daysRemaining, email, ct);
-                if (exists) continue;
-
-                var role = dsr.CreatedBy == user.Id.ToString() ? "user" : "admin";
-
-                var dto = new CreateDsrNotificationDto
-                {
-                    DsrId = (int)dsr.Id,
-                    RecipientEmail = email,
-                    RecipientRole = role,
-                    DaysBeforeDue = daysRemaining,
-                    EmailSent = false
-                };
-
-                await _repository.CreateAsync(dto, ct);
-                _logger.LogInformation("🔔 Nueva notificación detectada: DSR {CaseId} -> {Email} (días: {Days})",
-                    dsr.CaseId, email, daysRemaining);
-            }
-        }
-
-        _logger.LogInformation("✅ Refresh de notificaciones completado para {Email}", email);
-    }
 
     // =====================================================
     // MÉTODOS PRIVADOS
     // =====================================================
+
+    /// <summary>
+    /// Verifica si ya existe una notificación para este DSR + email + fecha de hoy.
+    /// Esta es la clave para evitar duplicados.
+    /// </summary>
+    private async Task<bool> ExistsForTodayAsync(int dsrId, string email, DateTime today, CancellationToken ct)
+    {
+        return await _db.Set<DsrNotificationEntity>()
+            .AsNoTracking()
+            .AnyAsync(n => n.DsrId == dsrId
+                && n.RecipientEmail == email
+                && n.CreatedAt.Date == today, ct);
+    }
+
+    /// <summary>
+    /// Limpia todas las notificaciones de DSRs que ya están cerrados.
+    /// </summary>
+    private async Task CleanClosedDsrNotificationsAsync(CancellationToken ct)
+    {
+        var closedDsrNotifications = await (
+            from n in _db.Set<DsrNotificationEntity>()
+            join d in _db.Set<DsrEntity>() on n.DsrId equals (int)d.Id
+            where d.Status == "Cerrado"
+            select new { n.DsrId, n.RecipientEmail }
+        ).ToListAsync(ct);
+
+        var affectedEmails = closedDsrNotifications.Select(x => x.RecipientEmail).Distinct().ToList();
+        var closedDsrIds = closedDsrNotifications.Select(x => x.DsrId).Distinct().ToList();
+
+        foreach (var dsrId in closedDsrIds)
+        {
+            await _repository.DeleteByDsrIdAsync(dsrId, ct);
+            _logger.LogInformation("🗑️ Notificaciones eliminadas para DSR cerrado: {DsrId}", dsrId);
+        }
+
+        foreach (var email in affectedEmails)
+        {
+            await _hubService.NotifyClearedAsync(email);
+        }
+
+        if (closedDsrIds.Count > 0)
+        {
+            _logger.LogInformation("🧹 Limpiaron notificaciones de {Count} DSR(s) cerrado(s)", closedDsrIds.Count);
+        }
+    }
+
+    /// <summary>
+    /// Obtiene los destinatarios de un DSR: el creador + el admin de la empresa.
+    /// </summary>
     private async Task<List<RecipientInfo>> GetRecipientsAsync(DsrEntity dsr, CancellationToken ct)
     {
         var recipients = new List<RecipientInfo>();
@@ -466,17 +452,15 @@ public class DsrNotificationService : IDsrNotificationService
                 .FirstOrDefaultAsync(u => u.NombreEmpresa == dsr.Tenant
                     && u.Role == "admin", ct);
 
-            if (admin != null && !string.IsNullOrEmpty(admin.Email))
+            if (admin != null && !string.IsNullOrEmpty(admin.Email)
+                && !recipients.Any(r => r.Email == admin.Email))
             {
-                if (!recipients.Any(r => r.Email == admin.Email))
+                recipients.Add(new RecipientInfo
                 {
-                    recipients.Add(new RecipientInfo
-                    {
-                        Email = admin.Email,
-                        FullName = admin.FullName ?? admin.Email,
-                        Role = "admin"
-                    });
-                }
+                    Email = admin.Email,
+                    FullName = admin.FullName ?? admin.Email,
+                    Role = "admin"
+                });
             }
         }
 
