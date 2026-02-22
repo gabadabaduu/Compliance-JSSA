@@ -127,16 +127,15 @@ namespace Compliance.Web.Controllers.DSR
         /// <summary>
         /// GET: api/dsr/next-due
         /// ✅ Obtiene la petición más próxima a vencerse (status = Abierto)
+        /// Devuelve 200 OK con null si no hay datos
         /// </summary>
         [HttpGet("next-due")]
-        public async Task<ActionResult<DsrDto>> GetNextDueSoon(CancellationToken ct)
+        public async Task<ActionResult<DsrDto?>> GetNextDueSoon(CancellationToken ct)
         {
             var tenant = GetTenantFromUser();
             var result = await _service.GetNextDueSoonAsync(tenant, ct);
 
-            if (result == null)
-                return NotFound(new { message = "No hay peticiones pendientes próximas a vencer" });
-
+            // ✅ CAMBIO: Siempre devolver 200 OK, aunque sea null
             return Ok(result);
         }
 

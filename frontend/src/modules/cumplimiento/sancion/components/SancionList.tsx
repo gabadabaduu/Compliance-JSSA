@@ -132,9 +132,49 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                 </span>
             )
         },
-        { label: 'Resolución Inicial', value: sanction.initial ? `#${sanction.initial}` : '-' },
-        { label: 'Recurso de Reposición', value: sanction.reconsideration ? `#${sanction.reconsideration}` : '-' },
-        { label: 'Recurso de Apelación', value: sanction.appeal ? `#${sanction.appeal}` : '-' },
+        // ✅ CAMBIO: Resoluciones clickeables
+        {
+            label: 'Resolución Inicial',
+            value: sanction.initial ? (
+                <button
+                    onClick={() => navigate(`/app/resolucion?resolutionId=${sanction.initial}`)}
+                    className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                >
+                    <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                    Resolución #{sanction.initial}
+                </button>
+            ) : (
+                <span className="text-sm text-gray-400">-</span>
+            )
+        },
+        {
+            label: 'Recurso de Reposición',
+            value: sanction.reconsideration ? (
+                <button
+                    onClick={() => navigate(`/app/resolucion?resolutionId=${sanction.reconsideration}`)}
+                    className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                >
+                    <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                    Resolución #{sanction.reconsideration}
+                </button>
+            ) : (
+                <span className="text-sm text-gray-400">-</span>
+            )
+        },
+        {
+            label: 'Recurso de Apelación',
+            value: sanction.appeal ? (
+                <button
+                    onClick={() => navigate(`/app/resolucion?resolutionId=${sanction.appeal}`)}
+                    className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                >
+                    <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                    Resolución #{sanction.appeal}
+                </button>
+            ) : (
+                <span className="text-sm text-gray-400">-</span>
+            )
+        },
         { label: 'Hechos', value: sanction.facts, fullWidth: true },
     ];
 
