@@ -163,5 +163,34 @@ namespace Compliance.Web.Controllers.ROPA
 
             return Ok(filtered.ToList());
         }
+
+        /// <summary>
+        /// GET: api/rat/data/countries
+        /// ✅ Obtiene lista de países únicos (filtrados por tenant)
+        /// </summary>
+        [HttpGet("countries")]
+        public async Task<ActionResult<IEnumerable<string>>> GetCountries(CancellationToken ct)
+        {
+            // ✅ Obtener tenant del usuario autenticado
+            var userRole = User.FindFirst("user_metadata")?.Value;
+            var isSuperAdmin = userRole?.Contains("\"role\":\"superadmin\"") ?? false;
+
+            string? tenant = null;
+
+            // ✅ Si NO es superadmin, filtrar por su empresa
+            if (!isSuperAdmin)
+            {
+                var userMetadata = User.FindFirst("user_metadata")?.Value;
+                if (userMetadata != null && userMetadata.Contains("\"nombre_empresa\""))
+                {
+                    var startIndex = userMetadata.IndexOf("\"nombre_empresa\":\"") + 18;
+                    var endIndex = userMetadata.IndexOf("\"", startIndex);
+                    tenant = userMetadata.Substring(startIndex, endIndex - startIndex);
+                }
+            }
+
+            var result = await _service.GetCountriesAsync(tenant, ct);
+            return Ok(result);
+        }
     }
 }

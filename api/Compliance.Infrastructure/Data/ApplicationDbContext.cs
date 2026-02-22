@@ -158,6 +158,9 @@ public class AppDbContext : DbContext
                 .HasMaxLength(50);
 
             entity.Property(e => e.Url).HasColumnName("url");
+            entity.Property(e => e.CreatedAt)
+            .HasColumnName("created_at")
+            .HasDefaultValueSql("NOW()");
         });
 
         // =====================================================

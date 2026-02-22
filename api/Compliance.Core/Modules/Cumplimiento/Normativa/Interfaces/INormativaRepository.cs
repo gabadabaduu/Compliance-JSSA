@@ -29,6 +29,7 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Interfaces
             string? companyName,
             CancellationToken ct = default);
         Task<IEnumerable<NormativaDto>> GetAllowedAsync(CancellationToken ct = default);
+        Task<NormativaDto?> GetLatestAsync(CancellationToken ct = default);
     }
 
 }

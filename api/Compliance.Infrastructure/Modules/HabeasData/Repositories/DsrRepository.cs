@@ -296,6 +296,62 @@ namespace Compliance.Infrastructure.Modules.DSR.Repositories
                 .Select(e => MapToDto(e))
                 .ToListAsync(ct);
         }
+        // ✅ ENDPOINT 1: Petición más próxima a vencerse
+        public async Task<DsrDto?> GetNextDueSoonAsync(string? tenant = null, CancellationToken ct = default)
+        {
+            var query = _db.Set<DsrEntity>().AsNoTracking();
+
+            // Filtrar por tenant
+            if (!string.IsNullOrEmpty(tenant))
+            {
+                query = query.Where(d => d.Tenant == tenant);
+            }
+
+            // Solo peticiones abiertas y con due_date en el futuro o hoy
+            var today = DateTime.UtcNow.Date;
+            var entity = await query
+                .Where(d => d.Status == "Abierto" && d.DueDate >= today)
+                .OrderBy(d => d.DueDate)
+                .FirstOrDefaultAsync(ct);
+
+            return entity == null ? null : MapToDto(entity);
+        }
+
+        // ✅ ENDPOINT 2: Peticiones pendientes (status = Abierto)
+        public async Task<IEnumerable<DsrDto>> GetPendingAsync(string? tenant = null, CancellationToken ct = default)
+        {
+            var query = _db.Set<DsrEntity>().AsNoTracking();
+
+            // Filtrar por tenant
+            if (!string.IsNullOrEmpty(tenant))
+            {
+                query = query.Where(d => d.Tenant == tenant);
+            }
+
+            return await query
+                .Where(d => d.Status == "Abierto")
+                .OrderBy(d => d.DueDate) // Las más urgentes primero
+                .Select(d => MapToDto(d))
+                .ToListAsync(ct);
+        }
+
+        // ✅ ENDPOINT 3: Peticiones completadas (status = Cerrado)
+        public async Task<IEnumerable<DsrDto>> GetCompletedAsync(string? tenant = null, CancellationToken ct = default)
+        {
+            var query = _db.Set<DsrEntity>().AsNoTracking();
+
+            // Filtrar por tenant
+            if (!string.IsNullOrEmpty(tenant))
+            {
+                query = query.Where(d => d.Tenant == tenant);
+            }
+
+            return await query
+                .Where(d => d.Status == "Cerrado")
+                .OrderByDescending(d => d.ClosedAt) // Las más recientes primero
+                .Select(d => MapToDto(d))
+                .ToListAsync(ct);
+        }
 
         private static DsrDto MapToDto(DsrEntity entity)
         {

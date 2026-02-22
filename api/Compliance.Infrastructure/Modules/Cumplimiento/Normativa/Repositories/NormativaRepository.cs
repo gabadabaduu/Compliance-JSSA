@@ -224,6 +224,18 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
                 .ToListAsync(ct);
         }
 
+
+        public async Task<NormativaDto?> GetLatestAsync(CancellationToken ct = default)
+        {
+            // ✅ Obtener la última normativa creada (sin filtros)
+            var entity = await _db.Set<NormativaEntity>()
+                .AsNoTracking()
+                .OrderByDescending(r => r.CreatedAt)
+                .FirstOrDefaultAsync(ct);
+
+            return entity == null ? null : MapToDto(entity);
+        }
+
         // ✅ MapToDto ACTUALIZADO con nuevas propiedades
         private static NormativaDto MapToDto(NormativaEntity entity)
         {
@@ -243,7 +255,8 @@ namespace Compliance.Infrastructure.Modules.Cumplimiento.Normativa.Repositories
                 Status = entity.Status,
                 Url = entity.Url,
                 CreatedBy = entity.CreatedBy,  // ✅ NUEVO
-                Allowed = entity.Allowed       // ✅ NUEVO
+                Allowed = entity.Allowed,      // ✅ NUEVO
+                CreatedAt = entity.CreatedAt
             };
         }
     }

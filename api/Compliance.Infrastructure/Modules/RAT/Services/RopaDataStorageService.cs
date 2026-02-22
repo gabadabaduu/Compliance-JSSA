@@ -25,5 +25,8 @@ namespace Compliance.Infrastructure.Modules.ROPA.Services
 
         public Task<bool> DeleteAsync(int id, CancellationToken ct = default)
             => _repository.DeleteAsync(id, ct);
+  
+        public Task<IEnumerable<string>> GetCountriesAsync(string? tenant = null, CancellationToken ct = default)
+            => _repository.GetCountriesAsync(tenant, ct);
     }
 }
