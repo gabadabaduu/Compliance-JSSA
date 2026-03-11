@@ -18,6 +18,7 @@ namespace Compliance.Core.Modules.Cumplimiento.Normativa.Dtos
         public string Url { get; set; } = string.Empty;
         public string? CreatedBy { get; set; } // ✅ NUEVO
         public bool Allowed { get; set; }      // ✅ NUEVO
+        public DateTime CreatedAt { get; set; }
     }
 
     // DTO para creación

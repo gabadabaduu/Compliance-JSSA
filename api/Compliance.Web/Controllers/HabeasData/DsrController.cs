@@ -123,5 +123,63 @@ namespace Compliance.Web.Controllers.DSR
             if (!result) return NotFound();
             return NoContent();
         }
+
+        /// <summary>
+        /// GET: api/dsr/next-due
+        /// ✅ Obtiene la petición más próxima a vencerse (status = Abierto)
+        /// Devuelve 200 OK con null si no hay datos
+        /// </summary>
+        [HttpGet("next-due")]
+        public async Task<ActionResult<DsrDto?>> GetNextDueSoon(CancellationToken ct)
+        {
+            var tenant = GetTenantFromUser();
+            var result = await _service.GetNextDueSoonAsync(tenant, ct);
+
+            // ✅ CAMBIO: Siempre devolver 200 OK, aunque sea null
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// GET: api/dsr/pending
+        /// ✅ Obtiene todas las peticiones pendientes (status = Abierto)
+        /// </summary>
+        [HttpGet("pending")]
+        public async Task<ActionResult<IEnumerable<DsrDto>>> GetPending(CancellationToken ct)
+        {
+            var tenant = GetTenantFromUser();
+            var result = await _service.GetPendingAsync(tenant, ct);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// GET: api/dsr/completed
+        /// ✅ Obtiene todas las peticiones completadas (status = Cerrado)
+        /// </summary>
+        [HttpGet("completed")]
+        public async Task<ActionResult<IEnumerable<DsrDto>>> GetCompleted(CancellationToken ct)
+        {
+            var tenant = GetTenantFromUser();
+            var result = await _service.GetCompletedAsync(tenant, ct);
+            return Ok(result);
+        }
+
+        // ✅ Método auxiliar para extraer tenant
+        private string? GetTenantFromUser()
+        {
+            var userRole = User.FindFirst("user_metadata")?.Value;
+            var isSuperAdmin = userRole?.Contains("\"role\":\"superadmin\"") ?? false;
+
+            if (isSuperAdmin) return null;
+
+            var userMetadata = User.FindFirst("user_metadata")?.Value;
+            if (userMetadata != null && userMetadata.Contains("\"nombre_empresa\""))
+            {
+                var startIndex = userMetadata.IndexOf("\"nombre_empresa\":\"") + 18;
+                var endIndex = userMetadata.IndexOf("\"", startIndex);
+                return userMetadata.Substring(startIndex, endIndex - startIndex);
+            }
+
+            return null;
+        }
     }
 }

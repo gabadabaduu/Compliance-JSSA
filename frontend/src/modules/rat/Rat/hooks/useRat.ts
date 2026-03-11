@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     getAllRopaTable,
@@ -12,11 +13,21 @@ import {
     getRopaPurposes,
     getRopaStorage,
     getRopaDataFlow,
+    getAllRopaDataFlows,
+    createRopaDataFlow,
+    updateRopaDataFlow,
+    deleteRopaDataFlow,
     getRopaDepartments,
     getProcessOwnerFilterOptions,
     getDataCategoriesFilterOptions,
     getDataSharedFilterOptions,
-    type RopaTableFilters
+    getAllRopaEntities,
+    getAllRopaContracts,
+    type RopaTableFilters,
+    type RopaDataFlowDto,
+    type CreateRopaDataFlowDto,
+    type RopaEntityDto,
+    type RopaContractDto,
 } from '../services/ratService';
 import type { CreateRopaTableDto, UpdateRopaTableDto } from '../types';
 import { useUserStore } from '../../../../stores/userStore';
@@ -67,7 +78,7 @@ export function useUpdateRopaTable() {
         mutationFn: (data: UpdateRopaTableDto) => updateRopaTable(data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
-            queryClient.invalidateQueries({ queryKey: ['ropa-table', variables.id] });
+            queryClient.invalidateQueries({ queryKey: ['ropa-table', (variables as any).id] });
         },
     });
 }
@@ -77,6 +88,50 @@ export function useDeleteRopaTable() {
     return useMutation({
         mutationFn: (id: number) => deleteRopaTable(id),
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+        },
+    });
+}
+
+export function useRopaDataFlows() {
+    return useQuery<RopaDataFlowDto[], Error>({
+        queryKey: ['ropa-lookups', 'dataflows'],
+        queryFn: getAllRopaDataFlows,
+        staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useCreateRopaDataFlow() {
+    const queryClient = useQueryClient();
+    return useMutation<RopaDataFlowDto, Error, CreateRopaDataFlowDto>({
+        mutationFn: (dto: CreateRopaDataFlowDto) => createRopaDataFlow(dto),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-lookups', 'dataflows'] });
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+        },
+    });
+}
+
+// Nuevo: update mutation para dataflow
+export function useUpdateRopaDataFlow() {
+    const queryClient = useQueryClient();
+    return useMutation<RopaDataFlowDto, Error, RopaDataFlowDto>({
+        mutationFn: (dto: RopaDataFlowDto) => updateRopaDataFlow(dto),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-lookups', 'dataflows'] });
+            queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
+        },
+    });
+}
+
+// Nuevo: delete mutation para dataflow
+export function useDeleteRopaDataFlow() {
+    const queryClient = useQueryClient();
+    return useMutation<void, Error, number>({
+        mutationFn: (id: number) => deleteRopaDataFlow(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ropa-lookups', 'dataflows'] });
             queryClient.invalidateQueries({ queryKey: ['ropa-table'] });
         },
     });
@@ -145,6 +200,25 @@ export function useRopaDepartments() {
         queryKey: ['ropa-lookups', 'departments'],
         queryFn: getRopaDepartments,
         staleTime: 1000 * 60 * 10,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+// New: entities & contracts lookups
+export function useRopaEntities() {
+    return useQuery<RopaEntityDto[], Error>({
+        queryKey: ['ropa-lookups', 'entities'],
+        queryFn: getAllRopaEntities,
+        staleTime: 1000 * 60 * 60,
+        gcTime: 1000 * 60 * 60,
+    });
+}
+
+export function useRopaContracts() {
+    return useQuery<RopaContractDto[], Error>({
+        queryKey: ['ropa-lookups', 'contracts'],
+        queryFn: getAllRopaContracts,
+        staleTime: 1000 * 60 * 60,
         gcTime: 1000 * 60 * 60,
     });
 }

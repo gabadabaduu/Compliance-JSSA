@@ -18,21 +18,19 @@ export default function SancionList({ onEdit, onCreate }: Props) {
     const { isSuperAdmin } = usePermissions();
     const navigate = useNavigate();
     const [filters, setFilters] = useState<Record<string, any>>({});
-    const [searchText, setSearchText] = useState(''); // ✅ NUEVO: Estado para búsqueda de texto
+    const [searchText, setSearchText] = useState('');
     const [selectedSanction, setSelectedSanction] = useState<Sanction | null>(null);
 
     const { data: sanctions, isLoading, error } = useSanctionsFiltered(filters);
     const { data: entitiesOptions } = useEntitiesForFilter();
     const deleteSanction = useDeleteSanction();
 
-    // ✅ NUEVO: Función para filtrar sanciones por texto de búsqueda
     const filterBySearchText = (sanctions: Sanction[]): Sanction[] => {
         if (!searchText.trim()) return sanctions;
 
         const searchLower = searchText.toLowerCase().trim();
 
         return sanctions.filter((sanction) => {
-            // Buscar en todos los campos relevantes, convirtiendo todo a string
             const searchableFields = [
                 String(sanction.number || ''),
                 String(sanction.entity || ''),
@@ -50,7 +48,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         });
     };
 
-    // Configuración de filtros
     const filterConfig: FilterConfig[] = [
         {
             key: 'status',
@@ -116,7 +113,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
         }
     };
 
-    // Campos para el modal de detalle
     const getDetailFields = (sanction: Sanction) => [
         { label: 'Número', value: sanction.number },
         { label: 'Entidad', value: sanction.entity },
@@ -136,13 +132,52 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                 </span>
             )
         },
-        { label: 'Resolución Inicial', value: sanction.initial ? `#${sanction.initial}` : '-' },
-        { label: 'Recurso de Reposición', value: sanction.reconsideration ? `#${sanction.reconsideration}` : '-' },
-        { label: 'Recurso de Apelación', value: sanction.appeal ? `#${sanction.appeal}` : '-' },
+        // ✅ CAMBIO: Resoluciones clickeables
+        {
+            label: 'Resolución Inicial',
+            value: sanction.initial ? (
+                <button
+                    onClick={() => navigate(`/app/resolucion?resolutionId=${sanction.initial}`)}
+                    className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                >
+                    <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                    Resolución #{sanction.initial}
+                </button>
+            ) : (
+                <span className="text-sm text-gray-400">-</span>
+            )
+        },
+        {
+            label: 'Recurso de Reposición',
+            value: sanction.reconsideration ? (
+                <button
+                    onClick={() => navigate(`/app/resolucion?resolutionId=${sanction.reconsideration}`)}
+                    className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                >
+                    <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                    Resolución #{sanction.reconsideration}
+                </button>
+            ) : (
+                <span className="text-sm text-gray-400">-</span>
+            )
+        },
+        {
+            label: 'Recurso de Apelación',
+            value: sanction.appeal ? (
+                <button
+                    onClick={() => navigate(`/app/resolucion?resolutionId=${sanction.appeal}`)}
+                    className="text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium flex items-center gap-1 transition-colors"
+                >
+                    <Icon icon="mdi:file-document-outline" width="16" height="16" />
+                    Resolución #{sanction.appeal}
+                </button>
+            ) : (
+                <span className="text-sm text-gray-400">-</span>
+            )
+        },
         { label: 'Hechos', value: sanction.facts, fullWidth: true },
     ];
 
-    // ✅ MODIFICADO: Aplicar filtro de búsqueda de texto
     const baseSanctions = sanctions || [];
     const displaySanctions = filterBySearchText(baseSanctions);
 
@@ -183,7 +218,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
     return (
         <>
             <div className="bg-white dark:bg-[#151824] rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.25)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] p-6">
-                {/* Header de la tabla */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                         <Icon icon="mdi:format-list-bulleted" width="24" height="24" className="text-rose-400" />
@@ -196,7 +230,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                     </div>
                 </div>
 
-                {/* ✅ NUEVO: Campo de búsqueda de texto libre */}
                 <div className="mb-4">
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -220,10 +253,8 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                     </div>
                 </div>
 
-                {/* Filtros */}
                 <TableFilter filters={filterConfig} onFilterChange={handleFilterChange} className="mb-4" />
 
-                {/* ✅ NUEVO: Mensaje cuando no hay resultados de búsqueda */}
                 {displaySanctions.length === 0 && searchText && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <Icon icon="mdi:file-search-outline" width="64" height="64" className="text-gray-300 dark:text-gray-600 mb-4" />
@@ -242,7 +273,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                     </div>
                 )}
 
-                {/* Tabla */}
                 {displaySanctions.length > 0 && (
                     <div className="overflow-x-auto">
                         <table className="w-full">
@@ -256,7 +286,10 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Resolución Inicial</th>
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Resolución de Reposición</th>
                                     <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden md:table-cell">Resolución de Apelación</th>
-                                    <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                                    {/* ✅ COLUMNA DE ACCIONES SOLO PARA SUPERADMIN */}
+                                    {isSuperAdmin && (
+                                        <th className="text-center py-3 px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -292,7 +325,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                                             </span>
                                         </td>
 
-                                        {/* Resolución Inicial */}
                                         <td className="py-4 px-4 hidden md:table-cell">
                                             {sanction.initial ? (
                                                 <button
@@ -308,7 +340,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                                             )}
                                         </td>
 
-                                        {/* Recurso de Reposición */}
                                         <td className="py-4 px-4 hidden md:table-cell">
                                             {sanction.reconsideration ? (
                                                 <button
@@ -324,7 +355,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                                             )}
                                         </td>
 
-                                        {/* Recurso de Apelación */}
                                         <td className="py-4 px-4 hidden md:table-cell">
                                             {sanction.appeal ? (
                                                 <button
@@ -340,6 +370,7 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                                             )}
                                         </td>
 
+                                        {/* ✅ CELDA DE ACCIONES SOLO PARA SUPERADMIN */}
                                         {isSuperAdmin && (
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center justify-center gap-1">
@@ -369,7 +400,6 @@ export default function SancionList({ onEdit, onCreate }: Props) {
                 )}
             </div>
 
-            {/* Modal de detalle */}
             {selectedSanction && (
                 <DetailModal
                     isOpen={!!selectedSanction}

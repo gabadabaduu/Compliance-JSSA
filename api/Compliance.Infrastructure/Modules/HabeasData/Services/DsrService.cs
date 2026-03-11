@@ -104,5 +104,15 @@ namespace Compliance.Infrastructure.Modules.DSR.Services
 
         public Task<IEnumerable<DsrDto>> GetByTypeAsync(int typeId, CancellationToken ct = default)
             => _repository.GetByTypeAsync(typeId, ct);
+
+      
+        public Task<DsrDto?> GetNextDueSoonAsync(string? tenant = null, CancellationToken ct = default)
+            => _repository.GetNextDueSoonAsync(tenant, ct);
+
+        public Task<IEnumerable<DsrDto>> GetPendingAsync(string? tenant = null, CancellationToken ct = default)
+            => _repository.GetPendingAsync(tenant, ct);
+
+        public Task<IEnumerable<DsrDto>> GetCompletedAsync(string? tenant = null, CancellationToken ct = default)
+            => _repository.GetCompletedAsync(tenant, ct);
     }
 }

@@ -11,7 +11,6 @@ public class DsrNotificationJob : BackgroundService
     private readonly ILogger<DsrNotificationJob> _logger;
 
     private static readonly TimeSpan ColombiaOffset = TimeSpan.FromHours(-5);
-    private const int TargetHourUtc = 13; // 8 AM Colombia
 
     public DsrNotificationJob(
         IServiceScopeFactory scopeFactory,
@@ -23,50 +22,27 @@ public class DsrNotificationJob : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("🕐 DsrNotificationJob iniciado. Ejecutará a las 8:00 AM Colombia (13:00 UTC)");
+        _logger.LogInformation("🕐 DsrNotificationJob iniciado");
 
-        // ✅ Ejecutar inmediatamente al arrancar para no perder ejecuciones
+        // Esperar 10 segundos para que la app termine de iniciar
+        await Task.Delay(TimeSpan.FromSeconds(100), stoppingToken);
+
+        // Ejecutar inmediatamente al arrancar (Render free plan: la app no corre 24/7)
         await RunJobAsync(stoppingToken, "INICIO DE APLICACIÓN");
 
+        // Después, ejecutar cada 6 horas mientras la app esté corriendo
         while (!stoppingToken.IsCancellationRequested)
         {
-            var utcNow = DateTime.UtcNow;
-            var nextRunUtc = GetNextRunUtc(utcNow);
-            var delay = nextRunUtc - utcNow;
-
-            if (delay < TimeSpan.Zero) delay = TimeSpan.FromSeconds(1);
-
-            var colombiaTime = utcNow + ColombiaOffset;
-            var nextRunColombia = nextRunUtc + ColombiaOffset;
-
-            _logger.LogInformation(
-                "⏰ Ahora: {Now} Colombia | Próxima ejecución: {NextRun} Colombia ({NextRunUtc} UTC) | Faltan: {Hours}h {Minutes}m",
-                colombiaTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                nextRunColombia.ToString("yyyy-MM-dd HH:mm:ss"),
-                nextRunUtc.ToString("yyyy-MM-dd HH:mm:ss"),
-                (int)delay.TotalHours,
-                delay.Minutes);
-
             try
             {
-                await Task.Delay(delay, stoppingToken);
+                await Task.Delay(TimeSpan.FromHours(6), stoppingToken);
             }
             catch (TaskCanceledException)
             {
                 break;
             }
 
-            await RunJobAsync(stoppingToken, "PROGRAMADA 8AM");
-
-            // Esperar 2 minutos para evitar doble ejecución
-            try
-            {
-                await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
-            }
-            catch (TaskCanceledException)
-            {
-                break;
-            }
+            await RunJobAsync(stoppingToken, "PERIÓDICA (6h)");
         }
     }
 
@@ -74,11 +50,9 @@ public class DsrNotificationJob : BackgroundService
     {
         try
         {
-            var ejecutadoColombia = DateTime.UtcNow + ColombiaOffset;
-            _logger.LogInformation("🚀 [{Motivo}] Ejecutando revisión DSR - {Hora} Colombia ({HoraUtc} UTC)",
-                motivo,
-                ejecutadoColombia.ToString("yyyy-MM-dd HH:mm:ss"),
-                DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
+            var colombiaTime = DateTime.UtcNow + ColombiaOffset;
+            _logger.LogInformation("🚀 [{Motivo}] Ejecutando revisión DSR - {Hora} Colombia",
+                motivo, colombiaTime.ToString("yyyy-MM-dd HH:mm:ss"));
 
             using var scope = _scopeFactory.CreateScope();
             var notificationService = scope.ServiceProvider.GetRequiredService<IDsrNotificationService>();
@@ -92,17 +66,5 @@ public class DsrNotificationJob : BackgroundService
         {
             _logger.LogError(ex, "❌ [{Motivo}] Error ejecutando job de notificaciones DSR", motivo);
         }
-    }
-
-    private static DateTime GetNextRunUtc(DateTime utcNow)
-    {
-        var todayRun = utcNow.Date.AddHours(TargetHourUtc);
-
-        if (utcNow >= todayRun)
-        {
-            return todayRun.AddDays(1);
-        }
-
-        return todayRun;
     }
 }
