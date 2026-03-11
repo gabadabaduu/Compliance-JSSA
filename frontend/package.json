@@ -22,7 +22,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-phone-input-2": "^2.15.1",
-    "react-phone-number-input": "^3.4.14",
+    "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^7.9.6",
     "react-simple-maps": "^3.0.0",
     "reactflow": "^11.11.4",
