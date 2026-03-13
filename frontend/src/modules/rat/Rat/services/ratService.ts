@@ -75,6 +75,7 @@ export async function getRopaDepartments(): Promise<RopaLookup[]> {
     return data.map(d => ({ id: d.id, name: d.departmentName || d.name || `Departamento ${d.id}` }));
 }
 
+
 // ============================================
 // 🔍 FILTROS
 // ============================================
@@ -194,13 +195,17 @@ export interface RopaContractDto {
 }
 
 export async function getAllRopaEntities(): Promise<RopaEntityDto[]> {
-    const res = await apiClient.get<RopaEntityDto[]>('/rat/entities');
-    if (res && typeof (res as any).data !== 'undefined') return (res as any).data;
-    return res as unknown as RopaEntityDto[];
+    const res = await apiClient.get<any[]>('/rat/entities');
+    return (res ?? []).map((e: any) => ({
+        id: Number(e.id),
+        name: e.name ?? e.entityName ?? e.legalName ?? `Entidad ${e.id}`,
+    }));
 }
 
 export async function getAllRopaContracts(): Promise<RopaContractDto[]> {
-    const res = await apiClient.get<RopaContractDto[]>('/rat/contracts');
-    if (res && typeof (res as any).data !== 'undefined') return (res as any).data;
-    return res as unknown as RopaContractDto[];
+    const res = await apiClient.get<any[]>('/rat/contracts');
+    return (res ?? []).map((c: any) => ({
+        id: Number(c.id),
+        name: c.name ?? c.contractName ?? c.title ?? c.agreementName ?? `Contrato ${c.id}`,
+    }));
 }

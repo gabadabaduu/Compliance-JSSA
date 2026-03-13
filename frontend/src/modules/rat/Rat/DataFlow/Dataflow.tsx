@@ -25,7 +25,14 @@ export default function Dataflow() {
     const deleteMutation = useDeleteRopaDataFlow();
 
     const { data: entities } = useRopaEntities();
-    const { data: contracts } = useRopaContracts();
+
+    // ✅ FIX: traemos también loading + error de contratos
+    const {
+        data: contracts,
+        isLoading: contractsLoading,
+        error: contractsError,
+    } = useRopaContracts();
+
     const countries = COUNTRIES;
 
     // theme detection (light/dark) — reads root .dark class
@@ -38,6 +45,23 @@ export default function Dataflow() {
         mo.observe(root, { attributes: true, attributeFilter: ['class'] });
         return () => mo.disconnect();
     }, []);
+
+    // --- Shared UI classes (light/dark) ---
+    const inputBase = 'w-full px-3 py-2 rounded border focus:outline-none focus:ring-2 transition-colors';
+    const inputClass = isDark
+        ? `${inputBase} bg-[#06101a] text-gray-200 border-gray-800 focus:ring-[#6b46c1]/40`
+        : `${inputBase} bg-white text-slate-900 border-slate-300 focus:ring-[#6b46c1]/30`;
+
+    const readonlyClass = isDark
+        ? 'w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800'
+        : 'w-full px-3 py-2 rounded bg-slate-50 text-slate-900 border border-slate-300';
+
+    const labelClass = isDark ? 'block text-xs text-gray-400 mb-1' : 'block text-xs text-slate-600 mb-1';
+    const modalTitleClass = isDark ? 'text-lg font-semibold text-[#e6eef6]' : 'text-lg font-semibold text-slate-900';
+    const closeBtnClass = isDark ? 'text-gray-400 hover:text-gray-200' : 'text-slate-400 hover:text-slate-600';
+    const cancelBtnClass = isDark
+        ? 'px-3 py-2 bg-transparent border border-gray-800 text-gray-300 rounded'
+        : 'px-3 py-2 bg-white border border-slate-300 text-slate-700 rounded hover:bg-slate-50';
 
     // safe arrays for TS
     const safeEntities = (entities ?? []) as any[];
@@ -130,8 +154,7 @@ export default function Dataflow() {
         return items;
     }, [items, fixedProcessingActivityId]);
 
-    // Construir la lista de entidades que participan en los flujos visibles (para el diagrama),
-    // incluyendo nombre, país y rol (si están disponibles en el flujo o en entityMap/countryMap).
+    // entities for diagram
     const entitiesForDiagram = useMemo(() => {
         const map = new Map<string, { id: number; name: string; country?: string; role?: string }>();
 
@@ -139,18 +162,11 @@ export default function Dataflow() {
             const entityId = (f as any).entityId ?? (f as any).entity_id ?? null;
             const parentEntity = (f as any).parentEntity ?? (f as any).parent_entity ?? null;
 
-            // prefer entityName in flow, otherwise lookup in entityMap
             if (entityId != null && String(entityId) !== '') {
                 const idNum = Number(entityId);
-                const name =
-                    (f as any).entityName ??
-                    entityMap.get(idNum) ??
-                    String(entityId);
+                const name = (f as any).entityName ?? entityMap.get(idNum) ?? String(entityId);
 
-                // country prefer flow countryName then countryMap
-                const country =
-                    (f as any).countryName ?? countryMap.get(String((f as any).country ?? '')) ?? undefined;
-
+                const country = (f as any).countryName ?? countryMap.get(String((f as any).country ?? '')) ?? undefined;
                 const role = (f as any).entityRole ?? undefined;
 
                 map.set(String(entityId), { id: idNum, name, country, role });
@@ -158,16 +174,10 @@ export default function Dataflow() {
 
             if (parentEntity != null && String(parentEntity) !== '') {
                 const idNum = Number(parentEntity);
-                const name =
-                    (f as any).parentEntityName ??
-                    entityMap.get(idNum) ??
-                    String(parentEntity);
-
-                const country = undefined;
-                const role = undefined;
+                const name = (f as any).parentEntityName ?? entityMap.get(idNum) ?? String(parentEntity);
 
                 if (!map.has(String(parentEntity))) {
-                    map.set(String(parentEntity), { id: idNum, name, country, role });
+                    map.set(String(parentEntity), { id: idNum, name });
                 }
             }
         });
@@ -211,7 +221,7 @@ export default function Dataflow() {
             setForm((s) => ({ ...s, [name]: value === '' ? undefined : Number(value) } as any));
             return;
         }
-       
+
         setForm((s) => ({ ...s, [name]: value } as any));
     };
 
@@ -411,8 +421,8 @@ export default function Dataflow() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
                     <div className="w-full max-w-2xl rounded-md p-6 border" style={{ background: isDark ? '#07121a' : '#fff' }}>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 style={{ color: isDark ? '#e6eef6' : '#0f172a' }} className="text-lg font-semibold">{editingItem ? 'Editar flujo de datos' : 'Agregar flujo de datos'}</h3>
-                            <button onClick={() => { setShowForm(false); setEditingItem(null); }} className="text-gray-400 hover:text-gray-200">
+                            <h3 className={modalTitleClass}>{editingItem ? 'Editar flujo de datos' : 'Agregar flujo de datos'}</h3>
+                            <button onClick={() => { setShowForm(false); setEditingItem(null); }} className={closeBtnClass}>
                                 <Icon icon="mdi:close" width="18" height="18" />
                             </button>
                         </div>
@@ -420,20 +430,27 @@ export default function Dataflow() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Registro de tratamiento</label>
+                                    <label className={labelClass}>Registro de tratamiento</label>
 
                                     {fixedProcessingActivityId ? (
-                                        <div className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                        <div className={readonlyClass}>
                                             {fixedProcessingActivityName ?? `ID ${fixedProcessingActivityId}`}
                                         </div>
                                     ) : (
-                                        <input name="processingActivityId" type="number" min={1} value={form.processingActivityId ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800" />
+                                        <input
+                                            name="processingActivityId"
+                                            type="number"
+                                            min={1}
+                                            value={form.processingActivityId ?? ''}
+                                            onChange={handleChange}
+                                            className={inputClass}
+                                        />
                                     )}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Entidad</label>
-                                    <select name="entityId" value={form.entityId ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                    <label className={labelClass}>Entidad</label>
+                                    <select name="entityId" value={form.entityId ?? ''} onChange={handleChange} className={inputClass}>
                                         <option value="">-- Seleccionar --</option>
                                         {safeEntities.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
                                     </select>
@@ -441,8 +458,8 @@ export default function Dataflow() {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Rol de entidad</label>
-                                <select name="entityRole" value={form.entityRole} onChange={handleChange} required className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                <label className={labelClass}>Rol de entidad</label>
+                                <select name="entityRole" value={form.entityRole} onChange={handleChange} required className={inputClass}>
                                     <option value="">-- Seleccionar --</option>
                                     {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
                                 </select>
@@ -450,35 +467,59 @@ export default function Dataflow() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1">País</label>
-                                    <select name="country" value={form.country ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                    <label className={labelClass}>País</label>
+                                    <select name="country" value={form.country ?? ''} onChange={handleChange} className={inputClass}>
                                         <option value="">-- Seleccionar --</option>
                                         {safeCountries.map((c: any) => <option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1">Entidad Padre</label>
-                                    <select name="parentEntity" value={form.parentEntity ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
+                                    <label className={labelClass}>Entidad Padre</label>
+                                    <select name="parentEntity" value={form.parentEntity ?? ''} onChange={handleChange} className={inputClass}>
                                         <option value="">Ninguno</option>
                                         {safeEntities.map((e: any) => <option key={e.id} value={String(e.id)}>{e.name}</option>)}
                                     </select>
                                 </div>
                             </div>
 
+                            {/* ✅ DROPDOWN CONTRATOS (CON LOADING / EMPTY / ERROR) */}
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1">Acuerdo de datos</label>
-                                <select name="dataAgreement" value={form.dataAgreement ?? ''} onChange={handleChange} className="w-full px-3 py-2 rounded bg-[#06101a] text-gray-200 border border-gray-800">
-                                    <option value="">-- Seleccionar --</option>
-                                    {safeContracts.map((c: any) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+                                <label className={labelClass}>Acuerdo de datos</label>
+                                <select name="dataAgreement" value={form.dataAgreement ?? ''} onChange={handleChange} className={inputClass}>
+                                    <option value="">
+                                        {contractsLoading ? 'Cargando contratos...' : '-- Seleccionar --'}
+                                    </option>
+
+                                    {!contractsLoading && safeContracts.length === 0 && (
+                                        <option value="" disabled>
+                                            No hay contratos disponibles
+                                        </option>
+                                    )}
+
+                                    {safeContracts.map((c: any) => (
+                                        <option key={c.id} value={String(c.id)}>
+                                            {c.name}
+                                        </option>
+                                    ))}
                                 </select>
+
+                                {contractsError && (
+                                    <div className="text-xs text-red-500 mt-1">
+                                        Error cargando contratos: {(contractsError as Error).message}
+                                    </div>
+                                )}
                             </div>
 
                             {formError && <div className="text-sm text-red-500">{formError}</div>}
 
                             <div className="flex justify-end gap-3 mt-4">
-                                <button type="button" onClick={() => { setShowForm(false); setEditingItem(null); }} className="px-3 py-2 bg-transparent border border-gray-800 text-gray-400 rounded">Cancelar</button>
-                                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#6b46c1] text-white rounded">{saving ? 'Guardando...' : 'Guardar'}</button>
+                                <button type="button" onClick={() => { setShowForm(false); setEditingItem(null); }} className={cancelBtnClass}>
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#6b46c1] text-white rounded">
+                                    {saving ? 'Guardando...' : 'Guardar'}
+                                </button>
                             </div>
                         </form>
                     </div>
